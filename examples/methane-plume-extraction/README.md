@@ -30,6 +30,8 @@ review priority in a customer-shaped JSON schema.
 - A local inference server for the base and fine-tuned models.
 - The fixed methane schema used for prompting, evaluation, and demo output.
 - A model download helper for Hugging Face-hosted checkpoints.
+- A [training recipe](training/README.md) with the exact schema, LEAP config,
+  dataset manifest, and sample row format used for the demo checkpoint.
 - `AGENTS.md` and `agent.md` runbooks for another agent or teammate opening the demo.
 
 This example intentionally does not include model weights. The base model and
