@@ -1074,4 +1074,46 @@ Arguments: {\"path\": \"/tmp/test.txt\"}";
             Some("Review Q4")
         );
     }
+
+    // ─── Reasoning-prefix tolerance (LFM2.5-8B-A1B) ─────────────────────────
+    //
+    // Pins external behavior: a leading <think>...</think> reasoning block
+    // before a bracket-format tool call must not prevent the call from being
+    // parsed. Existing behavior (no prefix, multi-call) must remain intact.
+
+    #[test]
+    fn bracket_tolerates_think_prefix_single_call() {
+        let text = "<think>some reasoning text</think>\
+                    <|tool_call_start|>[server.tool(arg='val')]<|tool_call_end|>";
+        let calls = parse_bracket_tool_calls(text).unwrap();
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].name, "server.tool");
+        assert_eq!(calls[0].arguments["arg"], "val");
+        assert!(calls[0].id.starts_with("call_"));
+    }
+
+    #[test]
+    fn bracket_without_think_prefix_single_call() {
+        let text = "<|tool_call_start|>[server.tool(arg='val')]<|tool_call_end|>";
+        let calls = parse_bracket_tool_calls(text).unwrap();
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].name, "server.tool");
+        assert_eq!(calls[0].arguments["arg"], "val");
+        assert!(calls[0].id.starts_with("call_"));
+    }
+
+    #[test]
+    fn bracket_tolerates_think_prefix_multi_call() {
+        // Multi-call is emitted as multiple <|tool_call_start|>...<|tool_call_end|>
+        // blocks (one call per block), per the parser's existing contract.
+        let text = "<think>reasoning</think>\
+                    <|tool_call_start|>[s1.t1(a=1)]<|tool_call_end|>\
+                    <|tool_call_start|>[s2.t2(b=2)]<|tool_call_end|>";
+        let calls = parse_bracket_tool_calls(text).unwrap();
+        assert_eq!(calls.len(), 2);
+        assert_eq!(calls[0].name, "s1.t1");
+        assert_eq!(calls[0].arguments["a"], 1);
+        assert_eq!(calls[1].name, "s2.t2");
+        assert_eq!(calls[1].arguments["b"], 2);
+    }
 }

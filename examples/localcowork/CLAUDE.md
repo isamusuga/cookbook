@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working on the LocalCowork proje
 
 ## Project Overview
 
-LocalCowork is a desktop AI agent that runs entirely on-device. It delivers a Claude Cowork-style experience powered by a locally-hosted LLM (dev: GPT-OSS-20B via Ollama, production: LFM2-24B-A2B via llama.cpp). The model calls pre-built tools via MCP — it never writes code. The user confirms every mutable action.
+LocalCowork is a desktop AI agent that runs entirely on-device. It delivers a Claude Cowork-style experience powered by a locally-hosted LLM (dev: GPT-OSS-20B via Ollama, production: LFM2.5-8B-A1B via llama.cpp). The model calls pre-built tools via MCP — it never writes code. The user confirms every mutable action.
 
 **Source of truth:** `docs/PRD.md` (the full product requirements document).
 **Tool contract:** `docs/mcp-tool-registry.yaml` (machine-readable tool definitions extracted from the PRD Appendix).

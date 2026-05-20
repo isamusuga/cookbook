@@ -25,9 +25,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 project: LocalCowork
-last_updated: "2026-02-18"
-last_session_id: "session-034"
-current_phase: "Post-A/B-test documentation consolidation. Orchestrator operational for 1-2 step workflows (A/B tested). Fine-tuned router V2 at 84% live accuracy. Documentation restructured: 3 files deleted, 1 created, 5 rewritten. All cross-references verified (35 links, 0 broken). Next: commit all changes, run tests."
+last_updated: "2026-05-21"
+last_session_id: "session-035"
+current_phase: "Branch localcowork-lfm2.5-8b-a1b: LFM2.5-8B-A1B is the new default model. Conversion script, parser <think>-prefix tests, model config + start-model.sh --model flag, model-analysis stub, README/CLAUDE.md updates all landed. Branch is non-mergeable to main until LiquidAI publishes the public GGUF repo; curated-tool-surface benchmark on the 8B deliberately deferred."
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PHASE 0: FOUNDATION (Week 1)
@@ -1784,6 +1784,29 @@ sessions:
       - "docs/model-analysis/lfm2-24b-a2b-real-world-execution.md (360 lines)"
     doc_sync: "✓ cross-refs (35 links, 0 broken), ✓ ADR-009 updated, ✓ README updated, no code changes (docs-only session)"
     next_recommended: "Commit all session-034 changes. Then live manual test of demo presets with running model, or proceed to fine-tuning V3 training data (address security.encrypt_file false positive and cross-server confusion failures)."
+
+  - id: "session-035"
+    date: "2026-05-21"
+    branch: "localcowork-lfm2.5-8b-a1b"
+    focus: "Add LFM2.5-8B-A1B as default model"
+    completed:
+      - "Issue 01 (.scratch/lfm25-8b-a1b-support/issues/01-write-conversion-script.md): wrote scripts/convert-8b-a1b.sh — converts the private safetensors checkpoint to F16/Q8_0/Q4_K_M GGUFs, spawns llama-server, validates response contains <think> block + parseable bracket tool call, optionally uploads Q4_K_M and Q8_0 (only) to Paulescu/LFM2.5-8B-A1B-GGUF via huggingface-cli; F16 deliberately not uploaded"
+      - "Issue 02 (.scratch/lfm25-8b-a1b-support/issues/02-run-conversion-and-upload.md): HITL, pending — requires GPU + HF_TOKEN; conversion + upload run is Pau's to execute on an H100"
+      - "Issue 03 (.scratch/lfm25-8b-a1b-support/issues/03-parser-think-prefix-tolerance.md): added three tests in src-tauri/src/inference/tool_call_parser.rs pinning <think>-prefix tolerance. Existing parser already passes Cases 1+2 (suffix-anchored scan for <|tool_call_start|>); Case 3 reframed during issue review to use two separate <|tool_call_start|>...<|tool_call_end|> blocks since the parser has never supported multi-tool inside one block. Zero production code changes."
+      - "Issue 04 (.scratch/lfm25-8b-a1b-support/issues/04-model-config-and-start-script.md): added lfm25-8b-a1b entry to _models/config.yaml, flipped active_model, reordered fallback_chain. Rewrote scripts/start-model.sh with a --model <key> flag that reads active_model from the YAML via a python one-liner (no YAML dependency added) and looks up filename/port/ctx/HF-repo per key via a case statement."
+      - "Issue 05 (.scratch/lfm25-8b-a1b-support/issues/05-docs-and-progress-update.md): updated CLAUDE.md Project Overview line, swapped README opening narrative + Quick Start to LFM2.5-8B-A1B (with LFM2-24B-A2B preserved as higher-VRAM alternative), added a Known Limitations bullet noting the 8B benchmark gap, created docs/model-analysis/lfm2.5-8b-a1b.md stub with Architecture/Provenance/Quantizations/Inference Params/Known Gaps sections."
+    artifacts_created:
+      - "scripts/convert-8b-a1b.sh (NEW, ~310 lines)"
+      - "docs/model-analysis/lfm2.5-8b-a1b.md (NEW stub)"
+    deferred_in_scope:
+      - "Benchmark run on the curated 20-tool surface against LFM2.5-8B-A1B (single-step accuracy, multi-step chain completion, VRAM/latency on M-series). Risk: shipping a new default without a measured baseline. Mitigation: in-script smoke validation at conversion time gates catastrophic GRPO behavior degradation. Tracked as TODOs in the model-analysis stub."
+      - "UI handling of <think> blocks (collapsed reasoning panel, message-store schema)."
+      - "Long-context wiring (context budget allocation, eviction strategy, --ctx-size bump) leveraging rope5M/longctx_v4 in the source checkpoint."
+      - "ADR-008 successor for reasoning-model temperature handling (no tool_temperature on the new entry)."
+      - "ADR-009 successor for orchestrator pairing with a reasoning planner (orchestrator stays enabled: false)."
+      - "min_p and repetition_penalty schema fields + inference-client plumbing (vendor-recommended but require schema work)."
+    doc_sync: "✓ CLAUDE.md Project Overview, ✓ README.md opening + Quick Start + Known Limitations, ✓ model-analysis stub (new), ✗ docs/PRD.md deliberately not updated per parent PRD out-of-scope list, ✗ no ADR added per issue 05 acceptance criteria"
+    next_recommended: "Branch is non-mergeable to main until LiquidAI publishes the public GGUF repo at LiquidAI/LFM2.5-8B-A1B-GGUF. Once published, the cutover diff is the repo string in _models/config.yaml + scripts/start-model.sh + scripts/convert-8b-a1b.sh + README.md and the model-analysis stub note. Before then: Pau to execute issue 02 (run conversion script on GPU, validate, upload to Paulescu/LFM2.5-8B-A1B-GGUF) and record the llama.cpp commit hash used in the model-analysis stub."
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BLOCKERS

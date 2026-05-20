@@ -10,7 +10,7 @@
 #   Model paths below use ${LOCALCOWORK_MODELS_DIR} for interpolation.
 #   The config-loader resolves environment variables at load time.
 
-active_model: lfm2-24b-a2b  # Sparse MoE: 24B total, 2.3B active, 64 experts top-4 — 80% tool accuracy
+active_model: lfm25-8b-a1b  # Sparse MoE: 8B total, 1B active, GRPO-trained reasoning + tool use, ~10 GB VRAM at Q8_0
 
 # Default model directory for non-Ollama model files (GGUF, MLX, etc.)
 models_dir: "${LOCALCOWORK_MODELS_DIR:-~/Projects/_models}"
@@ -96,6 +96,29 @@ models:
     temperature: 0.7
     max_tokens: 4096
     estimated_vram_gb: 14
+    capabilities:
+      - text
+      - tool_calling
+
+  # LFM2.5-8B-A1B: Sparse MoE reasoning model (default for LocalCowork as of 2026-05-21)
+  # Architecture: 8B total, 1B active per token, GRPO-trained for reasoning + tool use.
+  # Emits <think>...</think> reasoning blocks before bracket-format tool calls.
+  # Dev artifacts (private): https://huggingface.co/Paulescu/LFM2.5-8B-A1B-GGUF
+  # TODO: switch model_path repo to LiquidAI/LFM2.5-8B-A1B-GGUF at release cutover.
+  lfm25-8b-a1b:
+    display_name: "LFM2.5-8B-A1B-GGUF"
+    runtime: llama_cpp
+    model_path: "${LOCALCOWORK_MODELS_DIR:-~/Projects/_models}/LFM2.5-8B-A1B-Q8_0.gguf"
+    base_url: "http://localhost:8080/v1"
+    # TODO: source checkpoint is long-context-trained (rope5M, longctx_v4). Long-context wiring
+    # (context budget allocation, eviction strategy, llama-server --ctx-size bump) is deferred.
+    context_window: 32768
+    tool_call_format: bracket  # GRPO-trained: <think>...</think> + <|tool_call_start|>[server.tool(args)]<|tool_call_end|>
+    temperature: 0.3  # Per public LFM2-8B-A1B model card recommendation
+    # NOTE: no tool_temperature field; reasoning models emit reasoning + tool-call tokens in one
+    # generation, so ADR-008's per-turn dual-temperature pattern doesn't apply. Successor ADR deferred.
+    max_tokens: 8192  # Higher than default 4096 so <think> tokens + tool call don't truncate mid-bracket
+    estimated_vram_gb: 10  # Q8_0 weights ~8.5 GB + KV cache + overhead at 32k ctx
     capabilities:
       - text
       - tool_calling
@@ -380,9 +403,10 @@ runtimes:
 
 # Fallback chain — used when the active model is unavailable
 fallback_chain:
-  - lfm2-24b-a2b     # Primary — 78% single-step, 24% chain completion
-  - qwen3-30b-moe    # Fallback 1 — Ollama-hosted Qwen3 MoE
-  - static_response   # Fallback 2 — hardcoded "model unavailable" message
+  - lfm25-8b-a1b     # Primary — GRPO reasoning + tool calling, ~10 GB VRAM at Q8_0
+  - lfm2-24b-a2b     # Fallback 1 — proven 78% single-step, 24% chain completion
+  - qwen3-30b-moe    # Fallback 2 — Ollama-hosted Qwen3 MoE
+  - static_response   # Fallback 3 — hardcoded "model unavailable" message
 
 # Dual-model orchestrator (ADR-009)
 # When enabled, the planner model decomposes multi-step workflows and

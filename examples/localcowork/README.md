@@ -4,7 +4,7 @@
 
 **Tool-calling that actually feels instant on a laptop.**
 
-Building a local AI agent sounds great until you try to use one all day. The hard part isn't getting a model to understand you -- it's getting it to choose the right tool and do it fast enough that the experience feels interactive. This is where [LFM2-24B-A2B](https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF) shines: it's designed for tool dispatch on consumer hardware, where latency and memory aren't abstract constraints -- they decide whether your agent is a product or a demo.
+Building a local AI agent sounds great until you try to use one all day. The hard part isn't getting a model to understand you -- it's getting it to choose the right tool and do it fast enough that the experience feels interactive. This is where [LFM2.5-8B-A1B](https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF) shines: an 8B sparse-MoE model with 1B active parameters, GRPO-trained for reasoning and tool use, fitting comfortably on a 16 GB laptop. Its predecessor [LFM2-24B-A2B](https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF) remains available as a higher-VRAM alternative.
 
 LocalCowork is a desktop AI agent that runs entirely on-device. No cloud APIs, no data leaving your machine. The model calls pre-built tools via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP), and every tool execution is logged to a local audit trail.
 
@@ -120,13 +120,13 @@ Full study with 8 models, 150+ scenarios, and 12 failure modes: [`docs/model-ana
 git clone <repo-url> && cd localCoWork
 ./scripts/setup-dev.sh
 
-# 2. Download LFM2-24B-A2B (~14 GB)
-#    https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF
+# 2. Download LFM2.5-8B-A1B (~8.5 GB at Q8_0, fits on a 16 GB Mac)
+#    https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF
 pip install huggingface-hub
 python3 -c "
 from huggingface_hub import hf_hub_download
-hf_hub_download('LiquidAI/LFM2-24B-A2B-GGUF',
-                'LFM2-24B-A2B-Q4_K_M.gguf',
+hf_hub_download('LiquidAI/LFM2.5-8B-A1B-GGUF',
+                'LFM2.5-8B-A1B-Q8_0.gguf',
                 local_dir='$HOME/Projects/_models/')
 "
 
@@ -264,6 +264,7 @@ localCoWork/
 - **1-2 step workflows are reliable.** 4+ step chains degrade as conversation history grows -- multi-step completion is 26% across all tools. The curated 20-tool demo set is selected for proven chain participation.
 - **Batch operations process partial results** -- the model may handle 2 items from a set of 10. Iteration prompting is a known gap.
 - **Cross-server transitions are the universal barrier.** Every model tested fails at these. UX is designed around human confirmation to compensate.
+- **LFM2.5-8B-A1B is the new default; benchmarks above reflect its predecessor LFM2-24B-A2B.** A curated-tool-surface benchmark run on the 8B is pending. The 24B remains selectable via `_models/config.yaml` for users wanting the measured baseline.
 
 These limits are documented because they're instructive. See the [failure taxonomy](docs/model-analysis/) for all 12 failure modes with evidence.
 
