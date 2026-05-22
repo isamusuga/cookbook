@@ -103,8 +103,7 @@ models:
   # LFM2.5-8B-A1B: Sparse MoE reasoning model (default for LocalCowork as of 2026-05-21)
   # Architecture: 8B total, 1B active per token, GRPO-trained for reasoning + tool use.
   # Emits <think>...</think> reasoning blocks before bracket-format tool calls.
-  # Dev artifacts (private): https://huggingface.co/Paulescu/LFM2.5-8B-A1B-GGUF
-  # TODO: switch model_path repo to LiquidAI/LFM2.5-8B-A1B-GGUF at release cutover.
+  # Artifacts: https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF
   lfm25-8b-a1b:
     display_name: "LFM2.5-8B-A1B-GGUF"
     runtime: llama_cpp

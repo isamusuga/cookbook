@@ -40,8 +40,7 @@ LFM2.5-8B-A1B is the successor to the publicly released LFM2-8B-A1B. The 8B / 1B
 | Q8_0 | ~8.5 GB | Production default (cookbook target: 16 GB Mac) |
 | Q4_K_M | ~5 GB | Lightweight option for tighter VRAM budgets |
 
-- **Dev mirror (private, pre-release)**: [`Paulescu/LFM2.5-8B-A1B-GGUF`](https://huggingface.co/Paulescu/LFM2.5-8B-A1B-GGUF)
-- **Public release target**: `LiquidAI/LFM2.5-8B-A1B-GGUF`. The cookbook branch `localcowork-lfm2.5-8b-a1b` is non-mergeable to `main` until this public repo exists; the cutover diff is the repo string in `_models/config.yaml` and `README.md`.
+- **Public artifacts**: [`LiquidAI/LFM2.5-8B-A1B-GGUF`](https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF)
 - **F16 is intentionally not uploaded.** It is a conversion artifact only; only Q4_K_M and Q8_0 are pushed.
 
 `TODO`: record the `llama.cpp` commit hash used for the conversion run (filled in by issue 02 operator after the first successful run of `scripts/convert-8b-a1b.sh`).

@@ -52,8 +52,7 @@ resolve_model() {
             MAIN_MODEL="LFM2.5-8B-A1B-Q4_K_M.gguf"
             MAIN_PORT=8080
             MAIN_CTX=32768
-            # TODO: switch to LiquidAI/LFM2.5-8B-A1B-GGUF at release cutover.
-            MAIN_DOWNLOAD_REPO="Paulescu/LFM2.5-8B-A1B-GGUF"
+            MAIN_DOWNLOAD_REPO="LiquidAI/LFM2.5-8B-A1B-GGUF"
             MAIN_DISPLAY="LFM2.5-8B-A1B"
             ;;
         lfm2-24b-a2b)
