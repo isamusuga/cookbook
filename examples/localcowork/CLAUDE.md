@@ -323,3 +323,17 @@ PROGRESS.yaml                      # Persistent progress state (the "JIRA board"
 .claude/commands/session-end.md    # Slash command to checkpoint a session
 .git/hooks/pre-commit              # Guardrail: warns if PROGRESS.yaml not updated
 ```
+
+## Agent skills
+
+### Issue tracker
+
+Local markdown under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles recorded as `Status:` lines in each issue file, using the default strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. `CONTEXT.md` at the LocalCowork root; ADRs at `docs/architecture-decisions/` (not the default `docs/adr/`). See `docs/agents/domain.md`.

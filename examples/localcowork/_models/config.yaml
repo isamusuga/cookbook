@@ -108,7 +108,7 @@ models:
   lfm25-8b-a1b:
     display_name: "LFM2.5-8B-A1B-GGUF"
     runtime: llama_cpp
-    model_path: "${LOCALCOWORK_MODELS_DIR:-~/Projects/_models}/LFM2.5-8B-A1B-Q8_0.gguf"
+    model_path: "${LOCALCOWORK_MODELS_DIR:-~/Projects/_models}/LFM2.5-8B-A1B-Q4_K_M.gguf"
     base_url: "http://localhost:8080/v1"
     # TODO: source checkpoint is long-context-trained (rope5M, longctx_v4). Long-context wiring
     # (context budget allocation, eviction strategy, llama-server --ctx-size bump) is deferred.
@@ -118,7 +118,7 @@ models:
     # NOTE: no tool_temperature field; reasoning models emit reasoning + tool-call tokens in one
     # generation, so ADR-008's per-turn dual-temperature pattern doesn't apply. Successor ADR deferred.
     max_tokens: 8192  # Higher than default 4096 so <think> tokens + tool call don't truncate mid-bracket
-    estimated_vram_gb: 10  # Q8_0 weights ~8.5 GB + KV cache + overhead at 32k ctx
+    estimated_vram_gb: 7  # Q4_K_M weights ~5.2 GB + KV cache + overhead at 32k ctx
     capabilities:
       - text
       - tool_calling

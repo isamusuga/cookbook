@@ -49,7 +49,7 @@ sys.exit(1)
 resolve_model() {
     case "$1" in
         lfm25-8b-a1b)
-            MAIN_MODEL="LFM2.5-8B-A1B-Q8_0.gguf"
+            MAIN_MODEL="LFM2.5-8B-A1B-Q4_K_M.gguf"
             MAIN_PORT=8080
             MAIN_CTX=32768
             # TODO: switch to LiquidAI/LFM2.5-8B-A1B-GGUF at release cutover.
@@ -224,7 +224,7 @@ llama-server \
     --port "$MAIN_PORT" \
     --ctx-size "$MAIN_CTX" \
     --n-gpu-layers 99 \
-    --flash-attn &
+    --flash-attn on &
 
 MAIN_PID=$!
 echo "  PID: $MAIN_PID"

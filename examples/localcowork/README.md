@@ -120,13 +120,15 @@ Full study with 8 models, 150+ scenarios, and 12 failure modes: [`docs/model-ana
 git clone <repo-url> && cd localCoWork
 ./scripts/setup-dev.sh
 
-# 2. Download LFM2.5-8B-A1B (~8.5 GB at Q8_0, fits on a 16 GB Mac)
-#    https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF
+# 2. Download LFM2.5-8B-A1B (~5.2 GB at Q4_K_M, fits comfortably on a 16 GB Mac)
+#    Until the official LiquidAI release, use the staging repo:
+#    https://huggingface.co/Paulescu/LFM2.5-8B-A1B-GGUF
+#    (will move to LiquidAI/LFM2.5-8B-A1B-GGUF at release cutover)
 pip install huggingface-hub
 python3 -c "
 from huggingface_hub import hf_hub_download
-hf_hub_download('LiquidAI/LFM2.5-8B-A1B-GGUF',
-                'LFM2.5-8B-A1B-Q8_0.gguf',
+hf_hub_download('Paulescu/LFM2.5-8B-A1B-GGUF',
+                'LFM2.5-8B-A1B-Q4_K_M.gguf',
                 local_dir='$HOME/Projects/_models/')
 "
 
