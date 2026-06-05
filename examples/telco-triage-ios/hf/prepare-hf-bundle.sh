@@ -23,7 +23,6 @@ REQUIRED_MODELS=(
 REQUIRED_RESOURCES=(
   "rag-units-v1.json"
   "page-link-table-v1.json"
-  "knowledge-base.json"
 )
 
 if [[ ! -d "$MODELS_DIR" ]]; then

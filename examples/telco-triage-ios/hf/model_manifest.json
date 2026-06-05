@@ -25,10 +25,6 @@
     {
       "filename": "page-link-table-v1.json",
       "role": "Canonical source-chip and in-app destination links"
-    },
-    {
-      "filename": "knowledge-base.json",
-      "role": "Small sample KB retained for non-composer demo surfaces"
     }
   ],
   "online_qa_runtime": {
