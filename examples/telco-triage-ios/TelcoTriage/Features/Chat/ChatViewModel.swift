@@ -43,6 +43,12 @@ final class ChatViewModel: ObservableObject {
     /// understanding stack is bypassed unless this dispatcher is absent.
     let verizonDispatcher: VerizonChatDispatcher?
 
+    /// ADR-026 semantic control plane for normal Telco Triage turns:
+    /// one LFM2.5-350M shared-adapter pass over 9 classifier heads.
+    /// Nil only in degraded bundles or tests that do not need model
+    /// semantics.
+    let telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying?
+
     /// ADR-022 §4.3 Layer 1 — the unified understanding classifier.
     /// Always present (`UnavailableStrategy` covers degraded builds).
     /// Replaces the bare `chatModeRouter.classify(query:)` call that
@@ -90,6 +96,7 @@ final class ChatViewModel: ObservableObject {
     /// collapsed cards re-expand themselves after the user collapsed
     /// them. Keying by `ChatMessage.id` (UUID) survives recycling.
     @Published var expandedTraceMessageIDs: Set<UUID> = []
+    @Published var expandedTelcoUnderstandingMessageIDs: Set<UUID> = []
 
     func isTraceExpanded(messageID: UUID) -> Bool {
         // Default-expanded for the most recent assistant message,
@@ -107,6 +114,18 @@ final class ChatViewModel: ObservableObject {
             expandedTraceMessageIDs.remove(messageID)
         } else {
             expandedTraceMessageIDs.insert(messageID)
+        }
+    }
+
+    func isTelcoUnderstandingExpanded(messageID: UUID) -> Bool {
+        expandedTelcoUnderstandingMessageIDs.contains(messageID)
+    }
+
+    func setTelcoUnderstandingExpanded(messageID: UUID, isExpanded: Bool) {
+        if isExpanded {
+            expandedTelcoUnderstandingMessageIDs.insert(messageID)
+        } else {
+            expandedTelcoUnderstandingMessageIDs.remove(messageID)
         }
     }
 
@@ -131,6 +150,7 @@ final class ChatViewModel: ObservableObject {
         toolSelector: ToolSelector,
         toolExecutor: ToolExecutor,
         verizonDispatcher: VerizonChatDispatcher? = nil,
+        telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying? = nil,
         understandingClassifier: QueryUnderstandingClassifying? = nil,
         relationalStrategy: RelationalHeadsStrategy? = nil,
         conversationState: ConversationState? = nil,
@@ -152,6 +172,7 @@ final class ChatViewModel: ObservableObject {
         self.toolSelector = toolSelector
         self.toolExecutor = toolExecutor
         self.verizonDispatcher = verizonDispatcher
+        self.telcoUnderstandingClassifier = telcoUnderstandingClassifier
         // ADR-022 §4.3 — fall back to a composite classifier wrapping
         // the caller-supplied chatModeRouter when the host doesn't
         // pre-build one (tests, integration harnesses). The composite
@@ -223,6 +244,9 @@ final class ChatViewModel: ObservableObject {
 
     func clear() {
         messages.removeAll()
+        expandedTraceMessageIDs.removeAll()
+        expandedTelcoUnderstandingMessageIDs.removeAll()
+        conversationState.reset()
         seedWelcomeMessage()
     }
 
@@ -308,39 +332,26 @@ final class ChatViewModel: ObservableObject {
         // whole flow.
         if let pendingConfirmation = conversationState.pendingToolConfirmation,
            ConversationStateRecorder.isBareAffirmative(query) {
+            guard let tool = toolRegistry.tool(id: pendingConfirmation.toolID) else {
+                AppLog.intelligence.error(
+                    "pending-tool-confirmation missing registered tool: \(pendingConfirmation.toolID, privacy: .public)"
+                )
+                conversationState.clearPendingToolConfirmation()
+                appendInferenceFailure(
+                    error: ToolError.notFound(pendingConfirmation.toolID),
+                    mode: .toolAction,
+                    containsPII: containsPII
+                )
+                return
+            }
             AppLog.intelligence.info(
                 "pending-tool-confirmation recovered: \(pendingConfirmation.toolID, privacy: .public)"
             )
             conversationState.clearPendingToolConfirmation()
-            // Replay the original tool decision through runToolProposal —
-            // the user's "yes" becomes the equivalent of tapping Confirm
-            // on the previously-rendered card.
-            await runToolProposal(
-                query: query,
-                modePrediction: ChatModePrediction(
-                    mode: .toolAction,
-                    confidence: 0.95,
-                    reasoning: "pending-tool-confirmation: bare affirmative",
-                    runtimeMS: 0
-                ),
-                extraction: extraction,
-                containsPII: containsPII,
-                preselectedToolSelection: ToolSelection(
-                    intent: pendingConfirmation.intent,
-                    confidence: pendingConfirmation.confidence,
-                    arguments: ToolArguments(
-                        Dictionary(uniqueKeysWithValues: pendingConfirmation.arguments.map { ($0.label, $0.value) })
-                    ),
-                    reasoning: pendingConfirmation.reasoning ?? "recovered from pending confirmation",
-                    runtimeMS: 0
-                ),
-                understanding: nil
-            )
-            // Record this turn so frustration counters update.
-            conversationState.recordTurn(
-                userMessage: query,
-                assistantLane: .toolAction,
-                toolDecision: nil
+            await executeConfirmedTool(
+                tool: tool,
+                decision: pendingConfirmation,
+                triggerQuery: query
             )
             return
         }
@@ -416,16 +427,14 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
-        // Step 6 runtime split — normal Liquid Telco support turns now
-        // enter the composer dispatcher directly. The dispatcher owns the
-        // deep module boundary for retrieval evidence, route policy, and
-        // deterministic composition. This path intentionally bypasses
+        // ADR-026 runtime split — normal Liquid Telco support turns run
+        // exactly one Liquid model pass for semantic understanding, then
+        // enter the composer dispatcher. This path intentionally bypasses
         // QueryUnderstandingClassifier, chat-mode-router, Stage A LoRAs,
-        // and relational LoRA. Those remain available only through the
-        // legacy dispatch path below when the composer dispatcher is not
-        // wired.
+        // relational LoRA, and Stage B.
         if let dispatcher = verizonDispatcher {
-            AppLog.intelligence.info("composer runtime path: bypassing composite understanding")
+            let (telcoUnderstanding, telcoUnderstandingMS) = await classifyTelcoTurn(query)
+            AppLog.intelligence.info("composer runtime path: telco shared understanding + deterministic composer")
             lastUnderstanding = nil
             routingStage = .searching
             await runVerizonDispatch(
@@ -433,13 +442,15 @@ final class ChatViewModel: ObservableObject {
                 modePrediction: ChatModePrediction(
                     mode: .kbQuestion,
                     confidence: 1.0,
-                    reasoning: "composer runtime: explicit state + retrieval evidence",
-                    runtimeMS: 0
+                    reasoning: "telco-shared-clf-v1 control plane",
+                    runtimeMS: telcoUnderstandingMS
                 ),
                 extraction: extraction,
                 containsPII: containsPII,
                 dispatcher: dispatcher,
                 understanding: nil,
+                telcoUnderstanding: telcoUnderstanding,
+                preDispatchMS: telcoUnderstandingMS,
                 retrievalContext: composerRetrievalContext(),
                 composerOnly: true
             )
@@ -600,6 +611,15 @@ final class ChatViewModel: ObservableObject {
             // can't run — fall back to the legacy KB grounded-QA path.
             guard let dispatcher = verizonDispatcher,
                   let stageA = Self.stageADecisionFrom(understanding) else {
+                if verizonLane == .oosRefusal {
+                    await runOutOfScope(
+                        query: query,
+                        modePrediction: modePrediction,
+                        extraction: extraction,
+                        understanding: enrichedUnderstanding
+                    )
+                    return
+                }
                 routingStage = .searching
                 let retrievalStart = Date()
                 let citation = await kbExtractor.extract(query: query, kb: kb.entries)
@@ -677,10 +697,28 @@ final class ChatViewModel: ObservableObject {
     }
 
     private func composerRetrievalContext() -> RetrievalContext {
-        RetrievalContext(
-            priorAssistantText: conversationState.priorAssistantText,
+        let priorText = conversationState.priorAssistantText?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let priorText, !priorText.isEmpty else {
+            return .empty
+        }
+        return RetrievalContext(
+            priorAssistantText: priorText,
             priorPageID: conversationState.priorPageID,
             priorLinkID: conversationState.priorLinkID
+        )
+    }
+
+    private func dialogueRepairState() -> DialogueRepairConversationState {
+        let priorText = conversationState.priorAssistantText?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasPriorAssistant = priorText.map { !$0.isEmpty } ?? false
+        return DialogueRepairConversationState(
+            priorPageID: hasPriorAssistant ? conversationState.priorPageID : nil,
+            priorLinkID: hasPriorAssistant ? conversationState.priorLinkID : nil,
+            pendingTool: conversationState.pendingToolConfirmation?.toolID,
+            frustrationCount: conversationState.didntWorkCount,
+            pendingConfirmation: conversationState.pendingToolConfirmation != nil
         )
     }
 
@@ -722,6 +760,20 @@ final class ChatViewModel: ObservableObject {
         )
     }
 
+    private func classifyTelcoTurn(_ query: String) async -> (TelcoSharedUnderstanding?, Int) {
+        guard let telcoUnderstandingClassifier else {
+            AppLog.intelligence.warning("telco shared understanding unavailable; composer will use retrieval evidence only")
+            return (nil, 0)
+        }
+        do {
+            let understanding = try await telcoUnderstandingClassifier.classify(query: query)
+            return (understanding, Int(understanding.totalMs.rounded()))
+        } catch {
+            AppLog.intelligence.error("telco shared understanding failed: \(error.localizedDescription, privacy: .public)")
+            return (nil, 0)
+        }
+    }
+
     /// Verizon RAG dispatch — Stage A (probe-validated heads) →
     /// VerizonRagRouter → branches (Stage B for ragStepByStep, templates
     /// for the refusal / nav / live-agent lanes, KeywordKBExtractor for
@@ -738,6 +790,8 @@ final class ChatViewModel: ObservableObject {
         containsPII: Bool,
         dispatcher: VerizonChatDispatcher,
         understanding: QueryUnderstanding? = nil,
+        telcoUnderstanding: TelcoSharedUnderstanding? = nil,
+        preDispatchMS: Int = 0,
         prebuiltStageA: VerizonStageADecision? = nil,
         prebuiltLane: VerizonLane? = nil,
         retrievalContext: RetrievalContext = .empty,
@@ -764,7 +818,9 @@ final class ChatViewModel: ObservableObject {
             if composerOnly {
                 return dispatcher.dispatchComposer(
                     query: query,
-                    retrievalContext: retrievalContext
+                    retrievalContext: retrievalContext,
+                    telcoUnderstanding: telcoUnderstanding,
+                    dialogueState: dialogueRepairState()
                 )
             } else if let prebuiltStageA, let prebuiltLane {
                 return dispatcher.dispatch(
@@ -818,7 +874,8 @@ final class ChatViewModel: ObservableObject {
 
         if let finalResult {
             lastVerizonResult = finalResult
-            let totalWallMS = Int((finalResult.totalMs > 0 ? finalResult.totalMs : Double(dispatchLatencyMS)).rounded())
+            let dispatchWallMS = finalResult.totalMs > 0 ? finalResult.totalMs : Double(dispatchLatencyMS)
+            let totalWallMS = Int((dispatchWallMS + Double(preDispatchMS)).rounded())
             let retrievalMS = finalResult.retrievalMs.map { Int($0.rounded()) }
             let routePolicyMS = finalResult.routePolicyMs.map { Int($0.rounded()) }
             let composerMS = finalResult.composerMs.map { Int($0.rounded()) }
@@ -871,6 +928,8 @@ final class ChatViewModel: ObservableObject {
                     chatModeRuntimeMS: modePrediction.runtimeMS,
                     extraction: extraction,
                     understanding: understanding,
+                    telcoUnderstanding: telcoUnderstanding,
+                    telcoUnderstandingMS: preDispatchMS > 0 ? preDispatchMS : nil,
                     routePolicyMS: routePolicyMS,
                     composerMS: composerMS,
                     totalWallMS: totalWallMS,
@@ -884,6 +943,13 @@ final class ChatViewModel: ObservableObject {
                     composerConfirmationShown: finalResult.requiresConfirmation
                 )
             )
+            let composerToolDecision = composerExecutableToolDecision(
+                from: finalResult,
+                extraction: extraction
+            )
+            if finalResult.composerRoute == .toolAction {
+                message.toolDecision = composerToolDecision
+            }
             // Compound RAG + tool — attach a "Want me to do this?" card
             // when the Verizon lane carries content (RAG/unknown/clarification)
             // and the user's query is an unambiguous imperative.
@@ -906,6 +972,7 @@ final class ChatViewModel: ObservableObject {
                 query: query,
                 lane: resolvedLane,
                 toolDecision: message.toolDecision,
+                pendingToolConfirmation: composerToolDecision,
                 pendingIntent: nil,
                 missingSlots: [],
                 assistantText: message.text,
@@ -1674,6 +1741,7 @@ final class ChatViewModel: ObservableObject {
         query: String,
         lane: UnderstandingLane,
         toolDecision: ToolDecision?,
+        pendingToolConfirmation: ToolDecision? = nil,
         pendingIntent: ToolIntent?,
         missingSlots: Set<Slot>,
         assistantText: String? = nil,
@@ -1684,6 +1752,7 @@ final class ChatViewModel: ObservableObject {
             userMessage: query,
             assistantLane: lane,
             toolDecision: toolDecision,
+            pendingToolConfirmation: pendingToolConfirmation,
             missingSlots: missingSlots,
             pendingIntent: pendingIntent,
             originalQuery: query
@@ -1702,7 +1771,7 @@ final class ChatViewModel: ObservableObject {
         // single-turn for non-action lanes.
         conversationState.recordPriorTurnContext(
             lane: lane,
-            intent: toolDecision?.intent ?? pendingIntent
+            intent: toolDecision?.intent ?? pendingToolConfirmation?.intent ?? pendingIntent
         )
 
         // ADR-024 §4.5 — hidden-state cache for the NEXT turn's
@@ -1764,42 +1833,7 @@ final class ChatViewModel: ObservableObject {
         Task { @MainActor in
             isProcessing = true
             defer { isProcessing = false }
-            do {
-                let outcome = try await toolExecutor.execute(tool: tool, decision: decision)
-                tokenLedger.recordOnDevice(
-                    inputTokens: outcome.inputTokens,
-                    outputTokens: outcome.outputTokens
-                )
-                let total = outcome.toolLatencyMS + outcome.summaryLatencyMS
-                let message = ChatMessage(
-                    role: .assistant,
-                    text: outcome.assistantText,
-                    routing: RoutingSummary(
-                        path: .toolCall,
-                        toolIntent: tool.intent,
-                        containsPII: false
-                    ),
-                    deepLinks: tool.deepLink.map { [$0] } ?? [],
-                    latencyMS: total,
-                    trace: CallTrace(
-                        surface: .tool,
-                        inferenceMS: total,
-                        inputTokens: outcome.inputTokens,
-                        outputTokens: outcome.outputTokens
-                    )
-                )
-                messages.append(message)
-                sessionStats.recordLatency(total)
-                sessionStats.recordToolExecution(
-                    toolID: tool.id,
-                    status: outcome.toolResult.status
-                )
-            } catch {
-                // Tool execution failed — the original mode was
-                // .toolAction; pass it through so the trace row is
-                // accurate.
-                appendInferenceFailure(error: error, mode: .toolAction, containsPII: false)
-            }
+            await executeConfirmedTool(tool: tool, decision: decision, triggerQuery: nil)
         }
     }
 
@@ -1809,6 +1843,70 @@ final class ChatViewModel: ObservableObject {
         // ADR-023 Phase 2 — user dismissed the proposal; clear pending
         // so a follow-up "yes" doesn't resurrect it.
         conversationState.clearPendingToolConfirmation()
+    }
+
+    /// Execute a confirmed tool decision. This is the single side-effect
+    /// path for both confirmation surfaces:
+    ///   - tapping Confirm on the customer sheet / engineering card
+    ///   - typing a bare affirmative while `ConversationState` has a
+    ///     pending tool confirmation
+    ///
+    /// Keeping these together prevents the UI from showing an actionable
+    /// promise that is not backed by the same execution logic.
+    private func executeConfirmedTool(
+        tool: Tool,
+        decision: ToolDecision,
+        triggerQuery: String?
+    ) async {
+        do {
+            let outcome = try await toolExecutor.execute(tool: tool, decision: decision)
+            tokenLedger.recordOnDevice(
+                inputTokens: outcome.inputTokens,
+                outputTokens: outcome.outputTokens
+            )
+            let total = outcome.toolLatencyMS + outcome.summaryLatencyMS
+            let message = ChatMessage(
+                role: .assistant,
+                text: outcome.assistantText,
+                routing: RoutingSummary(
+                    path: .toolCall,
+                    toolIntent: tool.intent,
+                    containsPII: false
+                ),
+                deepLinks: tool.deepLink.map { [$0] } ?? [],
+                latencyMS: total,
+                trace: CallTrace(
+                    surface: .tool,
+                    inferenceMS: total,
+                    inputTokens: outcome.inputTokens,
+                    outputTokens: outcome.outputTokens
+                )
+            )
+            messages.append(message)
+            sessionStats.recordLatency(total)
+            sessionStats.recordToolExecution(
+                toolID: tool.id,
+                status: outcome.toolResult.status
+            )
+
+            if let triggerQuery {
+                let supportContext = Self.supportPageContext(for: tool.intent)
+                recordTurnSideEffects(
+                    query: triggerQuery,
+                    lane: .toolAction,
+                    toolDecision: nil,
+                    pendingIntent: nil,
+                    missingSlots: [],
+                    assistantText: message.text,
+                    citedPageID: supportContext?.pageID,
+                    citedLinkID: supportContext?.linkID
+                )
+            }
+        } catch {
+            // Tool execution failed — the original mode was .toolAction;
+            // pass it through so the trace row is accurate.
+            appendInferenceFailure(error: error, mode: .toolAction, containsPII: false)
+        }
     }
 
     // MARK: - NBA
@@ -1837,6 +1935,36 @@ final class ChatViewModel: ObservableObject {
                     .capitalized
                 return ToolDecisionArgument(label: label, value: value)
             }
+    }
+
+    /// Convert the composer control-plane's typed executable intent into
+    /// the shared `ToolDecision` envelope. This is the bridge between
+    /// RAG answer rendering and the action state machine: the dispatcher
+    /// decides "this selected unit maps to this registered tool"; the
+    /// view model formats arguments and lets `ConversationState` persist
+    /// the pending confirmation.
+    private func composerExecutableToolDecision(
+        from result: VerizonDispatchResult,
+        extraction: ExtractionResult
+    ) -> ToolDecision? {
+        guard let intent = result.executableToolIntent,
+              let tool = toolRegistry.tool(for: intent) else {
+            return nil
+        }
+        let arguments = imperativeArguments(intent: intent, extraction: extraction)
+        return ToolDecision(
+            intent: intent,
+            toolID: tool.id,
+            displayName: tool.displayName,
+            icon: tool.icon,
+            description: tool.description,
+            arguments: Self.formatArguments(arguments),
+            confidence: result.requiresConfirmation == true ? 0.99 : 0.95,
+            reasoning: tool.description,
+            requiresConfirmation: tool.requiresConfirmation,
+            isDestructive: tool.isDestructive,
+            isCompoundAttachment: false
+        )
     }
 
     /// ADR-022 compound-response review (2026-05-26) — when the primary
@@ -1942,9 +2070,9 @@ final class ChatViewModel: ObservableObject {
             case .firePendingTool(let tool):
                 // The user said "yes/ok/go ahead" on a pending tool.
                 // Equivalent to tapping the Confirm button on the
-                // previously-rendered card. Route through runToolProposal
-                // so the trace + framing are consistent with a fresh
-                // tool action.
+                // previously-rendered card. Execute the pending decision
+                // directly; re-proposing here would acknowledge the
+                // confirmation without performing the requested action.
                 //
                 // **Short-circuit (CRITICAL fix 2026-05-27)**: this
                 // action terminates the dispatch — we return `true`
@@ -1958,26 +2086,18 @@ final class ChatViewModel: ObservableObject {
                 )
                 conversationState.clearPendingToolConfirmation()
                 conversationState.clearPendingClarification()
-                await runToolProposal(
-                    query: query,
-                    modePrediction: ChatModePrediction(
+                guard let executable = toolRegistry.tool(id: tool.toolID) else {
+                    appendInferenceFailure(
+                        error: ToolError.notFound(tool.toolID),
                         mode: .toolAction,
-                        confidence: 0.95,
-                        reasoning: "AFFIRMATIVE_CONTINUATION on pending tool",
-                        runtimeMS: 0
-                    ),
-                    extraction: extraction,
-                    containsPII: containsPII,
-                    preselectedToolSelection: ToolSelection(
-                        intent: tool.intent,
-                        confidence: tool.confidence,
-                        arguments: ToolArguments(
-                            Dictionary(uniqueKeysWithValues: tool.arguments.map { ($0.label, $0.value) })
-                        ),
-                        reasoning: tool.reasoning ?? "Recovered from pending confirmation.",
-                        runtimeMS: 0
-                    ),
-                    understanding: understanding
+                        containsPII: containsPII
+                    )
+                    return .shortCircuit
+                }
+                await executeConfirmedTool(
+                    tool: executable,
+                    decision: tool,
+                    triggerQuery: query
                 )
                 return .shortCircuit
 
@@ -2045,17 +2165,15 @@ final class ChatViewModel: ObservableObject {
                 // becomes a clean no-op in those cases (no spurious
                 // augmentation with an empty string).
                 //
-                // Step 5b Pre-flight Fix C iOS wiring: also thread the
-                // prior turn's cited `pageID` / `linkID` so the
-                // dispatcher's short-followup override can force-reuse
-                // it when the new query is a bare wh-word / anaphoric
-                // pronoun / slot-prefix fragment. All three signals
-                // ride on the same `RetrievalContext` value.
+                // Step 5b Pre-flight Fix C iOS wiring: thread the prior
+                // assistant text plus its cited `pageID` / `linkID` as a
+                // single coherent turn. Page/link hints are never sent
+                // without the visible assistant turn they describe.
                 let priorText = conversationState.priorAssistantText
                 let priorPageID = conversationState.priorPageID
                 let priorLinkID = conversationState.priorLinkID
                 let hasText = priorText.map { !$0.isEmpty } ?? false
-                if hasText || priorPageID != nil {
+                if hasText {
                     retrievalContext = RetrievalContext(
                         priorAssistantText: hasText ? priorText : nil,
                         priorPageID: priorPageID,
@@ -2066,7 +2184,7 @@ final class ChatViewModel: ObservableObject {
                     )
                 } else {
                     AppLog.intelligence.info(
-                        "post-decision: retrieval augment requested but no prior assistant text or page — no-op"
+                        "post-decision: retrieval augment requested but no prior assistant text — no-op"
                     )
                 }
 

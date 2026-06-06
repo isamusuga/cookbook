@@ -26,6 +26,7 @@ public enum VerizonDispatchEvent: Sendable, Equatable {
 public struct VerizonDispatchResult: Sendable, Equatable {
     public enum Source: String, Sendable, Equatable {
         case composer  // Step 6 — deterministic composer on top of lexical retrieval
+        case dialogueRepair  // V4 response-only verbalizer over composer evidence/policy
         case stageB    // Legacy Stage B path (disabled on v1 per Step 5 decision)
         case kbFallback
         case template
@@ -90,6 +91,12 @@ public struct VerizonDispatchResult: Sendable, Equatable {
     /// #3 in the Step 6 plan — no confirmation theatre).
     public let requiresConfirmation: Bool?
 
+    /// Registered local tool behind this answer, when one exists.
+    /// The UI/state layer uses this typed value to create pending
+    /// confirmation state. It must never infer executable behavior
+    /// from rendered text such as "Reply yes".
+    public let executableToolIntent: ToolIntent?
+
     /// The canonical RAG unit the composer rendered from. Drives the
     /// citation chip on the composer path the same way `retrievedChunk`
     /// drove it on the legacy ColBERT path.
@@ -108,6 +115,7 @@ public struct VerizonDispatchResult: Sendable, Equatable {
         composerMs: Double? = nil,
         composerRoute: ComposerRoute? = nil,
         requiresConfirmation: Bool? = nil,
+        executableToolIntent: ToolIntent? = nil,
         citedRAGUnit: RAGUnit? = nil
     ) {
         self.text = text
@@ -122,6 +130,7 @@ public struct VerizonDispatchResult: Sendable, Equatable {
         self.composerMs = composerMs
         self.composerRoute = composerRoute
         self.requiresConfirmation = requiresConfirmation
+        self.executableToolIntent = executableToolIntent
         self.citedRAGUnit = citedRAGUnit
     }
 }
@@ -167,6 +176,7 @@ public actor VerizonChatDispatcher {
     private let lexicalRetriever: BM25HierarchyRetriever?
     private let toolRegistry: ToolRegistry?
     private let toolAliasMap: ToolAliasMap?
+    private let dialogueRepairVerbalizer: DialogueRepairVerbalizing?
     private let logger = Logger(
         subsystem: "ai.liquid.demos.telcotriage",
         category: "VerizonDispatcher"
@@ -183,7 +193,8 @@ public actor VerizonChatDispatcher {
         corpus: RAGUnitCorpus? = nil,
         lexicalRetriever: BM25HierarchyRetriever? = nil,
         toolRegistry: ToolRegistry? = nil,
-        toolAliasMap: ToolAliasMap? = nil
+        toolAliasMap: ToolAliasMap? = nil,
+        dialogueRepairVerbalizer: DialogueRepairVerbalizing? = nil
     ) {
         self.stageA = stageA
         self.stageB = stageB
@@ -196,6 +207,7 @@ public actor VerizonChatDispatcher {
         self.lexicalRetriever = lexicalRetriever
         self.toolRegistry = toolRegistry
         self.toolAliasMap = toolAliasMap
+        self.dialogueRepairVerbalizer = dialogueRepairVerbalizer
     }
 
     /// True when all Step 6 composer-path dependencies are present.
@@ -211,13 +223,17 @@ public actor VerizonChatDispatcher {
     /// Stage B, ColBERT, or KeywordKBExtractor.
     public nonisolated func dispatchComposer(
         query: String,
-        retrievalContext: RetrievalContext = .empty
+        retrievalContext: RetrievalContext = .empty,
+        telcoUnderstanding: TelcoSharedUnderstanding? = nil,
+        dialogueState: DialogueRepairConversationState = .empty
     ) -> AsyncStream<VerizonDispatchEvent> {
         AsyncStream { continuation in
             Task {
                 await self.runComposerOnly(
                     query: query,
                     retrievalContext: retrievalContext,
+                    telcoUnderstanding: telcoUnderstanding,
+                    dialogueState: dialogueState,
                     continuation: continuation
                 )
             }
@@ -344,11 +360,13 @@ public actor VerizonChatDispatcher {
     private func runComposerOnly(
         query: String,
         retrievalContext: RetrievalContext,
+        telcoUnderstanding: TelcoSharedUnderstanding?,
+        dialogueState: DialogueRepairConversationState,
         continuation: AsyncStream<VerizonDispatchEvent>.Continuation
-    ) {
+    ) async {
         let t0 = CFAbsoluteTimeGetCurrent()
 
-        if let policy = deriveComposerPolicyRoute(query: query) {
+        if let policy = deriveComposerPolicyRoute(query: query, understanding: telcoUnderstanding) {
             let result = composeTemplateResponse(
                 route: policy.route,
                 query: query,
@@ -363,10 +381,12 @@ public actor VerizonChatDispatcher {
             return
         }
 
-        let result = handleRagStepByStepComposer(
+        let result = await handleRagStepByStepComposer(
             query: query,
             lane: .ragStepByStep,
             retrievalContext: retrievalContext,
+            telcoUnderstanding: telcoUnderstanding,
+            dialogueState: dialogueState,
             continuation: continuation,
             t0: t0
         )
@@ -387,10 +407,49 @@ public actor VerizonChatDispatcher {
     /// intent-exact control states, not knowledge-base questions. All
     /// support Q&A, action/question separation, and no-answer handling
     /// stays downstream in retrieval evidence + `deriveComposerRoute`.
-    private func deriveComposerPolicyRoute(query: String) -> ComposerPolicyRoute? {
+    private func deriveComposerPolicyRoute(
+        query: String,
+        understanding: TelcoSharedUnderstanding?
+    ) -> ComposerPolicyRoute? {
         let normalized = query
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
+
+        if understanding?.isBlocked == true {
+            return ComposerPolicyRoute(
+                route: .outOfScope,
+                lane: .oosRefusal,
+                legacyText: "I'm here to help with home internet support. I can't process sensitive identity or payment details in this demo.",
+                legacyDeepLink: nil
+            )
+        }
+
+        if understanding?.needsClarification == true {
+            return ComposerPolicyRoute(
+                route: .clarify,
+                lane: .clarification,
+                legacyText: "Could you clarify what you're asking about?",
+                legacyDeepLink: nil
+            )
+        }
+
+        if understanding?.requiresHumanHandoff == true {
+            return ComposerPolicyRoute(
+                route: .liveAgent,
+                lane: .liveAgentEscalation,
+                legacyText: "Connecting you to a support agent. Estimated wait: a few minutes.",
+                legacyDeepLink: VerizonLinkResolver.levelOneFallback(for: .liveAgent)
+            )
+        }
+
+        if understanding?.requiresCloudAssist == true {
+            return ComposerPolicyRoute(
+                route: .accountNav,
+                lane: .navOnlyDeeplink,
+                legacyText: "This needs live account or network data. Open the app account area to continue.",
+                legacyDeepLink: VerizonLinkResolver.levelOneFallback(for: .accountOOS)
+            )
+        }
 
         if ConversationStateRecorder.isLiveAgentRequest(query) {
             return ComposerPolicyRoute(
@@ -572,6 +631,7 @@ public actor VerizonChatDispatcher {
                 composerMs: composerMs,
                 composerRoute: route,
                 requiresConfirmation: false,
+                executableToolIntent: nil,
                 citedRAGUnit: nil
             )
         }
@@ -612,10 +672,11 @@ public actor VerizonChatDispatcher {
         t0: CFAbsoluteTime
     ) async -> VerizonDispatchResult {
         if composerPathEnabled {
-            return handleRagStepByStepComposer(
+            return await handleRagStepByStepComposer(
                 query: query,
                 lane: lane,
                 retrievalContext: retrievalContext,
+                dialogueState: .empty,
                 continuation: continuation,
                 t0: t0
             )
@@ -780,9 +841,11 @@ public actor VerizonChatDispatcher {
         query: String,
         lane: VerizonLane,
         retrievalContext: RetrievalContext,
+        telcoUnderstanding: TelcoSharedUnderstanding? = nil,
+        dialogueState: DialogueRepairConversationState = .empty,
         continuation: AsyncStream<VerizonDispatchEvent>.Continuation,
         t0: CFAbsoluteTime
-    ) -> VerizonDispatchResult {
+    ) async -> VerizonDispatchResult {
         guard
             let composer = composer,
             let corpus = corpus,
@@ -804,6 +867,7 @@ public actor VerizonChatDispatcher {
                 composerMs: 0,
                 composerRoute: .noRagAnswer,
                 requiresConfirmation: false,
+                executableToolIntent: nil,
                 citedRAGUnit: nil
             )
         }
@@ -830,9 +894,10 @@ public actor VerizonChatDispatcher {
 
         // ---- Route derivation (ToolRegistry + alias-map gated) ----
         let routePolicyStart = CFAbsoluteTimeGetCurrent()
-        let (route, requiresConfirmation) = deriveComposerRoute(
+        let routeDecision = deriveComposerRoute(
             query: query,
             evidence: topUnit,
+            understanding: telcoUnderstanding,
             toolRegistry: toolRegistry,
             aliasMap: toolAliasMap
         )
@@ -842,34 +907,81 @@ public actor VerizonChatDispatcher {
         let composerStart = CFAbsoluteTimeGetCurrent()
         let answer = composer.compose(
             query: query,
-            route: route,
+            route: routeDecision.route,
             evidence: topUnit,
-            requiresConfirmation: requiresConfirmation,
+            requiresConfirmation: routeDecision.requiresConfirmation,
             history: history,
             expectedPolicyLinkID: nil
         )
         let composerMs = elapsed(composerStart)
 
+        var finalText = answer.text
+        var finalSource: VerizonDispatchResult.Source = .composer
+        var finalComposerMs = composerMs
+        if let dialogueRepairVerbalizer,
+           let act = DialogueRepairActDeriver.derive(
+                query: query,
+                route: routeDecision.route,
+                evidence: topUnit,
+                retrievalContext: retrievalContext,
+                understanding: telcoUnderstanding
+           ),
+           Self.shouldUseDialogueRepairVerbalizer(
+                act: act,
+                route: routeDecision.route,
+                retrievalContext: retrievalContext,
+                dialogueState: dialogueState
+           ) {
+            let verbalizerInput = DialogueRepairVerbalizerInput(
+                currentUserTurn: query,
+                priorAssistantText: retrievalContext.priorAssistantText,
+                conversationState: dialogueState,
+                understanding: telcoUnderstanding,
+                evidence: topUnit,
+                route: routeDecision.route,
+                act: act,
+                handoff: DialogueRepairActDeriver.handoff(for: routeDecision.route),
+                requiresConfirmation: routeDecision.requiresConfirmation ?? false
+            )
+            let verbalized = await dialogueRepairVerbalizer.verbalize(verbalizerInput)
+            finalText = Self.withRuntimeOwnedConfirmation(
+                verbalized.text,
+                requiresConfirmation: routeDecision.requiresConfirmation
+            )
+            finalSource = .dialogueRepair
+            finalComposerMs += verbalized.latencyMs
+            logger.info(
+                "dialogue_repair_v4_used act=\(act.rawValue, privacy: .public) fallback=\(verbalized.usedFallback, privacy: .public) extraction=\(verbalized.extractionMode, privacy: .public)"
+            )
+        }
+
         logger.info(
-            "composer route=\(route.wireName, privacy: .public) pid=\(topUnit?.pageID ?? "<none>", privacy: .public) link=\(topUnit?.linkID ?? "<none>", privacy: .public) confirm=\(requiresConfirmation ?? false, privacy: .public) fallback=\(answer.usedFallback, privacy: .public)"
+            "composer route=\(routeDecision.route.wireName, privacy: .public) pid=\(topUnit?.pageID ?? "<none>", privacy: .public) link=\(topUnit?.linkID ?? "<none>", privacy: .public) confirm=\(routeDecision.requiresConfirmation ?? false, privacy: .public) tool=\(routeDecision.executableToolIntent?.toolID ?? "<none>", privacy: .public) fallback=\(answer.usedFallback, privacy: .public) source=\(finalSource.rawValue, privacy: .public)"
         )
 
         let deepLink = answer.renderedLinks.first
         return VerizonDispatchResult(
-            text: answer.text,
+            text: finalText,
             lane: lane,
-            source: .composer,
+            source: finalSource,
             deepLink: deepLink,
             retrievedChunk: nil,
             kbEntry: nil,
             totalMs: elapsed(t0),
             retrievalMs: retrievalMs,
             routePolicyMs: routePolicyMs,
-            composerMs: composerMs,
-            composerRoute: route,
-            requiresConfirmation: requiresConfirmation,
+            composerMs: finalComposerMs,
+            composerRoute: routeDecision.route,
+            requiresConfirmation: routeDecision.requiresConfirmation,
+            executableToolIntent: routeDecision.executableToolIntent,
             citedRAGUnit: topUnit
         )
+    }
+
+    private struct ComposerRouteDecision: Sendable, Equatable {
+        let route: ComposerRoute
+        let requiresConfirmation: Bool?
+        let executableToolIntent: ToolIntent?
     }
 
     /// Step 5b Pre-flight Fix A wiring. Source of truth for the
@@ -901,21 +1013,30 @@ public actor VerizonChatDispatcher {
     private func deriveComposerRoute(
         query: String,
         evidence: RAGUnit?,
+        understanding: TelcoSharedUnderstanding?,
         toolRegistry: ToolRegistry,
         aliasMap: ToolAliasMap?
-    ) -> (ComposerRoute, Bool?) {
+    ) -> ComposerRouteDecision {
         guard let unit = evidence else {
             // Retrieval returned nothing — composer's no_rag_answer
             // path. Per guardrail #2, KeywordKBExtractor is NOT
             // consulted here.
-            return (.noRagAnswer, nil)
+            return ComposerRouteDecision(
+                route: .noRagAnswer,
+                requiresConfirmation: nil,
+                executableToolIntent: nil
+            )
         }
         // Affordance gate: view/navigate pages never produce a tool
         // offer. Keeps view-only landings on rag_answer even when their
         // link_id aliases to a registered tool.
         if let affordance = unit.actionAffordance,
            affordance == "view" || affordance == "navigate" {
-            return (.ragAnswer, false)
+            return ComposerRouteDecision(
+                route: .ragAnswer,
+                requiresConfirmation: false,
+                executableToolIntent: nil
+            )
         }
         // Resolve through the alias map first, then look the tool up
         // by its canonical tool_id. Fall back to the legacy direct-match
@@ -934,7 +1055,27 @@ public actor VerizonChatDispatcher {
         }
         guard let resolvedTool = tool,
               let resolvedIntent = ToolIntent(toolID: resolvedTool.id) else {
-            return (.ragAnswer, false)
+            return ComposerRouteDecision(
+                route: .ragAnswer,
+                requiresConfirmation: false,
+                executableToolIntent: nil
+            )
+        }
+
+        if understanding?.routingLane.isConfident(.localAnswer) == true {
+            return ComposerRouteDecision(
+                route: .ragAnswer,
+                requiresConfirmation: false,
+                executableToolIntent: nil
+            )
+        }
+
+        if understanding?.routingLane.isConfident(.localTool) == true {
+            return ComposerRouteDecision(
+                route: .toolAction,
+                requiresConfirmation: resolvedIntent.requiresConfirmation,
+                executableToolIntent: resolvedIntent
+            )
         }
 
         let mood = inferQueryMood(query)
@@ -944,19 +1085,79 @@ public actor VerizonChatDispatcher {
         // question→answerPlusAction upgrade. Informational queries
         // stay informational.
         if imperativeOnly && mood != .actionImperative {
-            return (.ragAnswer, false)
+            return ComposerRouteDecision(
+                route: .ragAnswer,
+                requiresConfirmation: false,
+                executableToolIntent: nil
+            )
         }
 
         switch mood {
         case .actionImperative:
-            return (.toolAction, resolvedIntent.requiresConfirmation)
+            return ComposerRouteDecision(
+                route: .toolAction,
+                requiresConfirmation: resolvedIntent.requiresConfirmation,
+                executableToolIntent: resolvedIntent
+            )
         case .question:
             guard unit.queryTargetsTaskObjective(query) else {
-                return (.ragAnswer, false)
+                return ComposerRouteDecision(
+                    route: .ragAnswer,
+                    requiresConfirmation: false,
+                    executableToolIntent: nil
+                )
             }
-            return (.answerPlusAction, resolvedIntent.requiresConfirmation)
+            return ComposerRouteDecision(
+                route: .answerPlusAction,
+                requiresConfirmation: resolvedIntent.requiresConfirmation,
+                executableToolIntent: resolvedIntent
+            )
         case .navigateImperative, .statement:
-            return (.ragAnswer, false)
+            return ComposerRouteDecision(
+                route: .ragAnswer,
+                requiresConfirmation: false,
+                executableToolIntent: nil
+            )
+        }
+    }
+
+    private nonisolated static func withRuntimeOwnedConfirmation(
+        _ text: String,
+        requiresConfirmation: Bool?
+    ) -> String {
+        guard requiresConfirmation == true else { return text }
+        let lower = text.lowercased()
+        guard !lower.contains("reply 'yes'") && !lower.contains("reply yes") else {
+            return text
+        }
+        return "\(text) Reply 'yes' to confirm."
+    }
+
+    private nonisolated static func shouldUseDialogueRepairVerbalizer(
+        act: DialogueRepairAct,
+        route: ComposerRoute,
+        retrievalContext: RetrievalContext,
+        dialogueState: DialogueRepairConversationState
+    ) -> Bool {
+        let priorAssistant = retrievalContext.priorAssistantText?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasPriorTurn = priorAssistant.map { !$0.isEmpty } ?? false
+        let hasRepairState = hasPriorTurn ||
+            dialogueState.pendingConfirmation ||
+            dialogueState.frustrationCount > 0
+
+        switch act {
+        case .navigationFollowup, .stepFocus, .failedAttempt, .repairCannotFind:
+            return hasRepairState
+        case .clarification:
+            return route == .clarify
+        case .noAnswerRepair:
+            return route == .noRagAnswer ||
+                route == .outOfScope ||
+                route == .accountNav ||
+                route == .liveAgent
+        case .topicPivotRepair:
+            return hasPriorTurn
         }
     }
 }

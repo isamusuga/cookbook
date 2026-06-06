@@ -93,12 +93,18 @@ targets:
       # Customer-facing cookbook tests: keep the suite focused on the
       # architecture that actually ships in this example. The source app
       # still contains some disabled research scaffolding for historical
-      # comparison, but the cookbook validation contract is composer-only
-      # RAG + policy routing + multi-turn state.
+      # comparison, but the cookbook validation contract is one shared
+      # LFM understanding pass + BM25 hierarchy RAG + policy/composer +
+      # bounded dialogue-repair verbalization.
       - TelcoTriageTests/AnswerComposerTests.swift
       - TelcoTriageTests/BM25HierarchyRetrieverSwiftParityTests.swift
+      - TelcoTriageTests/ChatViewModelIntegrationTests.swift
+      - TelcoTriageTests/ConversationRecoveryTests.swift
+      - TelcoTriageTests/ConversationStateTests.swift
       - TelcoTriageTests/MultiTurnHeuristicsTests.swift
       - TelcoTriageTests/MultiTurnIntegrationTests.swift
+      - TelcoTriageTests/MultiTurnRetrievalAugmentationTests.swift
+      - TelcoTriageTests/ToolExecutorTests.swift
       - TelcoTriageTests/VerizonDispatcherComposerPathTests.swift
       - TelcoTriageTests/Fixtures/ScriptedBackend.swift
       - TelcoTriageTests/Fixtures/TestChatHarness.swift

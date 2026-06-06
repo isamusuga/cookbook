@@ -15,6 +15,10 @@ struct ChatMessageRow: View {
     /// canonical store lives in `ChatViewModel.expandedTraceMessageIDs`
     /// so collapsed cards stay collapsed across `LazyVStack` recycling.
     let traceExpandedBinding: Binding<Bool>
+    /// Binding for the ADR-026 LFM understanding card. This disclosure
+    /// is collapsed by default so engineering mode stays readable until
+    /// someone explicitly asks for all nine head outputs.
+    let telcoUnderstandingExpandedBinding: Binding<Bool>
 
     @Environment(\.brand) private var brand
     @Environment(\.appMode) private var appMode
@@ -29,7 +33,8 @@ struct ChatMessageRow: View {
         onConfirmTool: @escaping (UUID) -> Void,
         onDeclineTool: @escaping (UUID) -> Void,
         onOpenArticle: @escaping (KBEntry) -> Void,
-        traceExpandedBinding: Binding<Bool> = .constant(true)
+        traceExpandedBinding: Binding<Bool> = .constant(true),
+        telcoUnderstandingExpandedBinding: Binding<Bool> = .constant(false)
     ) {
         self.message = message
         self.onTapPII = onTapPII
@@ -41,6 +46,7 @@ struct ChatMessageRow: View {
         self.onDeclineTool = onDeclineTool
         self.onOpenArticle = onOpenArticle
         self.traceExpandedBinding = traceExpandedBinding
+        self.telcoUnderstandingExpandedBinding = telcoUnderstandingExpandedBinding
     }
 
     var body: some View {
@@ -65,6 +71,12 @@ struct ChatMessageRow: View {
                     if appMode == .engineering,
                        let trace = message.trace, let routing = message.routing {
                         TraceRow(trace: trace, routingPath: routing.path)
+                        if let telcoUnderstanding = trace.telcoUnderstanding {
+                            TelcoUnderstandingTraceDisclosure(
+                                understanding: telcoUnderstanding,
+                                isExpanded: telcoUnderstandingExpandedBinding
+                            )
+                        }
                         // ADR-022 §4.3 Layer 4 — full 5-head understanding
                         // vector. Renders below TraceRow so the trace
                         // reads top→down as: routing summary, then the
@@ -154,6 +166,8 @@ struct ChatMessageRow: View {
     private var messageContent: some View {
         if let presentation = composerStepPresentation {
             ComposerStepAnswerView(presentation: presentation)
+        } else if let presentation = composerSummaryPresentation {
+            ComposerSummaryAnswerView(presentation: presentation)
         } else {
             Text(LocalizedStringKey(DeepLinkRebrand.forDisplay(message.text, brand: brand)))
                 .font(brand.bodyFont)
@@ -161,6 +175,46 @@ struct ChatMessageRow: View {
                 .lineSpacing(2)
                 .textSelection(.enabled)
         }
+    }
+
+    private var composerSummaryPresentation: ComposerSummaryPresentation? {
+        guard message.role == .assistant,
+              message.trace?.composerRoute != nil,
+              !message.text.contains(" > ") else {
+            return nil
+        }
+
+        let paragraphs = message.text
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !paragraphs.isEmpty else { return nil }
+
+        var lead: String?
+        var details: [String] = []
+        var confirmation: String?
+
+        for paragraph in paragraphs {
+            if paragraph.localizedCaseInsensitiveContains("reply 'yes'") {
+                confirmation = strippedComposerMarkdown(paragraph)
+            } else if paragraph.hasPrefix("Key details:") {
+                details.append(contentsOf: keyDetailLines(from: paragraph))
+            } else if !isComposerNavigationCTA(paragraph) {
+                let clean = strippedComposerMarkdown(paragraph)
+                if lead == nil {
+                    lead = clean
+                } else if !clean.isEmpty {
+                    details.append(clean)
+                }
+            }
+        }
+
+        guard let lead, !lead.isEmpty else { return nil }
+        return ComposerSummaryPresentation(
+            lead: lead,
+            details: details,
+            confirmation: confirmation
+        )
     }
 
     private var composerStepPresentation: ComposerStepPresentation? {
@@ -262,6 +316,12 @@ private struct ComposerStepPresentation: Equatable {
     let confirmation: String?
 }
 
+private struct ComposerSummaryPresentation: Equatable {
+    let lead: String
+    let details: [String]
+    let confirmation: String?
+}
+
 private struct ComposerStepAnswerView: View {
     let presentation: ComposerStepPresentation
 
@@ -321,6 +381,105 @@ private struct ComposerStepAnswerView: View {
             }
         }
     }
+}
+
+private struct ComposerSummaryAnswerView: View {
+    let presentation: ComposerSummaryPresentation
+
+    @Environment(\.brand) private var brand
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(presentation.lead)
+                .font(brand.bodyFont)
+                .foregroundStyle(brand.textPrimary)
+                .lineSpacing(2)
+                .textSelection(.enabled)
+
+            if !presentation.details.isEmpty {
+                VStack(alignment: .leading, spacing: 9) {
+                    Text("Key details")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(brand.textSecondary)
+                        .textCase(.uppercase)
+                    ForEach(Array(presentation.details.enumerated()), id: \.offset) { _, detail in
+                        HStack(alignment: .top, spacing: 9) {
+                            Circle()
+                                .fill(brand.textPrimary.opacity(0.16))
+                                .frame(width: 7, height: 7)
+                                .padding(.top, 8)
+                            Text(detail)
+                                .font(brand.bodyFont)
+                                .foregroundStyle(brand.textPrimary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .padding(11)
+                .background(brand.textPrimary.opacity(0.035),
+                            in: RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(brand.border.opacity(0.7), lineWidth: 1)
+                )
+            }
+
+            if let confirmation = presentation.confirmation {
+                HStack(alignment: .top, spacing: 7) {
+                    Image(systemName: "checkmark.shield")
+                        .font(.caption)
+                        .foregroundStyle(brand.success)
+                        .padding(.top, 2)
+                    Text(confirmation)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(brand.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 1)
+            }
+        }
+    }
+}
+
+private func keyDetailLines(from paragraph: String) -> [String] {
+    paragraph
+        .components(separatedBy: .newlines)
+        .dropFirst()
+        .map { raw in
+            var line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            if line.hasPrefix("-") {
+                line.removeFirst()
+            }
+            return strippedComposerMarkdown(line)
+        }
+        .filter { !$0.isEmpty }
+}
+
+private func strippedComposerMarkdown(_ text: String) -> String {
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    let nsText = trimmed as NSString
+    guard let regex = try? NSRegularExpression(pattern: #"\[([^\]\n]+)\]\([^)]+\)"#) else {
+        return trimmed
+    }
+    let mutable = NSMutableString(string: trimmed)
+    let range = NSRange(location: 0, length: nsText.length)
+    for match in regex.matches(in: trimmed, range: range).reversed() {
+        guard match.numberOfRanges >= 2 else { continue }
+        mutable.replaceCharacters(in: match.range(at: 0),
+                                  with: nsText.substring(with: match.range(at: 1)))
+    }
+    return String(mutable).trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+private func isComposerNavigationCTA(_ paragraph: String) -> Bool {
+    let lowered = paragraph.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return paragraph.contains("](") &&
+        (lowered.hasPrefix("open ") ||
+         lowered.hasPrefix("you can continue") ||
+         lowered.hasPrefix("to manage your account"))
 }
 
 struct PIIWarningChip: View {

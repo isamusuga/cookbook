@@ -143,6 +143,13 @@ public struct CallTrace: Equatable {
     /// understanding layer.
     public let understanding: QueryUnderstanding?
 
+    /// ADR-026 normal Telco Triage semantic vector. This is the active
+    /// customer/demo control plane: one shared `telco-shared-clf-v1`
+    /// forward pass, nine classifier heads. Nil for legacy fallback,
+    /// vision, voice, and tests that do not inject it.
+    public let telcoUnderstanding: TelcoSharedUnderstanding?
+    public let telcoUnderstandingMS: Int?
+
     // -- Step 6.6 composer telemetry --
     //
     // Surgical four-field set per the Step 6 plan §5. Populated by
@@ -173,6 +180,8 @@ public struct CallTrace: Equatable {
         toolSelectionReasoning: String? = nil,
         toolSelectionConfidence: Double? = nil,
         understanding: QueryUnderstanding? = nil,
+        telcoUnderstanding: TelcoSharedUnderstanding? = nil,
+        telcoUnderstandingMS: Int? = nil,
         routePolicyMS: Int? = nil,
         composerMS: Int? = nil,
         totalWallMS: Int? = nil,
@@ -196,6 +205,8 @@ public struct CallTrace: Equatable {
         self.toolSelectionReasoning = toolSelectionReasoning
         self.toolSelectionConfidence = toolSelectionConfidence
         self.understanding = understanding
+        self.telcoUnderstanding = telcoUnderstanding
+        self.telcoUnderstandingMS = telcoUnderstandingMS
         self.routePolicyMS = routePolicyMS
         self.composerMS = composerMS
         self.totalWallMS = totalWallMS

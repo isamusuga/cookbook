@@ -40,19 +40,21 @@ struct SettingsView: View {
     }
 
     private var kbSection: some View {
-        Section(header: Text("Composer RAG")) {
+        Section(header: Text("Local AI runtime")) {
             LabeledContent("Status", value: appState.ragStatus.isLive ? "Live" : "Degraded")
+            LabeledContent("Understanding", value: "LFM2.5-350M shared pass")
+            LabeledContent("Policy", value: "9 heads + thresholds")
             LabeledContent("Corpus", value: "rag-units-v1.json")
             LabeledContent(
                 "Units",
                 value: appState.ragStatus.corpusUnitCount.map(String.init) ?? "—"
             )
             LabeledContent("Retriever", value: "BM25 hierarchy")
-            LabeledContent("Answer layer", value: "Deterministic composer")
+            LabeledContent("Answer layer", value: "Composer + V4 repair")
             if let reason = appState.ragStatus.degradedReason {
                 LabeledContent("Reason", value: reason)
             }
-            Text("Normal demo answers use the canonical composer corpus and render only approved `vzhome://` links. The legacy 34-entry keyword KB is kept as a fallback for degraded builds.")
+            Text("Normal demo turns use one LFM2.5-350M forward pass for route, tool, cloud, handoff, safety, and transcript signals. BM25 retrieves canonical support units; deterministic policy owns links, citations, and confirmation. V4 verbalizes bounded multi-turn repair wording when bundled. Slot value extraction is TBD.")
                 .font(.caption).foregroundStyle(brand.textSecondary)
         }
     }
@@ -60,26 +62,42 @@ struct SettingsView: View {
     @ViewBuilder
     private var modelsSection: some View {
         if appState.appMode == .engineering {
-            Section(header: Text("On-device models")) {
+            Section(header: Text("Active on-device artifacts")) {
                 LabeledContent("Base", value: TelcoModelBundle.baseModelName)
                 LabeledContent(
-                    "Legacy decision heads",
-                    value: TelcoModelBundle.sharedClfAdapterPath() == nil
-                        ? "not active"
-                        : TelcoModelBundle.sharedClfAdapterName
+                    "Understanding adapter",
+                    value: TelcoModelBundle.adr015TelcoStackBundled()
+                        ? TelcoModelBundle.sharedClfAdapterName
+                        : "not bundled"
                 )
+                LabeledContent("Classifier heads", value: "9 packaged heads")
+                LabeledContent("Tool policy", value: "required_tool head + registry")
                 LabeledContent(
-                    "Legacy chat router",
-                    value: TelcoModelBundle.chatModeRouterAdapterPath() == nil
+                    "Repair verbalizer",
+                    value: TelcoModelBundle.dialogueRepairV4AdapterPath() == nil
                         ? "not bundled"
-                        : TelcoModelBundle.chatModeRouterAdapterName
+                        : TelcoModelBundle.dialogueRepairV4AdapterName
                 )
-                LabeledContent("Tool selector", value: TelcoModelBundle.toolAdapterName)
-                Text("Customer Q&A uses the composer path. Legacy understanding adapters are shown only for degraded builds and opt-in experiments.")
+                LabeledContent("Slot values", value: "TBD")
+                Text("Customer Q&A does not run the legacy chat router, ColBERT, or Stage B generator. Supported actions are gated by the shared `required_tool` head, canonical RAG unit affordance, ToolRegistry, and confirmation policy. V4 can only rewrite response text; it cannot change route, source, handoff, or tool execution.")
                     .font(.caption).foregroundStyle(brand.textSecondary)
             }
 
-            Section(header: Text("Legacy Stage B probe")) {
+            Section(header: Text("Legacy / evaluation artifacts")) {
+                LabeledContent(
+                    "Chat router",
+                    value: inactiveArtifactStatus(
+                        name: TelcoModelBundle.chatModeRouterAdapterName,
+                        path: TelcoModelBundle.chatModeRouterAdapterPath()
+                    )
+                )
+                LabeledContent(
+                    "Tool selector LoRA",
+                    value: inactiveArtifactStatus(
+                        name: TelcoModelBundle.toolAdapterName,
+                        path: TelcoModelBundle.toolAdapterPath()
+                    )
+                )
                 NavigationLink {
                     VerizonRAGTestView()
                 } label: {
@@ -91,7 +109,7 @@ struct SettingsView: View {
                     )
                 }
                 .disabled(TelcoModelBundle.verizonStageBGeneratorPath() == nil)
-                Text("Optional evaluation surface only. The normal answer path is BM25HierarchyRetriever plus the deterministic composer; Stage B is not required for grounded answers.")
+                Text("These artifacts are kept only for degraded-build compatibility or offline evaluation. They are not invoked by the normal Telco Triage customer/demo answer path.")
                     .font(.caption).foregroundStyle(brand.textSecondary)
             }
         }
@@ -121,5 +139,9 @@ struct SettingsView: View {
     private func resetSession() {
         appState.tokenLedger.reset()
         appState.sessionStats.reset()
+    }
+
+    private func inactiveArtifactStatus(name: String, path: String?) -> String {
+        path == nil ? "not bundled" : "\(name) · inactive"
     }
 }

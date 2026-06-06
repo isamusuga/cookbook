@@ -116,7 +116,7 @@ final class BM25HierarchyRetrieverSwiftParityTests: XCTestCase {
 
     func test_context_rank_prefers_active_task_when_query_matches_task_step() {
         let context = RetrievalContext(
-            priorAssistantText: nil,
+            priorAssistantText: "To restart router: select the Equipment tile, then select Restart router.",
             priorPageID: "02.07",
             priorLinkID: "restart-router"
         )

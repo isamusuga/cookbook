@@ -17,12 +17,27 @@ BUNDLE_DIR="${HF_BUNDLE_DIR:-$EXAMPLE_DIR/.hf-bundle/telco-triage-ios}"
 
 REQUIRED_MODELS=(
   "lfm25-350m-base-Q4_K_M.gguf"
+  "telco-shared-clf-v1.gguf"
+  "telco-dialogue-repair-v4.gguf"
   "telco-tool-selector-v3.gguf"
 )
 
 REQUIRED_RESOURCES=(
   "rag-units-v1.json"
   "page-link-table-v1.json"
+  "telco_shared_clf_schema.json"
+)
+
+TELCO_HEADS=(
+  "telco-support-intent"
+  "telco-issue-complexity"
+  "telco-routing-lane"
+  "telco-cloud-requirements"
+  "telco-required-tool"
+  "telco-customer-escalation-risk"
+  "telco-pii-risk"
+  "telco-transcript-quality"
+  "telco-slot-completeness"
 )
 
 if [[ ! -d "$MODELS_DIR" ]]; then
@@ -48,6 +63,18 @@ for name in "${REQUIRED_RESOURCES[@]}"; do
     exit 1
   fi
   cp "$src" "$BUNDLE_DIR/$name"
+done
+
+for head in "${TELCO_HEADS[@]}"; do
+  for suffix in weights.bin bias.bin meta.json; do
+    name="${head}_classifier_${suffix}"
+    src="$EXAMPLE_DIR/TelcoTriage/Resources/$name"
+    if [[ ! -f "$src" ]]; then
+      echo "error: missing classifier head artifact: $src" >&2
+      exit 1
+    fi
+    cp "$src" "$BUNDLE_DIR/$name"
+  done
 done
 
 cp "$SCRIPT_DIR/README.md" "$BUNDLE_DIR/README.md"

@@ -207,13 +207,29 @@ private func taskPhrase(from unit: RAGUnit) -> String {
 
 /// Mirrors `_intro_for_route`.
 private func introForRoute(_ route: ComposerRoute, task: String) -> String {
+    let customerTask = customerFacingTaskPhrase(task)
     switch route {
     case .toolAction:
-        return "I can \(task) for you. Confirm to proceed:"
+        return "I can \(customerTask) for you."
     case .answerPlusAction:
-        return "To \(task), you can either follow the steps below or have me do it for you:"
+        return "To \(customerTask), follow these steps. I can also do it after you confirm:"
     default:
-        return "To \(task):"
+        return "To \(customerTask):"
+    }
+}
+
+private func customerFacingTaskPhrase(_ task: String) -> String {
+    switch task {
+    case "restart router":
+        return "restart your router"
+    case "run speed test", "speed test":
+        return "run a speed test"
+    case "toggle parental controls":
+        return "update parental controls"
+    case "reboot extender":
+        return "reboot your extender"
+    default:
+        return task
     }
 }
 

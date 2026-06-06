@@ -5,9 +5,10 @@ import SwiftUI
 /// surface every cell without truncation.
 ///
 /// Cells (left to right):
-///  - INTENT   : classifier intent + calibrated confidence + runtime
-///  - SOURCE   : tool id (if any) or "RAG: kb-entry-id"
-///  - LATENCY  : inference ms + token counts
+///  - POLICY   : active telco policy lane, or legacy intent when the
+///               shared telco classifier is unavailable
+///  - SOURCE   : tool id (if any) or "RAG: page-id"
+///  - LATENCY  : wall time plus understanding/retrieval/policy/composer split
 ///  - EGRESS   : "0 bytes ✓" — always, on every path. The demo never
 ///               leaves the device.
 ///
@@ -22,7 +23,7 @@ struct TraceRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            cell(title: "Intent", value: intentText, subtitle: intentSubtitle,
+            cell(title: policyTitle, value: policyText, subtitle: policySubtitle,
                  tint: intentConfidenceTint)
             cell(title: "Source", value: sourceText, subtitle: sourceSubtitle)
             cell(title: "Latency", value: latencyText, subtitle: tokensText)
@@ -43,6 +44,20 @@ struct TraceRow: View {
     /// >=0.5 warning, <0.5 danger). If a third surface adopts these
     /// bands, extract a shared utility.
     var intentConfidenceTint: Color {
+        if trace.telcoUnderstanding != nil {
+            guard let route = trace.composerRoute else { return brand.textPrimary }
+            switch route {
+            case let value where value == ComposerRoute.liveAgent.wireName ||
+                value == ComposerRoute.outOfScope.wireName:
+                return brand.danger
+            case let value where value == ComposerRoute.accountNav.wireName ||
+                value == ComposerRoute.clarify.wireName ||
+                value == ComposerRoute.noRagAnswer.wireName:
+                return brand.warning
+            default:
+                return brand.success
+            }
+        }
         switch ConfidenceBand.classify(trace.chatModeConfidence) {
         case .neutral: return brand.textPrimary
         case .high:    return brand.success
@@ -69,11 +84,23 @@ struct TraceRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var intentText: String {
-        trace.chatMode?.rawValue ?? "—"
+    private var policyTitle: String {
+        trace.telcoUnderstanding == nil ? "Intent" : "Policy"
     }
 
-    private var intentSubtitle: String {
+    private var policyText: String {
+        if let telco = trace.telcoUnderstanding {
+            return trace.composerRoute ?? telco.routingLane.label.rawValue
+        }
+        return trace.chatMode?.rawValue ?? "—"
+    }
+
+    private var policySubtitle: String {
+        if let telco = trace.telcoUnderstanding {
+            let confidence = String(format: "%.2f", telco.routingLane.confidence)
+            let ms = trace.telcoUnderstandingMS ?? Int(telco.totalMs.rounded())
+            return "\(telco.routingLane.label.rawValue) · \(confidence) · \(ms)ms"
+        }
         guard let c = trace.chatModeConfidence, let ms = trace.chatModeRuntimeMS else {
             return "—"
         }
@@ -106,7 +133,7 @@ struct TraceRow: View {
         switch routingPath {
         case .answerWithRAG:
             if let linkID = trace.composerRenderedLinkID {
-                return "composer · \(linkID)"
+                return "evidence · \(linkID)"
             }
             if let score = trace.topKBScore {
                 return String(format: "kb hit %.2f", score)
@@ -126,16 +153,22 @@ struct TraceRow: View {
     }
 
     private var tokensText: String {
-        if trace.retrievalMS != nil || trace.routePolicyMS != nil || trace.composerMS != nil {
-            let retrieval = trace.retrievalMS ?? 0
-            let policy = trace.routePolicyMS ?? 0
-            let composer = trace.composerMS ?? trace.inferenceMS
-            return "r \(retrieval) · p \(policy) · c \(composer)"
+        if trace.telcoUnderstandingMS != nil || trace.retrievalMS != nil || trace.routePolicyMS != nil || trace.composerMS != nil {
+            let understanding = formatStageMS(trace.telcoUnderstandingMS)
+            let retrieval = formatStageMS(trace.retrievalMS)
+            let policy = formatStageMS(trace.routePolicyMS)
+            let composer = formatStageMS(trace.composerMS ?? trace.inferenceMS)
+            return "LFM \(understanding) · RAG \(retrieval)\npolicy \(policy) · compose \(composer)"
         }
         let inTok = trace.inputTokens ?? 0
         let outTok = trace.outputTokens ?? 0
         if inTok == 0 && outTok == 0 { return "—" }
         return "\(inTok) in · \(outTok) out"
+    }
+
+    private func formatStageMS(_ value: Int?) -> String {
+        guard let value else { return "—" }
+        return value == 0 ? "<1ms" : "\(value)ms"
     }
 }
 

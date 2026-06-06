@@ -60,25 +60,35 @@ public struct ToolExecutor: Sendable {
         let toolMS = Int(Date().timeIntervalSince(toolStart) * 1000)
 
         let summaryStart = Date()
-        let summary: ChatModelResponse
         do {
-            summary = try await chatProvider.generate(
+            let summary = try await chatProvider.generate(
                 query: "(tool confirmation)",
                 mode: .toolConfirmation(tool: tool, result: result)
             )
+            let summaryMS = Int(Date().timeIntervalSince(summaryStart) * 1000)
+            return Outcome(
+                assistantText: summary.text,
+                toolResult: result,
+                toolLatencyMS: toolMS,
+                summaryLatencyMS: summaryMS,
+                inputTokens: summary.inputTokens,
+                outputTokens: summary.outputTokens
+            )
         } catch {
-            throw ExecutorError.summaryFailed(underlying: error)
+            // The side effect already succeeded. Do not convert a
+            // failed verbalizer/polish pass into a failed action from
+            // the user's point of view; surface the tool-owned summary
+            // instead. The structured status is still recorded by
+            // ChatViewModel.sessionStats.
+            return Outcome(
+                assistantText: result.humanSummary,
+                toolResult: result,
+                toolLatencyMS: toolMS,
+                summaryLatencyMS: 0,
+                inputTokens: 0,
+                outputTokens: 0
+            )
         }
-        let summaryMS = Int(Date().timeIntervalSince(summaryStart) * 1000)
-
-        return Outcome(
-            assistantText: summary.text,
-            toolResult: result,
-            toolLatencyMS: toolMS,
-            summaryLatencyMS: summaryMS,
-            inputTokens: summary.inputTokens,
-            outputTokens: summary.outputTokens
-        )
     }
 
     /// Flatten `[ToolDecisionArgument]` → `[String: String]`. The

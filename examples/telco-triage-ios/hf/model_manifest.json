@@ -1,20 +1,32 @@
 {
   "pack_id": "telco-triage-ios-current-runtime",
   "pack_version": "0.1.0",
-  "runtime_architecture": "zero_generation_composer_rag",
+  "runtime_architecture": "single_forward_understanding_composer_rag_with_repair_verbalizer",
   "ios_example_path": "examples/telco-triage-ios",
   "required_models": [
     {
       "filename": "lfm25-350m-base-Q4_K_M.gguf",
-      "role": "LFM2.5-350M base model for optional model-backed app features and explicit tool support",
+      "role": "LFM2.5-350M base model used by shared understanding and bounded verbalization",
       "required_by_bootstrap": true,
-      "normal_qa_path": false
+      "normal_qa_path": true
+    },
+    {
+      "filename": "telco-shared-clf-v1.gguf",
+      "role": "Shared understanding adapter for the single-forward 9-head classifier runtime",
+      "required_by_bootstrap": true,
+      "normal_qa_path": true
+    },
+    {
+      "filename": "telco-dialogue-repair-v4.gguf",
+      "role": "Bounded dialogue-repair verbalizer for selected follow-up and repair acts",
+      "required_by_bootstrap": true,
+      "normal_qa_path": "repair_followup_only"
     },
     {
       "filename": "telco-tool-selector-v3.gguf",
-      "role": "Tool-support adapter used only when explicit tool paths need model assistance",
+      "role": "Tool-support adapter for ambiguous local action paths",
       "required_by_bootstrap": true,
-      "normal_qa_path": false
+      "normal_qa_path": "ambiguous_tool_only"
     }
   ],
   "required_resources": [
@@ -25,13 +37,23 @@
     {
       "filename": "page-link-table-v1.json",
       "role": "Canonical source-chip and in-app destination links"
+    },
+    {
+      "filename": "telco_shared_clf_schema.json",
+      "role": "Label schema for the shared understanding classifier heads"
+    },
+    {
+      "filename": "telco-*_classifier_{weights,bias,meta}",
+      "role": "Nine classifier head triplets for support intent, issue complexity, routing lane, cloud requirements, required tool, escalation risk, PII risk, transcript quality, and slot completeness"
     }
   ],
   "online_qa_runtime": {
-    "model_forwards": 0,
-    "generation_calls": 0,
+    "understanding_forwards": 1,
+    "first_turn_answer_generation_calls": 0,
+    "repair_verbalizer_calls": "selected repair/follow-up acts only",
     "retriever": "BM25HierarchyRetriever",
     "answer_layer": "DeterministicAnswerComposer",
-    "citation_source": "RAGUnit.canonicalURL"
+    "citation_source": "RAGUnit.canonicalURL",
+    "policy_owner": "Swift route policy; verbalizer cannot choose tools, citations, routes, or handoffs"
   }
 }

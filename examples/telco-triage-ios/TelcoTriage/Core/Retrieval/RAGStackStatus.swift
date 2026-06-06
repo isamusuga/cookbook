@@ -1,9 +1,10 @@
 import Foundation
 
-/// Boot-time load result for the composer RAG path. Captured once at
-/// app launch and surfaced in engineering mode so an operator can see
-/// whether the on-device corpus + BM25 retriever + deterministic
-/// composer are wired, or whether the app fell back to a degraded path.
+/// Boot-time load result for the local Telco Triage answer path.
+/// Captured once at app launch and surfaced in engineering mode so an
+/// operator can see whether the on-device understanding layer, corpus,
+/// BM25 retriever, and deterministic composer are wired, or whether
+/// the app fell back to a degraded path.
 ///
 /// "Live" means the canonical RAG units loaded and the composer
 /// retriever can answer from them. The `embedDim` field remains for the
@@ -32,12 +33,12 @@ public enum RAGStackStatus: Equatable, Sendable {
         return nil
     }
 
-    /// One-line label suitable for the always-visible header chip.
+    /// One-line label suitable for the engineering header chip.
     /// Keep this short — the full reason can render in a sheet on tap.
     public var summary: String {
         switch self {
         case .live(let n, _):
-            return "RAG: live — composer (\(n) units)"
+            return "AI: LFM→RAG→composer (\(n) units)"
         case .degraded(let reason):
             // Trim long error messages so the chip stays single-line.
             // The tap-to-expand sheet shows the full text.
@@ -45,9 +46,9 @@ public enum RAGStackStatus: Equatable, Sendable {
             let short = reason.count > max
                 ? String(reason.prefix(max)) + "…"
                 : reason
-            return "RAG: degraded — \(short)"
+            return "AI: degraded — \(short)"
         case .notInitialized:
-            return "RAG: initializing…"
+            return "AI: initializing…"
         }
     }
 
@@ -61,32 +62,33 @@ public enum RAGStackStatus: Equatable, Sendable {
                 ? "Retrieval: ColBERT legacy path, embed dim \(d)."
                 : "Retrieval: BM25HierarchyRetriever over canonical units."
             return """
-            Composer RAG is live.
+            Local AI runtime is live.
 
+            Understanding: LFM2.5-350M + telco-shared-clf-v1 + 9 classifier heads.
             Corpus: \(n) canonical units.
             \(retrievalDetail)
             Answer layer: deterministic composer.
 
-            Stage B and ColBERT are not required for the normal answer \
-            path. They remain legacy / evaluation-only surfaces.
+            Stage B, ColBERT, chat-mode-router-v2, topic/refusal LoRAs, \
+            and the relational LoRA are not part of the normal customer \
+            answer path. They remain legacy / evaluation-only surfaces.
             """
         case .degraded(let reason):
             return """
-            Composer RAG is not fully wired.
+            Local AI runtime is not fully wired.
 
             Reason: \(reason)
 
             Common fixes:
               1. Confirm `rag-units-v1.json` is present in the app bundle.
-              2. Delete the app from the device, clean the build folder \
+              2. Confirm `telco-shared-clf-v1` and the nine classifier \
+                 heads are present in the app bundle.
+              3. Delete the app from the device, clean the build folder \
                  (Cmd+Shift+K), and reinstall — a stale install can \
                  reference pbxproj entries the bundle never received.
-              3. Confirm the Stage A classifier artifacts are bundled; \
-                 the composer path still needs the router to choose the \
-                 right lane before answering.
             """
         case .notInitialized:
-            return "Composer RAG not yet initialized — boot still in progress."
+            return "Local AI runtime not yet initialized — boot still in progress."
         }
     }
 }

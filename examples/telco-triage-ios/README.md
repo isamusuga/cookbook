@@ -6,10 +6,13 @@ retrieve the right support unit, decide whether the user asked a question or a
 safe action, render a cited answer, and only hand off when the request is outside
 the local support boundary.
 
-The customer Q&A path is intentionally **zero-generation**. The app does not
-call a language model to synthesize grounded answers. It uses a canonical RAG
-corpus, a state-aware BM25 retriever, explicit route policy, and a deterministic
-composer.
+The current runtime uses **one LFM2.5-350M shared understanding pass** to read
+the user turn, then keeps answer grounding under Swift policy control: a
+canonical RAG corpus, state-aware BM25 retrieval, explicit tool/handoff gates,
+and a deterministic composer for cited support answers. A bounded V4 dialogue
+repair verbalizer is available for follow-up turns such as "I can't find it" or
+"that didn't work"; it verbalizes the already-selected state and never chooses
+tools, citations, routes, or handoff policy.
 
 - **Target**: `TelcoTriage`
 - **Bundle ID**: `ai.liquid.demos.telcotriage`
@@ -22,7 +25,8 @@ composer.
 ```mermaid
 flowchart TD
     A["User turn"] --> B["ConversationState<br/>prior page/link, pending tool,<br/>pending clarification"]
-    B --> C["BM25HierarchyRetriever<br/>over rag-units-v1.json"]
+    B --> U["LFM2.5-350M shared understanding<br/>9 heads: intent, lane, tool,<br/>cloud, complexity, escalation,<br/>PII, transcript, slots"]
+    U --> C["BM25HierarchyRetriever<br/>over rag-units-v1.json"]
     K["Canonical RAG corpus<br/>49 units, aliases, steps,<br/>affordance, canonical links"] --> C
     C --> D{"Supported local evidence?"}
 
@@ -30,16 +34,18 @@ flowchart TD
     T["ToolRegistry + ToolAliasMap<br/>only registered actions can execute"] --> E
     E --> F{"Route"}
 
-    F -- "rag_answer" --> G["Deterministic answer"]
+    F -- "rag_answer" --> G["Deterministic cited answer"]
     F -- "answer_plus_action" --> H["Steps + confirmation offer"]
     F -- "tool_action" --> I["Confirmation gate"]
     F -- "account_nav" --> J["Canonical in-app destination"]
+    F -- "repair/follow-up" --> V["V4 dialogue repair verbalizer<br/>bounded wording only"]
 
     I -- "confirmed" --> X["ToolExecutor"]
     I -- "not confirmed" --> UI
     G --> UI["Chat UI<br/>answer, source chip, open button"]
     H --> UI
     J --> UI
+    V --> UI
     X --> UI
 
     D -- "ambiguous" --> Q["Clarifying question"]
@@ -60,15 +66,17 @@ flowchart TD
 
 Normal support Q&A uses:
 
-- **Model forwards**: 0
-- **Generation calls**: 0
-- **Q&A LoRA adapters**: 0
+- **Understanding forwards**: 1 shared LFM2.5-350M pass
+- **Understanding artifact**: `telco-shared-clf-v1` + 9 classifier heads
+- **First-turn answer generation calls**: 0
+- **Dialogue repair generation**: optional, only for repair/follow-up wording
 - **Retriever**: `BM25HierarchyRetriever`
 - **Answer layer**: `DeterministicAnswerComposer`
 - **Citation source**: selected `RAGUnit.canonicalURL`
 
-The LFM2.5-350M base model remains packaged for optional model-backed features
-and explicit tool support. It is not on the critical Q&A answer path.
+The LFM decides compact understanding labels; Swift policy decides route,
+source, tool safety, confirmation, and handoff. The verbalizer never invents a
+source link or executes an action.
 
 ## What Ships In This Example
 
@@ -78,7 +86,11 @@ and explicit tool support. It is not on the critical Q&A answer path.
 | `TelcoTriage/Resources/page-link-table-v1.json` | Canonical link table for source chips and in-app destinations. |
 | `TelcoTriage/Resources/knowledge-base.json` | Small sample KB retained for non-composer demo surfaces. Not the current RAG source of truth. |
 | `TelcoTriage/Resources/Models/lfm25-350m-base-Q4_K_M.gguf` | Base LFM2.5-350M model, copied locally by `bootstrap-models.sh`. |
-| `TelcoTriage/Resources/Models/telco-tool-selector-v3.gguf` | Optional tool-support adapter, copied locally by `bootstrap-models.sh`. |
+| `TelcoTriage/Resources/Models/telco-shared-clf-v1.gguf` | Shared understanding adapter for the 9-head single-forward pass. |
+| `TelcoTriage/Resources/telco-*_classifier_{weights,bias,meta}` | Classifier head projections for intent, lane, tool, cloud, complexity, escalation, PII, transcript, and slot-completeness labels. |
+| `TelcoTriage/Resources/telco_shared_clf_schema.json` | Label schema consumed by the shared understanding runtime. |
+| `TelcoTriage/Resources/Models/telco-dialogue-repair-v4.gguf` | Bounded dialogue repair verbalizer for selected multi-turn repair/follow-up acts. |
+| `TelcoTriage/Resources/Models/telco-tool-selector-v3.gguf` | Tool-support adapter for ambiguous local action paths. |
 
 Large GGUF files are intentionally not committed to the cookbook. Download them
 from the private Hugging Face model pack or place them in
@@ -135,13 +147,19 @@ xcodebuild test \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing:TelcoTriageTests/AnswerComposerTests \
   -only-testing:TelcoTriageTests/BM25HierarchyRetrieverSwiftParityTests \
+  -only-testing:TelcoTriageTests/ChatViewModelIntegrationTests \
+  -only-testing:TelcoTriageTests/ConversationRecoveryTests \
+  -only-testing:TelcoTriageTests/ConversationStateTests \
   -only-testing:TelcoTriageTests/MultiTurnIntegrationTests \
+  -only-testing:TelcoTriageTests/MultiTurnRetrievalAugmentationTests \
+  -only-testing:TelcoTriageTests/ToolExecutorTests \
   -only-testing:TelcoTriageTests/VerizonDispatcherComposerPathTests
 ```
 
-The regression tests assert that the composer path stays grounded, preserves
-multi-turn state, and does not invoke the model-backed understanding stack for
-normal Q&A turns.
+The regression tests assert that the single-forward understanding layer is used,
+the composer path stays grounded, citations remain canonical, confirmation
+gates execute only pending safe actions, and multi-turn repair/follow-up turns
+reuse state without letting the verbalizer choose routes or links.
 
 ## Demo Prompts
 

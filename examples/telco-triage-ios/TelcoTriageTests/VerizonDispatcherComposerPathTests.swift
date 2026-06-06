@@ -31,6 +31,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         XCTAssertEqual(result.composerRoute, .toolAction)
         XCTAssertEqual(result.requiresConfirmation, true,
                        "restart-router is a registered ToolIntent with requiresConfirmation=true")
+        XCTAssertEqual(result.executableToolIntent, .restartRouter)
         XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
         XCTAssertTrue(result.text.lowercased().contains("confirm"),
                       "tool_action text must carry the Confirm clause")
@@ -42,6 +43,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         let result = await dispatch(query: "run a speed test")
         XCTAssertEqual(result.composerRoute, .toolAction)
         XCTAssertEqual(result.requiresConfirmation, false)
+        XCTAssertEqual(result.executableToolIntent, .runSpeedTest)
         XCTAssertEqual(result.citedRAGUnit?.pageID, "01.02")
     }
 
@@ -52,6 +54,163 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         XCTAssertEqual(result.composerRoute, .answerPlusAction,
                        "Question form of a real-tool action → explain + offer")
         XCTAssertEqual(result.requiresConfirmation, true)
+        XCTAssertEqual(result.executableToolIntent, .restartRouter)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+    }
+
+    func test_telcoSharedLocalAnswerSuppressesActionOffer() async {
+        let understanding = makeTelcoUnderstanding(
+            routingLane: .localAnswer,
+            requiredTool: .restartGateway
+        )
+        let result = await dispatch(
+            query: "how do I restart my router?",
+            telcoUnderstanding: understanding
+        )
+
+        XCTAssertEqual(result.composerRoute, .ragAnswer)
+        XCTAssertEqual(result.requiresConfirmation, false)
+        XCTAssertNil(result.executableToolIntent)
+    }
+
+    func test_telcoSharedLocalToolRoutesRegisteredToolAction() async {
+        let understanding = makeTelcoUnderstanding(
+            routingLane: .localTool,
+            requiredTool: .restartGateway
+        )
+        let result = await dispatch(
+            query: "restart my router",
+            telcoUnderstanding: understanding
+        )
+
+        XCTAssertEqual(result.composerRoute, .toolAction)
+        XCTAssertEqual(result.requiresConfirmation, true)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+    }
+
+    func test_telcoSharedCloudAssistDeflectsBeforeRAG() async {
+        var understanding = makeTelcoUnderstanding(routingLane: .cloudAssist)
+        understanding = TelcoSharedUnderstanding(
+            supportIntent: understanding.supportIntent,
+            issueComplexity: understanding.issueComplexity,
+            routingLane: understanding.routingLane,
+            cloudRequirements: TelcoMultiLabelOutcome(activeLabels: [.accountState], probabilities: [1.0]),
+            requiredTool: understanding.requiredTool,
+            escalationRisk: understanding.escalationRisk,
+            piiRisk: understanding.piiRisk,
+            transcriptQuality: understanding.transcriptQuality,
+            missingSlots: understanding.missingSlots,
+            forwardPassMs: understanding.forwardPassMs,
+            headProjectionMs: understanding.headProjectionMs
+        )
+
+        let result = await dispatch(
+            query: "what is my current bill?",
+            telcoUnderstanding: understanding
+        )
+
+        XCTAssertEqual(result.composerRoute, .accountNav)
+        XCTAssertNil(result.citedRAGUnit)
+    }
+
+    func test_telcoSharedHumanEscalationDeflectsBeforeRAG() async {
+        let base = makeTelcoUnderstanding(routingLane: .humanEscalation)
+        let understanding = TelcoSharedUnderstanding(
+            supportIntent: TelcoHeadOutcome(
+                label: .agentHandoff,
+                confidence: 1.0,
+                probabilities: [],
+                labelIndex: 7
+            ),
+            issueComplexity: base.issueComplexity,
+            routingLane: base.routingLane,
+            cloudRequirements: base.cloudRequirements,
+            requiredTool: base.requiredTool,
+            escalationRisk: base.escalationRisk,
+            piiRisk: base.piiRisk,
+            transcriptQuality: base.transcriptQuality,
+            missingSlots: base.missingSlots,
+            forwardPassMs: base.forwardPassMs,
+            headProjectionMs: base.headProjectionMs
+        )
+
+        let result = await dispatch(
+            query: "get me a human",
+            telcoUnderstanding: understanding
+        )
+
+        XCTAssertEqual(result.composerRoute, .liveAgent)
+        XCTAssertNil(result.citedRAGUnit)
+    }
+
+    func test_lowConfidenceHardPolicySignalsDoNotDeflectBeforeRAG() async {
+        let base = makeTelcoUnderstanding(routingLane: .localAnswer)
+        let understanding = TelcoSharedUnderstanding(
+            supportIntent: TelcoHeadOutcome(
+                label: .agentHandoff,
+                confidence: 0.49,
+                probabilities: [],
+                labelIndex: 7
+            ),
+            issueComplexity: TelcoHeadOutcome(
+                label: .humanRequired,
+                confidence: 0.64,
+                probabilities: [],
+                labelIndex: 4
+            ),
+            routingLane: TelcoHeadOutcome(
+                label: .humanEscalation,
+                confidence: 0.45,
+                probabilities: [],
+                labelIndex: 3
+            ),
+            cloudRequirements: base.cloudRequirements,
+            requiredTool: base.requiredTool,
+            escalationRisk: base.escalationRisk,
+            piiRisk: base.piiRisk,
+            transcriptQuality: base.transcriptQuality,
+            missingSlots: base.missingSlots,
+            forwardPassMs: base.forwardPassMs,
+            headProjectionMs: base.headProjectionMs
+        )
+
+        let result = await dispatch(
+            query: "restart my router",
+            telcoUnderstanding: understanding
+        )
+
+        XCTAssertEqual(result.composerRoute, .toolAction)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+        XCTAssertNotEqual(result.composerRoute, .liveAgent)
+    }
+
+    func test_lowConfidenceLocalToolSignalDoesNotForceToolAction() async {
+        let base = makeTelcoUnderstanding(routingLane: .localAnswer)
+        let understanding = TelcoSharedUnderstanding(
+            supportIntent: base.supportIntent,
+            issueComplexity: base.issueComplexity,
+            routingLane: TelcoHeadOutcome(
+                label: .localTool,
+                confidence: 0.42,
+                probabilities: [],
+                labelIndex: 1
+            ),
+            cloudRequirements: base.cloudRequirements,
+            requiredTool: base.requiredTool,
+            escalationRisk: base.escalationRisk,
+            piiRisk: base.piiRisk,
+            transcriptQuality: base.transcriptQuality,
+            missingSlots: base.missingSlots,
+            forwardPassMs: base.forwardPassMs,
+            headProjectionMs: base.headProjectionMs
+        )
+
+        let result = await dispatch(
+            query: "how do I restart my router?",
+            telcoUnderstanding: understanding
+        )
+
+        XCTAssertEqual(result.composerRoute, .answerPlusAction)
         XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
     }
 
@@ -93,7 +252,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
 
     func test_how_to_do_it_reuses_prior_parental_controls_page() async {
         let context = RetrievalContext(
-            priorAssistantText: nil,
+            priorAssistantText: "I can help with Parental Controls. Open Parental Controls to manage profiles and pause internet.",
             priorPageID: "13.00",
             priorLinkID: "home"
         )
@@ -109,7 +268,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
 
     func test_cannot_find_restart_button_uses_active_restart_task() async {
         let context = RetrievalContext(
-            priorAssistantText: nil,
+            priorAssistantText: "To restart router: select Equipment, then select Restart router.",
             priorPageID: "02.07",
             priorLinkID: "restart-router"
         )
@@ -124,9 +283,174 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         )
     }
 
+    func test_dialogueRepairV4VerbalizerIsUsedForRepairTurn() async {
+        let verbalizer = StubDialogueRepairVerbalizer(text: "Stay on Restart Router and look near the top of Router Details.")
+        let context = RetrievalContext(
+            priorAssistantText: "To restart router: select Equipment, then Restart router.",
+            priorPageID: "02.07",
+            priorLinkID: "restart-router"
+        )
+
+        let result = await dispatch(
+            query: "Not able to find restart button",
+            context: context,
+            dialogueState: DialogueRepairConversationState(
+                priorPageID: "02.07",
+                priorLinkID: "restart-router"
+            ),
+            verbalizer: verbalizer
+        )
+
+        let seenInput = await verbalizer.lastInput
+        XCTAssertEqual(result.source, .dialogueRepair)
+        XCTAssertEqual(result.text, "Stay on Restart Router and look near the top of Router Details.")
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+        XCTAssertEqual(seenInput?.act, .repairCannotFind)
+        XCTAssertEqual(seenInput?.evidence?.pageID, "02.07")
+        XCTAssertEqual(seenInput?.conversationState.priorPageID, "02.07")
+    }
+
+    func test_dialogueRepairV4KeepsToolConfirmationOwnedByDispatcher() async {
+        let verbalizer = StubDialogueRepairVerbalizer(text: "I can try restarting the router from here.")
+        let understanding = makeTelcoUnderstanding(
+            routingLane: .localTool,
+            requiredTool: .restartGateway
+        )
+        let context = RetrievalContext(
+            priorAssistantText: "To restart router: select Equipment, then Restart router.",
+            priorPageID: "02.07",
+            priorLinkID: "restart-router"
+        )
+
+        let result = await dispatch(
+            query: "It's not starting anything else I can do",
+            context: context,
+            telcoUnderstanding: understanding,
+            dialogueState: DialogueRepairConversationState(
+                priorPageID: "02.07",
+                priorLinkID: "restart-router",
+                pendingTool: "restart-router",
+                frustrationCount: 1,
+                pendingConfirmation: true
+            ),
+            verbalizer: verbalizer
+        )
+
+        XCTAssertEqual(result.source, .dialogueRepair)
+        XCTAssertEqual(result.composerRoute, .toolAction)
+        XCTAssertEqual(result.requiresConfirmation, true)
+        XCTAssertEqual(result.executableToolIntent, .restartRouter)
+        XCTAssertTrue(
+            result.text.contains("Reply 'yes' to confirm."),
+            "Swift owns the confirmation clause even when V4 verbalizes the repair text"
+        )
+    }
+
+    func test_dialogueRepairV4NotUsedForFirstTurnRestartQuestionWithoutQuestionMark() async {
+        let verbalizer = StubDialogueRepairVerbalizer(text: "This text should never render.")
+
+        let result = await dispatch(
+            query: "how do I restart my router",
+            verbalizer: verbalizer
+        )
+
+        let seenInput = await verbalizer.lastInput
+        XCTAssertEqual(result.source, .composer)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+        XCTAssertNil(seenInput)
+        XCTAssertFalse(result.text.contains("This text should never render."))
+    }
+
+    func test_firstTurnRestartWithDeviceSetupUnderstandingStillRetrievesRestartRouter() async {
+        let understanding = makeTelcoUnderstanding(
+            supportIntent: .deviceSetup,
+            routingLane: .localAnswer,
+            requiredTool: .noTool
+        )
+        let verbalizer = StubDialogueRepairVerbalizer(text: "[forbids_contact(act=turn_style=local_answer)]")
+
+        let result = await dispatch(
+            query: "how do I restart my router",
+            telcoUnderstanding: understanding,
+            verbalizer: verbalizer
+        )
+
+        let seenInput = await verbalizer.lastInput
+        XCTAssertEqual(result.source, .composer)
+        XCTAssertEqual(result.composerRoute, .ragAnswer)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+        XCTAssertEqual(result.citedRAGUnit?.linkID, "restart-router")
+        XCTAssertNil(seenInput)
+        XCTAssertFalse(result.text.contains("forbids_contact"))
+        XCTAssertFalse(result.text.lowercased().contains("troubleshoot"))
+    }
+
+    func test_stalePriorPageWithoutAssistantTextDoesNotBiasFirstTurnRestart() async {
+        let verbalizer = StubDialogueRepairVerbalizer(text: "This text should never render.")
+        let staleContext = RetrievalContext(
+            priorAssistantText: nil,
+            priorPageID: "01.01",
+            priorLinkID: "tab-troubleshoot"
+        )
+
+        let result = await dispatch(
+            query: "how do I restart my router",
+            context: staleContext,
+            verbalizer: verbalizer
+        )
+
+        let seenInput = await verbalizer.lastInput
+        XCTAssertEqual(result.source, .composer)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "02.07")
+        XCTAssertNil(seenInput)
+        XCTAssertFalse(
+            result.text.contains("forbids_contact"),
+            "invisible prior page state must not trigger dialogue-repair generation"
+        )
+    }
+
+    func test_dialogueRepairV4RejectsInternalControlOutput() async throws {
+        let backend = ScriptedBackend()
+        await backend.script(.init(
+            matches: "current_user_turn",
+            response: "[forbids_contact(act=turn_style=local_answer, language=null, unsafe_contact=false)]"
+        ))
+        let verbalizer = DialogueRepairVerbalizer(backend: backend, adapterPath: "/tmp/fake.gguf")
+        let input = makeDialogueRepairInput(
+            act: .repairCannotFind,
+            query: "I can't find the restart button"
+        )
+
+        let result = await verbalizer.verbalize(input)
+
+        XCTAssertTrue(result.usedFallback)
+        XCTAssertEqual(result.extractionMode, "missing_response_field")
+        XCTAssertFalse(result.text.contains("forbids_contact"))
+        XCTAssertFalse(result.text.contains("unsafe_contact"))
+    }
+
+    func test_dialogueRepairV4AcceptsStructuredResponseFieldOnly() async throws {
+        let backend = ScriptedBackend()
+        await backend.script(.init(
+            matches: "current_user_turn",
+            response: #"<|tool_call_start|>telco.dialogue_reply(act="repair_cannot_find", response="Stay on Restart Router and look near the top of Router Details.", source_page_id="02.07", source_link_id="restart-router", handoff="none", unsafe_action=false)<|tool_call_end|>"#
+        ))
+        let verbalizer = DialogueRepairVerbalizer(backend: backend, adapterPath: "/tmp/fake.gguf")
+        let input = makeDialogueRepairInput(
+            act: .repairCannotFind,
+            query: "I can't find the restart button"
+        )
+
+        let result = await verbalizer.verbalize(input)
+
+        XCTAssertFalse(result.usedFallback)
+        XCTAssertEqual(result.extractionMode, "response_field")
+        XCTAssertEqual(result.text, "Stay on Restart Router and look near the top of Router Details.")
+    }
+
     func testEquipmentTileFollowupAnswersRestartSubstep() async {
         let context = RetrievalContext(
-            priorAssistantText: nil,
+            priorAssistantText: "To restart router: select the Equipment tile, then select Restart router.",
             priorPageID: "02.07",
             priorLinkID: "restart-router"
         )
@@ -206,11 +530,13 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
 
     func test_chatViewModelComposerPathBypassesCompositeUnderstandingAndRelationalStack() async {
         let stageA = CountingStageAClassifier()
+        let telcoUnderstanding = CountingTelcoUnderstandingClassifier()
         let understanding = CountingUnderstandingClassifier()
         let relational = CountingRelationalStrategy()
         let dispatcher = makeDispatcher(stageA: stageA)
         let harness = TestChatHarness(
             verizonDispatcher: dispatcher,
+            telcoUnderstandingClassifier: telcoUnderstanding,
             understandingClassifier: understanding,
             relationalStrategy: relational
         )
@@ -218,14 +544,18 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         await harness.send("restart my router")
 
         let stageACalls = await stageA.callCount()
+        let telcoCalls = await telcoUnderstanding.callCount()
         let understandingCalls = await understanding.callCount()
         let relationalTextCalls = await relational.textCallCount()
         let chatModeCalls = await harness.chatModeRouter.recordedQueryCount()
         XCTAssertEqual(stageACalls, 0)
+        XCTAssertEqual(telcoCalls, 1)
         XCTAssertEqual(understandingCalls, 0)
         XCTAssertEqual(relationalTextCalls, 0)
         XCTAssertEqual(chatModeCalls, 0)
-        XCTAssertEqual(harness.lastAssistantMessage?.trace?.chatModeRuntimeMS, 0)
+        XCTAssertEqual(harness.lastAssistantMessage?.trace?.chatModeRuntimeMS, 12)
+        XCTAssertEqual(harness.lastAssistantMessage?.trace?.telcoUnderstandingMS, 12)
+        XCTAssertNotNil(harness.lastAssistantMessage?.trace?.telcoUnderstanding)
         XCTAssertNotNil(harness.lastAssistantMessage?.trace?.retrievalMS)
         XCTAssertNotNil(harness.lastAssistantMessage?.trace?.routePolicyMS)
         XCTAssertNotNil(harness.lastAssistantMessage?.trace?.composerMS)
@@ -234,7 +564,10 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeDispatcher(stageA: VerizonStageAClassifying? = nil) -> VerizonChatDispatcher {
+    private func makeDispatcher(
+        stageA: VerizonStageAClassifying? = nil,
+        verbalizer: DialogueRepairVerbalizing? = nil
+    ) -> VerizonChatDispatcher {
         VerizonChatDispatcher(
             stageA: stageA,
             stageB: nil,
@@ -246,24 +579,70 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
             corpus: corpus,
             lexicalRetriever: retriever,
             toolRegistry: toolRegistry,
-            toolAliasMap: ToolAliasMap.default()
+            toolAliasMap: ToolAliasMap.default(),
+            dialogueRepairVerbalizer: verbalizer
         )
     }
 
     private func dispatch(
         query: String,
-        context: RetrievalContext = .empty
+        context: RetrievalContext = .empty,
+        telcoUnderstanding: TelcoSharedUnderstanding? = nil,
+        dialogueState: DialogueRepairConversationState = .empty,
+        verbalizer: DialogueRepairVerbalizing? = nil
     ) async -> VerizonDispatchResult {
-        let dispatcher = makeDispatcher()
+        let dispatcher = makeDispatcher(verbalizer: verbalizer)
         var finalResult: VerizonDispatchResult?
         for await event in dispatcher.dispatchComposer(
             query: query,
-            retrievalContext: context
+            retrievalContext: context,
+            telcoUnderstanding: telcoUnderstanding,
+            dialogueState: dialogueState
         ) {
             if case .response(let r) = event { finalResult = r }
         }
         return finalResult ?? VerizonDispatchResult(
             text: "<no response>", lane: .ragStepByStep, source: .composer, totalMs: 0
+        )
+    }
+
+    private func makeDialogueRepairInput(
+        act: DialogueRepairAct,
+        query: String
+    ) -> DialogueRepairVerbalizerInput {
+        DialogueRepairVerbalizerInput(
+            currentUserTurn: query,
+            priorAssistantText: "To restart router: select Equipment, then Restart router.",
+            conversationState: DialogueRepairConversationState(
+                priorPageID: "02.07",
+                priorLinkID: "restart-router"
+            ),
+            understanding: nil,
+            evidence: corpus.unit(forPageID: "02.07"),
+            route: .ragAnswer,
+            act: act,
+            handoff: .none,
+            requiresConfirmation: false
+        )
+    }
+}
+
+private actor StubDialogueRepairVerbalizer: DialogueRepairVerbalizing {
+    let text: String
+    private(set) var lastInput: DialogueRepairVerbalizerInput?
+
+    init(text: String) {
+        self.text = text
+    }
+
+    func verbalize(_ input: DialogueRepairVerbalizerInput) async -> DialogueRepairVerbalizerResult {
+        lastInput = input
+        return DialogueRepairVerbalizerResult(
+            text: text,
+            rawOutput: "stub",
+            usedFallback: false,
+            extractionMode: "stub",
+            latencyMs: 2
         )
     }
 }
@@ -278,6 +657,62 @@ private func makeStageADecision() -> VerizonStageADecision {
         refusalFlags: .none,
         refusalFlagsProbabilities: [0, 0, 0],
         totalMs: 0
+    )
+}
+
+private func makeTelcoUnderstanding(
+    supportIntent: TelcoSupportIntent = .troubleshooting,
+    routingLane: TelcoRoutingLane = .localAnswer,
+    requiredTool: TelcoRequiredTool = .noTool,
+    totalMs: Double = 0
+) -> TelcoSharedUnderstanding {
+    TelcoSharedUnderstanding(
+        supportIntent: TelcoHeadOutcome(
+            label: supportIntent,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 0
+        ),
+        issueComplexity: TelcoHeadOutcome(
+            label: .guided,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 1
+        ),
+        routingLane: TelcoHeadOutcome(
+            label: routingLane,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 0
+        ),
+        cloudRequirements: TelcoMultiLabelOutcome(activeLabels: [], probabilities: []),
+        requiredTool: TelcoHeadOutcome(
+            label: requiredTool,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 0
+        ),
+        escalationRisk: TelcoHeadOutcome(
+            label: .low,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 0
+        ),
+        piiRisk: TelcoHeadOutcome(
+            label: .safe,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 0
+        ),
+        transcriptQuality: TelcoHeadOutcome(
+            label: .clean,
+            confidence: 1.0,
+            probabilities: [],
+            labelIndex: 0
+        ),
+        missingSlots: TelcoMultiLabelOutcome(activeLabels: [], probabilities: []),
+        forwardPassMs: totalMs,
+        headProjectionMs: 0
     )
 }
 
@@ -312,6 +747,23 @@ private actor CountingUnderstandingClassifier: QueryUnderstandingClassifying {
                 reasoning: "test should not be called",
                 runtimeMS: 1
             )
+        )
+    }
+
+    func callCount() -> Int {
+        calls
+    }
+}
+
+private actor CountingTelcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying {
+    private var calls = 0
+
+    func classify(query: String) async throws -> TelcoSharedUnderstanding {
+        calls += 1
+        return makeTelcoUnderstanding(
+            routingLane: .localTool,
+            requiredTool: .restartGateway,
+            totalMs: 12
         )
     }
 

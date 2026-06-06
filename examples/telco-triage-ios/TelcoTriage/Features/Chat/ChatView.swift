@@ -257,6 +257,17 @@ struct ChatView: View {
                             traceExpandedBinding: Binding(
                                 get: { holder.vm?.isTraceExpanded(messageID: message.id) ?? true },
                                 set: { _ in holder.vm?.toggleTraceExpanded(messageID: message.id) }
+                            ),
+                            telcoUnderstandingExpandedBinding: Binding(
+                                get: {
+                                    holder.vm?.isTelcoUnderstandingExpanded(messageID: message.id) ?? false
+                                },
+                                set: { isExpanded in
+                                    holder.vm?.setTelcoUnderstandingExpanded(
+                                        messageID: message.id,
+                                        isExpanded: isExpanded
+                                    )
+                                }
                             )
                         )
                         .id(message.id)
@@ -340,6 +351,7 @@ final class ChatViewModelHolder: ObservableObject {
             toolSelector: appState.toolSelector,
             toolExecutor: appState.toolExecutor,
             verizonDispatcher: appState.verizonDispatcher,
+            telcoUnderstandingClassifier: appState.telcoUnderstandingClassifier,
             // ADR-022 §4.3 Layer 1 — the unified understanding classifier
             // produces the QueryUnderstanding vector used for routing,
             // NBA selection, and the engineering trace card.

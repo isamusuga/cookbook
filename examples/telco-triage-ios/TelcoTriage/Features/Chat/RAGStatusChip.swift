@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Engineering-mode chip that surfaces the boot-time load status of the
-/// composer RAG path. The customer UI hides raw RAG diagnostics; this
+/// local AI answer path. The customer UI hides raw diagnostics; this
 /// chip is for build validation and quick simulator/device triage.
 ///
 /// Renders nothing when status is .live AND we're in customer mode —
@@ -14,7 +14,7 @@ struct RAGStatusChip: View {
     @State private var showingDiagnostic = false
 
     var body: some View {
-        // Customers don't need to see "RAG: live" or raw diagnostic
+        // Customers don't need to see raw runtime diagnostics or raw
         // reasons. Engineering mode keeps the full tap-to-diagnose chip.
         if !isEngineeringMode {
             customerStatus
@@ -67,7 +67,7 @@ struct RAGStatusChip: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("RAG retrieval status. \(status.summary). Tap for diagnostic.")
+        .accessibilityLabel("Local AI runtime status. \(status.summary). Tap for diagnostic.")
         .sheet(isPresented: $showingDiagnostic) {
             RAGStatusDiagnosticSheet(status: status)
         }
@@ -127,8 +127,8 @@ private struct RAGStatusDiagnosticSheet: View {
                             .font(.system(size: 28))
                             .foregroundStyle(status.isLive ? .green : .orange)
                         Text(status.isLive
-                             ? "Composer RAG: LIVE"
-                             : "Composer RAG: DEGRADED")
+                             ? "Local AI Runtime: LIVE"
+                             : "Local AI Runtime: DEGRADED")
                             .font(.system(size: 17, weight: .semibold))
                     }
 
@@ -145,7 +145,7 @@ private struct RAGStatusDiagnosticSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("RAG Status")
+            .navigationTitle("Runtime Status")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

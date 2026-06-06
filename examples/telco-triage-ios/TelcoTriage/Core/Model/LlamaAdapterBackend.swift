@@ -127,6 +127,14 @@ public enum TelcoModelBundle {
     public static let verizonStageBMergedName = "vz-stage-b-v1.Q4_K_M"
     public static let verizonStageBLoraName = "vz-stage-b-v1.lora.f16"
 
+    // Dialogue-repair verbalizer v4.
+    //
+    // This LoRA is not a router, retriever, tool selector, or citation
+    // authority. It is a response-only verbalizer trained to make
+    // multi-turn repair turns sound natural while echoing the route,
+    // evidence ids, handoff, and confirmation policy supplied by Swift.
+    public static let dialogueRepairV4AdapterName = "telco-dialogue-repair-v4"
+
     // Verizon Stage A: probe-validated topic_gate + refusal_flags heads.
     // Each is a classifier head binary (weights/bias/meta) trained on top
     // of its own r=16 LoRA backbone. Schema lives in the meta JSON.
@@ -239,6 +247,10 @@ public enum TelcoModelBundle {
     /// runs on. Returns nil when not bundled.
     public static func verizonStageBLoraPath(in bundle: Bundle = .main) -> String? {
         bundle.path(forResource: verizonStageBLoraName, ofType: ext)
+    }
+
+    public static func dialogueRepairV4AdapterPath(in bundle: Bundle = .main) -> String? {
+        bundle.path(forResource: dialogueRepairV4AdapterName, ofType: ext)
     }
 
     // MARK: - Verizon Stage A (topic_gate + refusal_flags)

@@ -160,10 +160,9 @@ final class AnswerComposerTests: XCTestCase {
             evidence: unit,
             requiresConfirmation: false
         )
-        // The "I can …" intro still ends with "Confirm to proceed:"
-        // which contains "confirm", but the explicit "Reply 'yes'"
-        // clause should NOT be added when requiresConfirmation == false.
+        XCTAssertTrue(ans.text.contains("I can run a speed test for you."))
         XCTAssertFalse(ans.text.contains("Reply 'yes'"))
+        XCTAssertFalse(ans.text.lowercased().contains("confirm"))
     }
 
     func test_answerPlusAction_adds_confirmation_when_required() {

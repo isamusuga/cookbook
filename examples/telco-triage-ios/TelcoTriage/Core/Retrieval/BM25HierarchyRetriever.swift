@@ -405,10 +405,15 @@ public final class BM25HierarchyRetriever: Sendable {
         context: RetrievalContext,
         k: Int = 5
     ) -> [BM25Hit] {
-        let history: [ConversationTurnSnippet] = context.priorAssistantText.map {
-            [ConversationTurnSnippet(role: "ASSISTANT", body: $0)]
-        } ?? []
-        let explicitHints = Set([context.priorPageID].compactMap { $0 })
+        let priorAssistant = context.priorAssistantText?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasPriorAssistant = priorAssistant.map { !$0.isEmpty } ?? false
+        let history: [ConversationTurnSnippet] = hasPriorAssistant
+            ? [ConversationTurnSnippet(role: "ASSISTANT", body: priorAssistant ?? "")]
+            : []
+        let explicitHints = hasPriorAssistant
+            ? Set([context.priorPageID].compactMap { $0 })
+            : []
         return rank(query: query, history: history, explicitPageHints: explicitHints, k: k)
     }
 

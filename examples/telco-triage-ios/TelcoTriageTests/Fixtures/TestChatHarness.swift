@@ -38,6 +38,7 @@ final class TestChatHarness {
         useSimulatorFastGroundedQA: Bool = false,
         conversationState: ConversationState? = nil,
         verizonDispatcher: VerizonChatDispatcher? = nil,
+        telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying? = nil,
         understandingClassifier: QueryUnderstandingClassifying? = nil,
         relationalStrategy: RelationalHeadsStrategy? = nil
     ) {
@@ -89,6 +90,7 @@ final class TestChatHarness {
             toolSelector: tool,
             toolExecutor: executor,
             verizonDispatcher: verizonDispatcher,
+            telcoUnderstandingClassifier: telcoUnderstandingClassifier,
             understandingClassifier: understandingClassifier,
             relationalStrategy: relationalStrategy,
             conversationState: conversationState,

@@ -182,6 +182,7 @@ public final class ConversationState: ObservableObject {
         userMessage: String,
         assistantLane: UnderstandingLane,
         toolDecision: ToolDecision?,
+        pendingToolConfirmation: ToolDecision? = nil,
         missingSlots: Set<Slot> = [],
         pendingIntent: ToolIntent? = nil,
         originalQuery: String? = nil
@@ -197,17 +198,19 @@ public final class ConversationState: ObservableObject {
             didntWorkCount += 1
         }
 
-        // Pending tool confirmation — only the PRIMARY tool card
-        // (the .toolAction lane's own decision) sets the pending
-        // pointer. Compound attachments on a RAG turn are secondary
-        // affordances; treating a bare "yes" as confirming them would
-        // hijack the RAG flow's natural follow-up ("yes, that worked").
-        if let toolDecision,
-           toolDecision.requiresConfirmation,
-           !toolDecision.isCompoundAttachment {
-            pendingToolConfirmation = toolDecision
+        // Pending tool confirmation — explicit state wins over visual
+        // presentation. Composer answers can offer a real action via
+        // inline copy ("Reply yes") without necessarily rendering a
+        // ToolDecisionCard. Tool cards still set pending when they are
+        // primary. Compound attachments remain secondary and never
+        // become the target of a bare affirmative.
+        let confirmationCandidate = pendingToolConfirmation
+            ?? ((toolDecision?.isCompoundAttachment == false) ? toolDecision : nil)
+        if let confirmationCandidate,
+           confirmationCandidate.requiresConfirmation {
+            self.pendingToolConfirmation = confirmationCandidate
         } else {
-            pendingToolConfirmation = nil
+            self.pendingToolConfirmation = nil
         }
 
         // Pending clarification — set when the assistant's reply
@@ -617,7 +620,6 @@ public enum ConversationStateRecorder {
             yes|yeah|yep|yup|sure|ok|okay|k|fine
           | (?:go\s+ahead)|(?:do\s+it)|(?:please\s+do)
           | (?:sounds\s+good)|(?:that\s+works)
-          | thanks?|thx
         )\s*[.!]?\s*$
         """#,
         options: [.allowCommentsAndWhitespace, .caseInsensitive]

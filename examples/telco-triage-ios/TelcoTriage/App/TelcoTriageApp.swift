@@ -87,18 +87,23 @@ final class AppState: ObservableObject {
     // Contextual support intelligence
     let supportSignalEngine: SupportSignalEngine
 
-    // Intelligence layer. The normal Liquid Telco path is the
-    // composer dispatcher; ChatModeRouter remains injectable for
-    // legacy/degraded builds and explicit experiments only.
+    // Intelligence layer. The normal Liquid Telco path is:
+    // telco-shared-clf-v1 semantic control plane → composer dispatcher.
+    // ChatModeRouter remains injectable for legacy/degraded builds and
+    // explicit experiments only.
     let chatModeRouter: ChatModeRouter
     let kbExtractor: KBExtractor
     let toolSelector: ToolSelector
 
     // Liquid Telco composer dispatcher. When the canonical RAG unit
-    // corpus is bundled, this owns the normal support answer path.
-    // Stage A, relational, and Stage B are optional experiment surfaces,
-    // not dependencies of customer/demo Q&A.
+    // corpus is bundled, this owns retrieval, deterministic route
+    // policy, citation, and answer composition.
     let verizonDispatcher: VerizonChatDispatcher?
+
+    /// ADR-026 semantic control plane. One shared LFM2.5-350M adapter
+    /// forward pass projects the 9 telco classifier heads used by the
+    /// normal customer/demo path.
+    let telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying?
 
     /// ADR-022 §4.3 Layer 1 — produces a `QueryUnderstanding` vector
     /// per turn. Picks `SharedBackboneStrategy` when the v2 shared
@@ -197,6 +202,7 @@ final class AppState: ObservableObject {
         self.modelProvider = stack.chat
         self.toolExecutor = ToolExecutor(chatProvider: stack.chat)
         self.verizonDispatcher = stack.verizonDispatcher
+        self.telcoUnderstandingClassifier = stack.telcoUnderstandingClassifier
         self.queryUnderstandingClassifier = stack.queryUnderstandingClassifier
         self.relationalStrategy = stack.relationalStrategy
         self.ragStatus = stack.ragStatus
@@ -247,11 +253,12 @@ final class AppState: ObservableObject {
         #endif
 
         // Kick the model load off the main thread. The normal Liquid
-        // Telco composer path is zero-generation, so boot must not
-        // pre-warm the old composite understanding adapters. Loading
-        // those LoRAs at startup makes the customer/demo path look like
-        // it depends on chat-mode-router / Stage A even when it does not.
-        // Keep only the tool adapter warm for explicit tool execution.
+        // Telco path uses one shared understanding pass and deterministic
+        // grounded answers, so boot must not pre-warm the old composite
+        // understanding adapters. Loading those LoRAs at startup makes
+        // the customer/demo path look like it depends on chat-mode-router
+        // / Stage A even when it does not. Keep only the tool adapter warm
+        // for explicit tool execution.
         Task.detached(priority: .userInitiated) {
             do {
                 try await backend.loadModel(
@@ -268,12 +275,19 @@ final class AppState: ObservableObject {
 
         let bridge = LlamaAdapterBackend(backend: backend)
         let chat = LFMChatProvider(backend: bridge)
+        let dialogueRepairVerbalizer = DialogueRepairVerbalizer.bundled(backend: bridge)
+        if dialogueRepairVerbalizer != nil {
+            AppLog.lfm.info("dialogue repair verbalizer ready (\(TelcoModelBundle.dialogueRepairV4AdapterName, privacy: .public))")
+        } else {
+            AppLog.lfm.warning("dialogue repair verbalizer unavailable: \(TelcoModelBundle.dialogueRepairV4AdapterName, privacy: .public) not bundled")
+        }
 
-        // Liquid Telco composer dispatcher. Built when the Stage A
-        // router artifacts are bundled; the composer corpus/retriever
-        // decide whether the answer path is live or degraded. Stage B
-        // and ColBERT are legacy/evaluation-only surfaces.
+        // Liquid Telco composer dispatcher. Built when the canonical RAG
+        // corpus and lexical retriever load. The semantic control plane
+        // is wired separately below because it classifies the turn before
+        // retrieval/route policy.
         var verizonDispatcher: VerizonChatDispatcher?
+        var telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying?
         var ragStatus: RAGStackStatus = .notInitialized
         // Step 6: composer-path dependencies. The composer is the only
         // normal answer path per the Step 5 decision record. Loaded
@@ -310,7 +324,7 @@ final class AppState: ObservableObject {
         let composerWired = composerCorpus != nil && composerRetriever != nil
         if let cc = composerCorpus, composerWired {
             ragStatus = .live(chunkCount: cc.count, embedDim: 0)
-            AppLog.lfm.info("Liquid Telco dispatcher ready (composer-only path, \(cc.count, privacy: .public) RAG units)")
+            AppLog.lfm.info("Liquid Telco dispatcher ready (shared-understanding + composer path, \(cc.count, privacy: .public) RAG units)")
             verizonDispatcher = VerizonChatDispatcher(
                 stageA: nil,
                 stageB: nil,
@@ -322,11 +336,27 @@ final class AppState: ObservableObject {
                 corpus: cc,
                 lexicalRetriever: composerRetriever,
                 toolRegistry: composerToolRegistry,
-                toolAliasMap: composerToolAliasMap
+                toolAliasMap: composerToolAliasMap,
+                dialogueRepairVerbalizer: dialogueRepairVerbalizer
             )
         } else {
             ragStatus = .degraded(reason: "RAGUnitCorpus failed to load")
             AppLog.lfm.error("Liquid Telco composer dispatcher unavailable — RAGUnitCorpus failed to load")
+        }
+
+        if TelcoModelBundle.adr015TelcoStackBundled() {
+            do {
+                telcoUnderstandingClassifier = try TelcoSharedUnderstandingClassifier.bundled(
+                    backend: backend
+                )
+                AppLog.lfm.info("telco shared understanding ready (telco-shared-clf-v1 + 9 heads)")
+            } catch {
+                AppLog.lfm.error("telco shared understanding failed to load: \(error.localizedDescription, privacy: .public)")
+            }
+        } else {
+            AppLog.lfm.warning(
+                "telco shared understanding unavailable: expected \(TelcoModelBundle.sharedClfAdapterName, privacy: .public) and 9 ADR-015 heads"
+            )
         }
 
         // KB selection: deterministic keyword/alias matching. The KB
@@ -404,6 +434,7 @@ final class AppState: ObservableObject {
             tool: LFMToolSelector(backend: bridge, adapterPath: toolAdapter),
             chat: chat,
             verizonDispatcher: verizonDispatcher,
+            telcoUnderstandingClassifier: telcoUnderstandingClassifier,
             queryUnderstandingClassifier: queryUnderstandingClassifier,
             ragStatus: ragStatus,
             relationalStrategy: relationalStrategy
@@ -554,6 +585,7 @@ final class AppState: ObservableObject {
         let tool: ToolSelector
         let chat: LFMChatProvider
         let verizonDispatcher: VerizonChatDispatcher?
+        let telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying?
         let queryUnderstandingClassifier: QueryUnderstandingClassifying
         let ragStatus: RAGStackStatus
         let relationalStrategy: RelationalHeadsStrategy
