@@ -2,7 +2,7 @@ import XCTest
 @testable import TelcoTriage
 
 /// Swift parity tests for the Step 5b dispatcher heuristics. Mirrors
-/// `scripts/vz/tests/test_multi_turn_acceptance.py` so any drift between
+/// `scripts/telco/tests/test_multi_turn_acceptance.py` so any drift between
 /// the Python harness (where the 8 acceptance gates live) and the iOS
 /// dispatcher gets caught at build time.
 ///

@@ -8,22 +8,22 @@ import os.log
 /// same pattern the Banking POC `InferencePipeline` uses, just narrower
 /// (one turn, no multi-step chain) — keeps the trace UI surface
 /// consistent across both POCs for the inevitable future merge.
-public enum VerizonDispatchEvent: Sendable, Equatable {
+public enum TelcoDispatchEvent: Sendable, Equatable {
     case stageAStarted
-    case stageAComplete(stageA: VerizonStageADecision)
-    case laneSelected(VerizonLane)
+    case stageAComplete(stageA: TelcoStageADecision)
+    case laneSelected(TelcoLane)
     case retrievalStarted
     case retrievalComplete(result: ColBERTRetrievalResult)
     case stageBStarted
     case stageBComplete(StageBResponse)
     case faithfulnessChecked(score: FaithfulnessScore)
     case fallbackInvoked(reason: String)
-    case response(VerizonDispatchResult)
+    case response(TelcoDispatchResult)
     case failed(message: String)
 }
 
 /// Final response delivered to the chat view.
-public struct VerizonDispatchResult: Sendable, Equatable {
+public struct TelcoDispatchResult: Sendable, Equatable {
     public enum Source: String, Sendable, Equatable {
         case composer  // Step 6 — deterministic composer on top of lexical retrieval
         case dialogueRepair  // V4 response-only verbalizer over composer evidence/policy
@@ -39,14 +39,14 @@ public struct VerizonDispatchResult: Sendable, Equatable {
 
     /// The lane the router picked. Surfaced for engineering trace +
     /// session telemetry.
-    public let lane: VerizonLane
+    public let lane: TelcoLane
 
     /// Where the text came from (Stage B, deterministic KB fallback, a
     /// static template, etc.). Critical for the engineering-mode trace
     /// because Stage B vs fallback have very different latency profiles.
     public let source: Source
 
-    /// vzhome:// deep link the user can tap, when the response carries
+    /// telcohome:// deep link the user can tap, when the response carries
     /// one. Surfaced separately so the UI can render an actionable
     /// button below the message.
     public let deepLink: String?
@@ -85,7 +85,7 @@ public struct VerizonDispatchResult: Sendable, Equatable {
 
     /// True iff the rendered text requires a real, executable tool
     /// confirmation (a registered `ToolIntent` exists for the unit's
-    /// `linkID`). Surfaced so `ChatViewModel.runVerizonDispatch` can
+    /// `linkID`). Surfaced so `ChatViewModel.runTelcoDispatch` can
     /// push a `PendingToolConfirmation` for the existing affirmative-
     /// recovery flow. NEVER true for view-only RAG answers (guardrail
     /// #3 in the Step 6 plan — no confirmation theatre).
@@ -122,7 +122,7 @@ public struct VerizonDispatchResult: Sendable, Equatable {
 
     public init(
         text: String,
-        lane: VerizonLane,
+        lane: TelcoLane,
         source: Source,
         deepLink: String? = nil,
         retrievedChunk: ColBERTChunk? = nil,
@@ -173,7 +173,7 @@ public struct VerizonDispatchResult: Sendable, Equatable {
 /// Lane handlers:
 ///   - `.liveAgentEscalation`     → static template + ETA
 ///   - `.navOnlyDeeplink`         → static template + Account deep link
-///   - `.outOfScopeRefusal`       → Verizon canonical refusal
+///   - `.outOfScopeRefusal`       → Telco canonical refusal
 ///   - `.greeting`                → friendly hello (no LLM)
 ///   - `.unknownFeature`          → KB fallback if it has a hit, else refusal
 ///   - `.clarification`           → ask user to pick (stub for now —
@@ -187,8 +187,8 @@ public struct VerizonDispatchResult: Sendable, Equatable {
 /// scaffolding (ToolExecutor, LFMChatProvider + CustomerContext)
 /// fulfill the user-visible response. That integration lands in the
 /// next phase (ChatView rewire).
-public actor VerizonChatDispatcher {
-    private let stageA: VerizonStageAClassifying?
+public actor TelcoChatDispatcher {
+    private let stageA: TelcoStageAClassifying?
     private let stageB: StageBGenerating?
     private let kbFallback: KBExtractor
     private let kb: [KBEntry]
@@ -207,11 +207,11 @@ public actor VerizonChatDispatcher {
     private let dialogueRepairVerbalizer: DialogueRepairVerbalizing?
     private let logger = Logger(
         subsystem: "ai.liquid.demos.telcotriage",
-        category: "VerizonDispatcher"
+        category: "TelcoDispatcher"
     )
 
     public init(
-        stageA: VerizonStageAClassifying?,
+        stageA: TelcoStageAClassifying?,
         stageB: StageBGenerating?,
         kbFallback: KBExtractor,
         kb: [KBEntry],
@@ -256,7 +256,7 @@ public actor VerizonChatDispatcher {
         dialogueState: DialogueRepairConversationState = .empty,
         turnRelation: TelcoTurnRelation? = nil,
         policyState: TelcoDialogueStateSnapshot = .empty
-    ) -> AsyncStream<VerizonDispatchEvent> {
+    ) -> AsyncStream<TelcoDispatchEvent> {
         AsyncStream { continuation in
             Task {
                 await self.runComposerOnly(
@@ -275,7 +275,7 @@ public actor VerizonChatDispatcher {
     public nonisolated func dispatch(
         query: String,
         retrievalContext: RetrievalContext = .empty
-    ) -> AsyncStream<VerizonDispatchEvent> {
+    ) -> AsyncStream<TelcoDispatchEvent> {
         AsyncStream { continuation in
             Task {
                 await self.run(
@@ -291,7 +291,7 @@ public actor VerizonChatDispatcher {
 
     /// ADR-022 §4.3 Layer 1 entry point — caller supplies a pre-built
     /// Stage A decision (from the v2 understanding pass) and the
-    /// already-resolved `VerizonLane` (from `VerizonUnderstandingRouter.decide`).
+    /// already-resolved `TelcoLane` (from `TelcoUnderstandingRouter.decide`).
     /// The dispatcher skips its own Stage A classifier call (avoiding
     /// the duplicate ~150 ms forward pass) and goes straight to lane
     /// handling. The progressive trace stream still emits
@@ -304,10 +304,10 @@ public actor VerizonChatDispatcher {
     /// follow-ups. Default `.empty` for back-compat.
     public nonisolated func dispatch(
         query: String,
-        prebuiltStageA: VerizonStageADecision,
-        prebuiltLane: VerizonLane,
+        prebuiltStageA: TelcoStageADecision,
+        prebuiltLane: TelcoLane,
         retrievalContext: RetrievalContext = .empty
-    ) -> AsyncStream<VerizonDispatchEvent> {
+    ) -> AsyncStream<TelcoDispatchEvent> {
         AsyncStream { continuation in
             Task {
                 await self.run(
@@ -323,15 +323,15 @@ public actor VerizonChatDispatcher {
 
     private func run(
         query: String,
-        prebuiltStageA: VerizonStageADecision?,
-        prebuiltLane: VerizonLane?,
+        prebuiltStageA: TelcoStageADecision?,
+        prebuiltLane: TelcoLane?,
         retrievalContext: RetrievalContext = .empty,
-        continuation: AsyncStream<VerizonDispatchEvent>.Continuation
+        continuation: AsyncStream<TelcoDispatchEvent>.Continuation
     ) async {
         let t0 = CFAbsoluteTimeGetCurrent()
 
         continuation.yield(.stageAStarted)
-        let stageADecision: VerizonStageADecision
+        let stageADecision: TelcoStageADecision
         if let prebuiltStageA {
             // Caller already paid for Stage A — re-yield it through the
             // event stream so the trace UI renders the same chain.
@@ -355,12 +355,12 @@ public actor VerizonChatDispatcher {
 
         // Trust the caller's lane decision when supplied; the v2 router
         // includes signals (chat_mode, emotional_state) that this
-        // dispatcher's local `VerizonRagRouter` doesn't know about, so
+        // dispatcher's local `TelcoRagRouter` doesn't know about, so
         // re-routing here would discard them.
-        let lane = prebuiltLane ?? VerizonRagRouter.route(stageA: stageADecision)
+        let lane = prebuiltLane ?? TelcoRagRouter.route(stageA: stageADecision)
         continuation.yield(.laneSelected(lane))
 
-        let result: VerizonDispatchResult
+        let result: TelcoDispatchResult
         switch lane {
         case .liveAgentEscalation:
             result = handleLiveAgent(query: query, lane: lane, t0: t0)
@@ -396,7 +396,7 @@ public actor VerizonChatDispatcher {
         dialogueState: DialogueRepairConversationState,
         turnRelation: TelcoTurnRelation?,
         policyState: TelcoDialogueStateSnapshot,
-        continuation: AsyncStream<VerizonDispatchEvent>.Continuation
+        continuation: AsyncStream<TelcoDispatchEvent>.Continuation
     ) async {
         let t0 = CFAbsoluteTimeGetCurrent()
         let effectivePolicyState = Self.effectivePolicyState(
@@ -432,29 +432,29 @@ public actor VerizonChatDispatcher {
     // path), every lane handler delegates to the composer so all
     // user-facing text comes from a single source of truth. The
     // composer's per-route templates are documented at
-    // `scripts/vz/answer_composer.py::ROUTE_TEMPLATES` and mirrored in
+    // `scripts/telco/answer_composer.py::ROUTE_TEMPLATES` and mirrored in
     // `Core/Composer/AnswerComposer.swift`.
     //
     // The legacy inline templates remain as the dev / engineering
     // fallback when `composerPathEnabled == false` — same words as
     // before so legacy behaviour is unchanged for that path.
 
-    private func handleLiveAgent(query: String, lane: VerizonLane, t0: CFAbsoluteTime) -> VerizonDispatchResult {
+    private func handleLiveAgent(query: String, lane: TelcoLane, t0: CFAbsoluteTime) -> TelcoDispatchResult {
         composeTemplateResponse(
             route: .liveAgent,
             query: query,
             lane: lane,
-            legacyText: "Connecting you to a Verizon support agent. Estimated wait: a few minutes.",
-            legacyDeepLink: VerizonLinkResolver.levelOneFallback(for: .liveAgent),
+            legacyText: "Connecting you to a Telco support agent. Estimated wait: a few minutes.",
+            legacyDeepLink: TelcoLinkResolver.levelOneFallback(for: .liveAgent),
             t0: t0
         )
     }
 
-    private func handleNavOnly(query: String, lane: VerizonLane, t0: CFAbsoluteTime) -> VerizonDispatchResult {
+    private func handleNavOnly(query: String, lane: TelcoLane, t0: CFAbsoluteTime) -> TelcoDispatchResult {
         // Account / billing pivots — no LLM near financial data.
-        // Composer renders the canonical My Verizon URL; legacy
+        // Composer renders the canonical My Telco URL; legacy
         // fallback uses the in-app Account tab deep link.
-        let legacyLink = VerizonLinkResolver.levelOneFallback(for: .accountOOS)
+        let legacyLink = TelcoLinkResolver.levelOneFallback(for: .accountOOS)
         let legacyText = "I can't help with that here. Go to [Account](\(legacyLink)) > Bills to manage your account."
         return composeTemplateResponse(
             route: .accountNav,
@@ -466,29 +466,29 @@ public actor VerizonChatDispatcher {
         )
     }
 
-    private func handleOutOfScope(query: String, lane: VerizonLane, t0: CFAbsoluteTime) -> VerizonDispatchResult {
+    private func handleOutOfScope(query: String, lane: TelcoLane, t0: CFAbsoluteTime) -> TelcoDispatchResult {
         composeTemplateResponse(
             route: .outOfScope,
             query: query,
             lane: lane,
-            legacyText: "I'm here to help with Verizon Home Internet — router, network, devices, parental controls, equipment, or Digital Secure Home. Please try asking a different question.",
+            legacyText: "I'm here to help with Telco Home Internet — router, network, devices, parental controls, equipment, or Digital Secure Home. Please try asking a different question.",
             legacyDeepLink: nil,
             t0: t0
         )
     }
 
-    private func handleGreeting(query: String, lane: VerizonLane, t0: CFAbsoluteTime) -> VerizonDispatchResult {
+    private func handleGreeting(query: String, lane: TelcoLane, t0: CFAbsoluteTime) -> TelcoDispatchResult {
         composeTemplateResponse(
             route: .greeting,
             query: query,
             lane: lane,
-            legacyText: "Hi — I'm your Verizon Home Internet assistant. Ask me about your Wi-Fi, router, devices, parental controls, or equipment.",
+            legacyText: "Hi — I'm your Telco Home Internet assistant. Ask me about your Wi-Fi, router, devices, parental controls, or equipment.",
             legacyDeepLink: nil,
             t0: t0
         )
     }
 
-    private func handleClarification(query: String, lane: VerizonLane, t0: CFAbsoluteTime) -> VerizonDispatchResult {
+    private func handleClarification(query: String, lane: TelcoLane, t0: CFAbsoluteTime) -> TelcoDispatchResult {
         // Composer's `.clarify` template fills the "are you asking
         // about X?" slot from the user's query.
         composeTemplateResponse(
@@ -503,9 +503,9 @@ public actor VerizonChatDispatcher {
 
     private func handleUnknownFeature(
         query: String,
-        lane: VerizonLane,
+        lane: TelcoLane,
         t0: CFAbsoluteTime
-    ) async -> VerizonDispatchResult {
+    ) async -> TelcoDispatchResult {
         // **Guardrail #2**: on the composer path, `KeywordKBExtractor`
         // is NOT consulted. We render the canonical no_rag_answer
         // template instead — composer's safe fallback URL only, no
@@ -515,7 +515,7 @@ public actor VerizonChatDispatcher {
                 route: .noRagAnswer,
                 query: query,
                 lane: lane,
-                legacyText: "It looks like I don't have information about that. Would you like me to connect you with a Verizon support agent?",
+                legacyText: "It looks like I don't have information about that. Would you like me to connect you with a Telco support agent?",
                 legacyDeepLink: nil,
                 t0: t0
             )
@@ -523,7 +523,7 @@ public actor VerizonChatDispatcher {
         // ---- Legacy dev/engineering path: KB fallback ----
         let citation = await kbFallback.extract(query: query, kb: kb)
         if citation.isMatch, let entry = kb.first(where: { $0.id == citation.entryId }) {
-            return VerizonDispatchResult(
+            return TelcoDispatchResult(
                 text: entry.answer,
                 lane: lane,
                 source: .kbFallback,
@@ -532,8 +532,8 @@ public actor VerizonChatDispatcher {
                 totalMs: elapsed(t0)
             )
         }
-        return VerizonDispatchResult(
-            text: "It looks like I don't have information about that. Would you like me to connect you with a Verizon support agent?",
+        return TelcoDispatchResult(
+            text: "It looks like I don't have information about that. Would you like me to connect you with a Telco support agent?",
             lane: lane,
             source: .template,
             deepLink: nil,
@@ -549,11 +549,11 @@ public actor VerizonChatDispatcher {
     private func composeTemplateResponse(
         route: ComposerRoute,
         query: String,
-        lane: VerizonLane,
+        lane: TelcoLane,
         legacyText: String,
         legacyDeepLink: String?,
         t0: CFAbsoluteTime
-    ) -> VerizonDispatchResult {
+    ) -> TelcoDispatchResult {
         if composerPathEnabled, let composer = composer {
             let composerStart = CFAbsoluteTimeGetCurrent()
             let answer = composer.compose(
@@ -565,7 +565,7 @@ public actor VerizonChatDispatcher {
                 expectedPolicyLinkID: nil
             )
             let composerMs = elapsed(composerStart)
-            return VerizonDispatchResult(
+            return TelcoDispatchResult(
                 text: answer.text,
                 lane: lane,
                 source: .composer,
@@ -580,7 +580,7 @@ public actor VerizonChatDispatcher {
                 citedRAGUnit: nil
             )
         }
-        return VerizonDispatchResult(
+        return TelcoDispatchResult(
             text: legacyText,
             lane: lane,
             source: .template,
@@ -610,12 +610,12 @@ public actor VerizonChatDispatcher {
     /// KeywordKBExtractor fallback on any failure.
     private func handleRagStepByStep(
         query: String,
-        stageADecision: VerizonStageADecision,
-        lane: VerizonLane,
+        stageADecision: TelcoStageADecision,
+        lane: TelcoLane,
         retrievalContext: RetrievalContext,
-        continuation: AsyncStream<VerizonDispatchEvent>.Continuation,
+        continuation: AsyncStream<TelcoDispatchEvent>.Continuation,
         t0: CFAbsoluteTime
-    ) async -> VerizonDispatchResult {
+    ) async -> TelcoDispatchResult {
         if composerPathEnabled {
             let policyState = Self.effectivePolicyState(
                 provided: .empty,
@@ -684,7 +684,7 @@ public actor VerizonChatDispatcher {
         // If retrieval came back ambiguous or below the floor, the
         // router may now pick .clarification or .unknownFeature
         // instead of staying on .ragStepByStep. Honor that.
-        let refinedLane = VerizonRagRouter.route(
+        let refinedLane = TelcoRagRouter.route(
             stageA: stageADecision,
             retrieval: retrieval
         )
@@ -760,7 +760,7 @@ public actor VerizonChatDispatcher {
                 return await handleUnknownFeature(query: query, lane: refinedLane, t0: t0)
             }
 
-            return VerizonDispatchResult(
+            return TelcoDispatchResult(
                 text: response.rawText,
                 lane: refinedLane,
                 source: .stageB,
@@ -786,7 +786,7 @@ public actor VerizonChatDispatcher {
     /// no model swap, no GBNF, no faithfulness scorer. Sub-millisecond.
     ///
     /// Guarantees by construction:
-    ///   * Every rendered `vzhome://` URL is the selected unit's
+    ///   * Every rendered `telcohome://` URL is the selected unit's
     ///     `canonicalURL` (or one of the safe external fallbacks).
     ///   * `requiresConfirmation = true` ONLY when `ToolRegistry`
     ///     has a real `ToolIntent` registered for the unit's `linkID`
@@ -808,7 +808,7 @@ public actor VerizonChatDispatcher {
     ///   4. Optional response-only V4 dialogue-repair verbalizer.
     ///
     /// Guarantees by construction:
-    ///   * Every rendered `vzhome://` URL is the selected unit's
+    ///   * Every rendered `telcohome://` URL is the selected unit's
     ///     `canonicalURL` (or a safe external fallback).
     ///   * Confirmation is required iff the policy engine resolved a real
     ///     executable `ToolIntent` for the unit (guardrail #3).
@@ -822,9 +822,9 @@ public actor VerizonChatDispatcher {
         dialogueState: DialogueRepairConversationState,
         turnRelation: TelcoTurnRelation?,
         policyState: TelcoDialogueStateSnapshot,
-        continuation: AsyncStream<VerizonDispatchEvent>.Continuation,
+        continuation: AsyncStream<TelcoDispatchEvent>.Continuation,
         t0: CFAbsoluteTime
-    ) async -> VerizonDispatchResult {
+    ) async -> TelcoDispatchResult {
         guard
             let composer = composer,
             let corpus = corpus,
@@ -835,8 +835,8 @@ public actor VerizonChatDispatcher {
             // present. Defensive fallback in case a future caller
             // bypasses the gate.
             continuation.yield(.fallbackInvoked(reason: "composer dependencies missing"))
-            return VerizonDispatchResult(
-                text: "It looks like I don't have specific information about that. You can check [Verizon Home Internet](https://www.verizon.com/home/internet) for more details.",
+            return TelcoDispatchResult(
+                text: "It looks like I don't have specific information about that. You can check [Telco Home Internet](https://www.telco.com/home/internet) for more details.",
                 lane: .ragStepByStep,
                 source: .composer,
                 deepLink: nil,
@@ -922,7 +922,7 @@ public actor VerizonChatDispatcher {
         let composerMs = elapsed(composerStart)
 
         var finalText = answer.text
-        var finalSource: VerizonDispatchResult.Source = .composer
+        var finalSource: TelcoDispatchResult.Source = .composer
         var finalComposerMs = composerMs
         if let dialogueRepairVerbalizer,
            let act = DialogueRepairActDeriver.derive(
@@ -965,7 +965,7 @@ public actor VerizonChatDispatcher {
             "policy op=\(decision.stateOperation.rawValue, privacy: .public)/\(stateResolution.retrieval.rawValue, privacy: .public) route=\(decision.route.wireName, privacy: .public) reason=\(decision.reason, privacy: .public) pid=\(composerEvidence?.pageID ?? "<none>", privacy: .public) link=\(composerEvidence?.linkID ?? "<none>", privacy: .public) confirm=\(decision.requiresConfirmation, privacy: .public) tool=\(decision.executableToolIntent?.toolID ?? "<none>", privacy: .public) source=\(finalSource.rawValue, privacy: .public)"
         )
 
-        return VerizonDispatchResult(
+        return TelcoDispatchResult(
             text: finalText,
             lane: Self.lane(for: decision.route),
             source: finalSource,
@@ -1084,10 +1084,10 @@ public actor VerizonChatDispatcher {
         return nil
     }
 
-    /// Map an authoritative route to the legacy `VerizonLane` the trace UI
+    /// Map an authoritative route to the legacy `TelcoLane` the trace UI
     /// and session telemetry consume. The route is the source of truth;
     /// the lane is a presentation projection.
-    private nonisolated static func lane(for route: ComposerRoute) -> VerizonLane {
+    private nonisolated static func lane(for route: ComposerRoute) -> TelcoLane {
         switch route {
         case .liveAgent: return .liveAgentEscalation
         case .accountNav: return .navOnlyDeeplink

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Swift port of `scripts/vz/retriever.py` (Step 4a, post-4c alias
+/// Swift port of `scripts/telco/retriever.py` (Step 4a, post-4c alias
 /// improvements). The behaviour MUST match the Python reference
 /// byte-for-byte on identical input; a parity test
 /// (`BM25HierarchyRetrieverSwiftParityTests`) pins this.
@@ -24,7 +24,7 @@ import Foundation
 /// will be the composer (also pure); the retriever picks the unit
 /// and stops.
 public enum BM25Tokenizer {
-    /// Same stopword set as `scripts/vz/retriever.py::_STOPWORDS`.
+    /// Same stopword set as `scripts/telco/retriever.py::_STOPWORDS`.
     private static let stopwords: Set<String> = [
         "a", "an", "and", "are", "as", "at", "be", "by", "can",
         "do", "does", "for", "from", "have", "how", "i", "in", "is",
@@ -162,14 +162,14 @@ public struct ConversationTurnSnippet: Sendable, Equatable {
 }
 
 /// Mirrors Python `extract_history_page_hints`. Mines prior assistant
-/// turns for `vzhome://link-id` deep links and resolves them through
+/// turns for `telcohome://link-id` deep links and resolves them through
 /// `linkIndex` to a set of candidate page IDs.
 public func extractHistoryPageHints(
     history: [ConversationTurnSnippet],
     linkIndex: [String: [String]]
 ) -> Set<String> {
     var hints = Set<String>()
-    guard let regex = try? NSRegularExpression(pattern: "vzhome://([A-Za-z0-9\\-]+)", options: []) else {
+    guard let regex = try? NSRegularExpression(pattern: "telcohome://([A-Za-z0-9\\-]+)", options: []) else {
         return hints
     }
     for turn in history where turn.role == "ASSISTANT" {
@@ -330,7 +330,7 @@ final class BM25Retriever {
         }
         var idf: [String: Double] = [:]
         // BM25 smoothed: log((N - df + 0.5) / (df + 0.5) + 1).
-        // Matches `scripts/vz/retriever.py::BM25Retriever.__post_init__`.
+        // Matches `scripts/telco/retriever.py::BM25Retriever.__post_init__`.
         for (term, termDf) in df {
             let n = Double(nDocs)
             let d = Double(termDf)

@@ -1,14 +1,14 @@
 import Foundation
 
-/// 3-flag multi-label sigmoid output for the Verizon RAG assistant.
+/// 3-flag multi-label sigmoid output for the Telco RAG assistant.
 ///
 /// Each flag is independent — multiple flags can fire on the same query.
-/// The deterministic router (`VerizonRagRouter`) combines them with the
-/// topic-gate and intent signals to pick a `VerizonLane`. See
-/// `docs/architecture-decisions/ADR-021-verizon-home-internet-rag-assistant.md` §2.1, §3.
+/// The deterministic router (`TelcoRagRouter`) combines them with the
+/// topic-gate and intent signals to pick a `TelcoLane`. See
+/// `docs/architecture-decisions/ADR-021-telco-home-internet-rag-assistant.md` §2.1, §3.
 ///
-/// Parallels the `RefusalFlags` dataclass in `scripts/vz/schemas.py`.
-public struct VerizonRefusalFlags: Sendable, Equatable, Hashable, Codable {
+/// Parallels the `RefusalFlags` dataclass in `scripts/telco/schemas.py`.
+public struct TelcoRefusalFlags: Sendable, Equatable, Hashable, Codable {
     /// True when the RAG corpus contains an answer the model is confident
     /// it can ground a response against. Drives the RAG step-by-step lane.
     public let hasRagAnswer: Bool
@@ -35,7 +35,7 @@ public struct VerizonRefusalFlags: Sendable, Equatable, Hashable, Codable {
 
     /// Convenience: all flags off. Useful for greeting / OOS lanes where
     /// the sigmoid head is never queried.
-    public static let none = VerizonRefusalFlags(
+    public static let none = TelcoRefusalFlags(
         hasRagAnswer: false,
         navigationOnly: false,
         liveAgentTrigger: false

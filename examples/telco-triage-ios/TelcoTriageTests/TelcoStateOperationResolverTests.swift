@@ -133,9 +133,9 @@ final class TelcoStateOperationResolverTests: XCTestCase {
     /// CRITICAL: a short reply to our own clarification question must be treated
     /// as a clarification ANSWER (grounds), not a fresh ambiguous turn (re-asks).
     /// Guarded by `priorRouteWasClarify`. Without this guard the 2-token fixture
-    /// answer "Home Verizon" would re-ask and regress the clarification slice.
+    /// answer "Home Telco" would re-ask and regress the clarification slice.
     func test_shortReply_afterClarify_isClarificationAnswer_notAsk() {
-        let r = resolve("Home Verizon", state: state(active: false, priorRouteWasClarify: true))
+        let r = resolve("Home Telco", state: state(active: false, priorRouteWasClarify: true))
         XCTAssertEqual(r.operation, .clarificationAnswer)
         XCTAssertNotEqual(r.operation, .askClarification)
     }
@@ -159,7 +159,7 @@ final class TelcoStateOperationResolverTests: XCTestCase {
     /// as a clarification answer; with an active task the ambiguous fragment
     /// carries the task over, never re-using a question we didn't pose.
     func test_clarificationAnswerRelation_withoutPriorClarify_doesNotGround() {
-        let r = resolve("Home Verizon", relation: .clarificationAnswer, state: state(active: true))
+        let r = resolve("Home Telco", relation: .clarificationAnswer, state: state(active: true))
         XCTAssertNotEqual(r.operation, .clarificationAnswer)
         XCTAssertEqual(r.operation, .reuseActiveEvidence)
     }
@@ -167,7 +167,7 @@ final class TelcoStateOperationResolverTests: XCTestCase {
     /// Same gate, no active task: a vague clarification fragment with nothing to
     /// answer and nothing to continue is asked about, not grounded.
     func test_clarificationAnswerRelation_withoutPriorClarifyOrTask_asks() {
-        let r = resolve("Home Verizon", relation: .clarificationAnswer, state: state(active: false))
+        let r = resolve("Home Telco", relation: .clarificationAnswer, state: state(active: false))
         XCTAssertNotEqual(r.operation, .clarificationAnswer)
         XCTAssertEqual(r.operation, .askClarification)
     }

@@ -91,7 +91,7 @@ final class PhoneFlowValidationTests: XCTestCase {
     }
 
     /// Per-turn decision trace for EVERY graded turn (pass or fail), so the
-    /// situation-level decision-quality scorer (`scripts/vz/eval/situation_eval.py`)
+    /// situation-level decision-quality scorer (`scripts/telco/eval/situation_eval.py`)
     /// can map the app's actual decision against the situation taxonomy. This is
     /// the raw material for the product-readiness metric; the strict pass/fail
     /// rows above remain the regression-debugging layer.
@@ -409,7 +409,7 @@ final class PhoneFlowValidationTests: XCTestCase {
     private func makeHarness(runtime: EvalRuntime) throws -> TestChatHarness {
         _ = runtime.backend
         let corpus = try RAGUnitCorpus.loadFromBundle()
-        let dispatcher = VerizonChatDispatcher(
+        let dispatcher = TelcoChatDispatcher(
             stageA: nil,
             stageB: nil,
             kbFallback: StubKBExtractor(),
@@ -423,7 +423,7 @@ final class PhoneFlowValidationTests: XCTestCase {
             toolAliasMap: ToolAliasMap.default()
         )
         return TestChatHarness(
-            verizonDispatcher: dispatcher,
+            telcoDispatcher: dispatcher,
             telcoUnderstandingClassifier: runtime.telcoUnderstandingClassifier,
             relationalStrategy: runtime.relationalStrategy
         )

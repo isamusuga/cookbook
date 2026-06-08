@@ -326,12 +326,12 @@ final class TelcoPolicyEngineTests: XCTestCase {
     }
 
     /// The backend/order prior is a hard topic deflect (coverage-independent):
-    /// "add another line" retrieves the My-Verizon-App page with *decent*
+    /// "add another line" retrieves the My-Telco-App page with *decent*
     /// coverage, yet must still route to account navigation, not a local answer.
     func test_backendOrder_isCoverageIndependent() {
         let decision = decide(
             query: "how much would it cost to add another mobile phone line",
-            unit: corpus.unit(forPageID: "10.00")  // My Verizon App — high coverage, still deflects
+            unit: corpus.unit(forPageID: "10.00")  // My Telco App — high coverage, still deflects
         )
         XCTAssertEqual(decision.route, .accountNav)
     }
@@ -352,7 +352,7 @@ final class TelcoPolicyEngineTests: XCTestCase {
     /// A relation-head `clarification_answer` with NO prior clarify must not ground
     /// as a clarification answer (we never asked) — the vague turn is asked about.
     func test_clarificationAnswer_withoutPriorClarify_doesNotGround() {
-        let decision = decide(query: "home verizon", relation: .clarificationAnswer, state: .empty, unit: nil)
+        let decision = decide(query: "home telco", relation: .clarificationAnswer, state: .empty, unit: nil)
         XCTAssertNotEqual(decision.stateOperation, .clarificationAnswer)
         XCTAssertEqual(decision.route, .clarify)
     }

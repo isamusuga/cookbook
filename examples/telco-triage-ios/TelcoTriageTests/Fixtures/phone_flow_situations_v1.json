@@ -1343,7 +1343,7 @@
   {
    "conversation_id": "CHAT_018",
    "turn_index": 5,
-   "user_query": "How can I identify the devices Verizon app says are online?",
+   "user_query": "How can I identify the devices Telco app says are online?",
    "situation_type": "local_support_question",
    "situation_confidence": "high",
    "acceptable_decisions": [
@@ -2795,7 +2795,7 @@
   {
    "conversation_id": "CHAT_041",
    "turn_index": 3,
-   "user_query": "Home Verizon",
+   "user_query": "Home Telco",
    "situation_type": "clarification_answer",
    "situation_confidence": "medium",
    "acceptable_decisions": [
@@ -2838,7 +2838,7 @@
   {
    "conversation_id": "CHAT_042",
    "turn_index": 1,
-   "user_query": "This is the Home Assistant, Verizon\u2019s tool to help you manage your home internet.\n\n You can use one of these suggestions or ask a question to get started:\n- How do I change my Wi-Fi password?",
+   "user_query": "This is the Home Assistant, Telco\u2019s tool to help you manage your home internet.\n\n You can use one of these suggestions or ask a question to get started:\n- How do I change my Wi-Fi password?",
    "situation_type": "local_support_question",
    "situation_confidence": "high",
    "acceptable_decisions": [

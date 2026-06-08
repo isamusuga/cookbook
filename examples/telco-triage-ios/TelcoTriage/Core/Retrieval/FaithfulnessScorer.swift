@@ -29,7 +29,7 @@ import Foundation
 /// raise the threshold.
 public struct FaithfulnessScore: Sendable, Equatable {
     /// Jaccard overlap between response 2-grams and chunk 2-grams.
-    /// Range `[0, 1]`. Strong-faithful Verizon responses score
+    /// Range `[0, 1]`. Strong-faithful Telco responses score
     /// ~0.30-0.50; drift cases land ~0.05.
     public let bigramJaccard: Double
 
@@ -51,7 +51,7 @@ public struct FaithfulnessScore: Sendable, Equatable {
 
 public enum FaithfulnessScorer {
     /// v1 floor: ≥0.10 Jaccard 2-gram overlap. Calibrated against a
-    /// hand-labeled sample: faithful Verizon step-format responses
+    /// hand-labeled sample: faithful Telco step-format responses
     /// against their grounding chunk score ~0.30-0.50; clear drift
     /// cases (Stage B paraphrased from training) score ~0.05. The
     /// 0.10 floor catches egregious drift without false-positiving

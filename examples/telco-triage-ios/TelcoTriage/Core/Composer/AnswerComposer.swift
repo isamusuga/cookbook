@@ -1,6 +1,6 @@
 import Foundation
 
-/// Swift port of `scripts/vz/answer_composer.py::DeterministicComposer`.
+/// Swift port of `scripts/telco/answer_composer.py::DeterministicComposer`.
 ///
 /// **Doctrine** (Step 5 decision record):
 ///
@@ -13,17 +13,17 @@ import Foundation
 ///   by the test oracle). The composer never re-ranks and never opens
 ///   `body` for new claims.
 /// * `route` — already decided by the dispatcher
-///   (`VerizonChatDispatcher.deriveRoute`) using the ToolRegistry
+///   (`TelcoChatDispatcher.deriveRoute`) using the ToolRegistry
 ///   gate (guardrail #3). The composer never re-routes.
 /// * `requiresConfirmation` — already decided. The composer toggles
 ///   a single confirmation clause; it NEVER invokes any tool.
 ///
-/// **Link guarantee**: every `vzhome://` URL the composer emits comes
+/// **Link guarantee**: every `telcohome://` URL the composer emits comes
 /// from `evidence.canonicalURL`. The only other URLs allowed are the
-/// fixed external set (My Verizon, Verizon internet, tel:).
+/// fixed external set (My Telco, Telco internet, tel:).
 public enum AnswerComposerConstants {
-    public static let verizonInternetURL = "https://www.verizon.com/home/internet"
-    public static let myVerizonURL = "https://m.vzw.com/wMM0jUjn"
+    public static let telcoInternetURL = "https://www.telco.com/home/internet"
+    public static let myTelcoURL = "https://m.telco.com/wMM0jUjn"
     public static let liveAgentPhone = "tel://+18009220204"
 }
 
@@ -66,24 +66,24 @@ public struct DeterministicAnswerComposer: AnswerComposing {
 
         switch route {
         case .greeting:
-            text = "Hello! How can I assist you with Verizon Home Internet today?"
+            text = "Hello! How can I assist you with Telco Home Internet today?"
             expectedLinkURL = nil
         case .outOfScope:
-            text = "I'm here to help with topics related to Verizon Home Internet. Please try asking a different question."
+            text = "I'm here to help with topics related to Telco Home Internet. Please try asking a different question."
             expectedLinkURL = nil
         case .noRagAnswer:
-            text = "It looks like I don't have specific information about that. You can check [Verizon Home Internet](\(AnswerComposerConstants.verizonInternetURL)) for more details."
-            expectedLinkURL = AnswerComposerConstants.verizonInternetURL
+            text = "It looks like I don't have specific information about that. You can check [Telco Home Internet](\(AnswerComposerConstants.telcoInternetURL)) for more details."
+            expectedLinkURL = AnswerComposerConstants.telcoInternetURL
         case .liveAgent:
-            text = "I can connect you with a Verizon support agent. [Call us](\(AnswerComposerConstants.liveAgentPhone)) for support."
+            text = "I can connect you with a Telco support agent. [Call us](\(AnswerComposerConstants.liveAgentPhone)) for support."
             expectedLinkURL = AnswerComposerConstants.liveAgentPhone
         case .clarify:
             let hint = clarifyHintFromQuery(query)
             text = "Could you clarify what you're asking about? Are you referring to \(hint)?"
             expectedLinkURL = nil
         case .accountNav:
-            text = "To manage your account, please use the My Verizon App: [My Verizon](\(AnswerComposerConstants.myVerizonURL))."
-            expectedLinkURL = AnswerComposerConstants.myVerizonURL
+            text = "To manage your account, please use the My Telco App: [My Telco](\(AnswerComposerConstants.myTelcoURL))."
+            expectedLinkURL = AnswerComposerConstants.myTelcoURL
         case .ragAnswer, .answerPlusAction, .toolAction:
             if let unit = evidence {
                 let task = taskPhrase(from: unit)
@@ -110,12 +110,12 @@ public struct DeterministicAnswerComposer: AnswerComposing {
                 }
             } else {
                 // Composer can't ground itself without evidence. Safe
-                // fallback — the verizon.com URL is the canonical
+                // fallback — the telco.com URL is the canonical
                 // citation for this state.
-                text = "It looks like I don't have specific information about that. You can check [Verizon Home Internet](\(AnswerComposerConstants.verizonInternetURL)) for more details."
+                text = "It looks like I don't have specific information about that. You can check [Telco Home Internet](\(AnswerComposerConstants.telcoInternetURL)) for more details."
                 usedFallback = true
                 citedPageID = nil
-                expectedLinkURL = AnswerComposerConstants.verizonInternetURL
+                expectedLinkURL = AnswerComposerConstants.telcoInternetURL
             }
         }
 
@@ -140,7 +140,7 @@ public struct DeterministicAnswerComposer: AnswerComposing {
 
 // MARK: - Rendering helpers (mirror Python module-private helpers)
 
-/// Render a markdown link in the canonical Verizon Home assistant style.
+/// Render a markdown link in the canonical Telco Home assistant style.
 public func renderLink(label: String, url: String) -> String {
     let safeLabel = label
         .replacingOccurrences(of: "[", with: "(")
@@ -389,7 +389,7 @@ private func clarifyHintFromQuery(_ query: String) -> String {
         q = String(q.dropLast())
     }
     q = q.trimmingCharacters(in: .whitespacesAndNewlines)
-    if q.isEmpty { return "your Verizon Home Internet service" }
+    if q.isEmpty { return "your Telco Home Internet service" }
     let leadingDeterminers = ["the ", "a ", "an ", "my ", "our "]
     for det in leadingDeterminers {
         if q.hasPrefix(det) {

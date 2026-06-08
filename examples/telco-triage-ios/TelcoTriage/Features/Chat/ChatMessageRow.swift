@@ -134,7 +134,7 @@ struct ChatMessageRow: View {
                 }
                 .opacity(0.8)
             }
-            // Internal scheme (vzhome://) is rewritten to the brand
+            // Internal scheme (telcohome://) is rewritten to the brand
             // scheme at the render boundary — Stage B + page-link table
             // + grammar all use the internal scheme so the trained model
             // stays on distribution. See DeepLinkRebrand.swift.

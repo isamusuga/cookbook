@@ -4,15 +4,15 @@ import os.log
 /// Combined Stage A signals for a single chat turn.
 ///
 /// The probe-validated heads (topic_gate + refusal_flags) decide which
-/// `VerizonLane` the turn takes. See ADR-021 §2.1 (head inventory),
+/// `TelcoLane` the turn takes. See ADR-021 §2.1 (head inventory),
 /// §3 (lane routing), §6.5 (probe-set methodology) and
-/// `scripts/vz/schemas.py` (Pydantic wire contract).
-public struct VerizonStageADecision: Sendable, Equatable {
-    public let topicGate: VerizonTopicGate
+/// `scripts/telco/schemas.py` (Pydantic wire contract).
+public struct TelcoStageADecision: Sendable, Equatable {
+    public let topicGate: TelcoTopicGate
     public let topicGateConfidence: Double
     public let topicGateProbabilities: [Float]
 
-    public let refusalFlags: VerizonRefusalFlags
+    public let refusalFlags: TelcoRefusalFlags
     public let refusalFlagsProbabilities: [Float]
 
     /// Wall-clock for the two adapter-swap + forward-pass + head-projection
@@ -21,10 +21,10 @@ public struct VerizonStageADecision: Sendable, Equatable {
     public let totalMs: Double
 
     public init(
-        topicGate: VerizonTopicGate,
+        topicGate: TelcoTopicGate,
         topicGateConfidence: Double,
         topicGateProbabilities: [Float],
-        refusalFlags: VerizonRefusalFlags,
+        refusalFlags: TelcoRefusalFlags,
         refusalFlagsProbabilities: [Float],
         totalMs: Double
     ) {
@@ -37,17 +37,17 @@ public struct VerizonStageADecision: Sendable, Equatable {
     }
 }
 
-/// Errors from `VerizonStageAClassifier.classify(query:)`.
-public enum VerizonStageAError: Error, LocalizedError {
+/// Errors from `TelcoStageAClassifier.classify(query:)`.
+public enum TelcoStageAError: Error, LocalizedError {
     case missingArtifact(name: String)
     case backendFailure(underlying: Error)
 
     public var errorDescription: String? {
         switch self {
         case .missingArtifact(let name):
-            return "Verizon Stage A artifact missing: \(name)"
+            return "Telco Stage A artifact missing: \(name)"
         case .backendFailure(let underlying):
-            return "Verizon Stage A backend failure: \(underlying.localizedDescription)"
+            return "Telco Stage A backend failure: \(underlying.localizedDescription)"
         }
     }
 }
@@ -55,11 +55,11 @@ public enum VerizonStageAError: Error, LocalizedError {
 /// Async-Sendable wrapper exposing `classify(query:)` so the dispatcher
 /// can hold a protocol-typed reference and stubs can be substituted in
 /// tests without the real backend.
-public protocol VerizonStageAClassifying: Sendable {
-    func classify(query: String) async throws -> VerizonStageADecision
+public protocol TelcoStageAClassifying: Sendable {
+    func classify(query: String) async throws -> TelcoStageADecision
 }
 
-/// Stage A classifier for the Verizon RAG router.
+/// Stage A classifier for the Telco RAG router.
 ///
 /// Runs two probe-validated heads (topic_gate, refusal_flags) over the
 /// shared LFM2.5-350M base. Each head has its own r=16 LoRA backbone
@@ -78,7 +78,7 @@ public protocol VerizonStageAClassifying: Sendable {
 /// backbone (telco-shared-clf-v2). That collapses two swaps per Stage A
 /// call into zero (the shared adapter is already loaded for the existing
 /// triad). For now, two adapter swaps add tens of ms per chat turn.
-public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked Sendable {
+public final class TelcoStageAClassifier: TelcoStageAClassifying, @unchecked Sendable {
     private let backend: LlamaBackend
     private let topicGateAdapterPath: String
     private let topicGateHead: ClassifierHead
@@ -86,7 +86,7 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
     private let refusalFlagsHead: ClassifierHead
     private let logger = Logger(
         subsystem: "ai.liquid.demos.telcotriage",
-        category: "VerizonStageA"
+        category: "TelcoStageA"
     )
 
     public init(
@@ -109,18 +109,18 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
     public static func bundled(
         backend: LlamaBackend,
         bundle: Bundle = .main
-    ) throws -> VerizonStageAClassifier {
-        guard let topicAdapter = TelcoModelBundle.verizonTopicGateAdapterPath(in: bundle) else {
-            throw VerizonStageAError.missingArtifact(name: "vz-topic-gate-clf-v1.lora.gguf")
+    ) throws -> TelcoStageAClassifier {
+        guard let topicAdapter = TelcoModelBundle.telcoTopicGateAdapterPath(in: bundle) else {
+            throw TelcoStageAError.missingArtifact(name: "telco-topic-gate-clf-v1.lora.gguf")
         }
-        guard let topicHeadPaths = TelcoModelBundle.verizonTopicGateHeadPaths(in: bundle) else {
-            throw VerizonStageAError.missingArtifact(name: "vz-topic-gate_classifier_{weights,bias,meta}")
+        guard let topicHeadPaths = TelcoModelBundle.telcoTopicGateHeadPaths(in: bundle) else {
+            throw TelcoStageAError.missingArtifact(name: "telco-topic-gate_classifier_{weights,bias,meta}")
         }
-        guard let refusalAdapter = TelcoModelBundle.verizonRefusalFlagsAdapterPath(in: bundle) else {
-            throw VerizonStageAError.missingArtifact(name: "vz-refusal-flags-clf-v1.lora.gguf")
+        guard let refusalAdapter = TelcoModelBundle.telcoRefusalFlagsAdapterPath(in: bundle) else {
+            throw TelcoStageAError.missingArtifact(name: "telco-refusal-flags-clf-v1.lora.gguf")
         }
-        guard let refusalHeadPaths = TelcoModelBundle.verizonRefusalFlagsHeadPaths(in: bundle) else {
-            throw VerizonStageAError.missingArtifact(name: "vz-refusal-flags_classifier_{weights,bias,meta}")
+        guard let refusalHeadPaths = TelcoModelBundle.telcoRefusalFlagsHeadPaths(in: bundle) else {
+            throw TelcoStageAError.missingArtifact(name: "telco-refusal-flags_classifier_{weights,bias,meta}")
         }
 
         let topicHead = try ClassifierHead(
@@ -134,7 +134,7 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
             metaURL: refusalHeadPaths.metaURL
         )
 
-        return VerizonStageAClassifier(
+        return TelcoStageAClassifier(
             backend: backend,
             topicGateAdapterPath: topicAdapter,
             topicGateHead: topicHead,
@@ -143,7 +143,7 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
         )
     }
 
-    public func classify(query: String) async throws -> VerizonStageADecision {
+    public func classify(query: String) async throws -> TelcoStageADecision {
         let t0 = CFAbsoluteTimeGetCurrent()
 
         let topicResult: ClassifierHead.Prediction
@@ -160,7 +160,7 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
             let refusalEmbedding = try await backend.embeddings(prompt: query, clearCache: true)
             refusalResult = refusalFlagsHead.classifyMultiLabel(refusalEmbedding)
         } catch {
-            throw VerizonStageAError.backendFailure(underlying: error)
+            throw TelcoStageAError.backendFailure(underlying: error)
         }
 
         let totalMs = (CFAbsoluteTimeGetCurrent() - t0) * 1000
@@ -172,10 +172,10 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
         // meta JSON, but defending against the failure here too is cheap:
         // map by index directly (the bias vector size confirms 3 classes,
         // and the label ordering is the wire contract per
-        // data/finetune/clf/vz_refusal_flags_label_schema.json).
+        // data/finetune/clf/telco_refusal_flags_label_schema.json).
         let flags = Self.refusalFlagsFromBinaryVector(refusalResult.binaryVector)
 
-        let decision = VerizonStageADecision(
+        let decision = TelcoStageADecision(
             topicGate: topicGate,
             topicGateConfidence: Double(topicResult.confidence),
             topicGateProbabilities: topicResult.probabilities,
@@ -192,8 +192,8 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
 
     /// Maps the training-time label string back to the typed enum the
     /// router consumes. Schema lives in
-    /// `data/finetune/clf/vz_topic_gate_label_schema.json`.
-    static func topicGateFromLabel(_ label: String) -> VerizonTopicGate {
+    /// `data/finetune/clf/telco_topic_gate_label_schema.json`.
+    static func topicGateFromLabel(_ label: String) -> TelcoTopicGate {
         switch label {
         case "in_scope": return .inScope
         case "out_of_scope": return .outOfScope
@@ -206,13 +206,13 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
     }
 
     /// Maps the multi-label `activeLabels` (subset of the 3 flag names)
-    /// to the typed `VerizonRefusalFlags`. Schema lives in
-    /// `data/finetune/clf/vz_refusal_flags_label_schema.json`.
+    /// to the typed `TelcoRefusalFlags`. Schema lives in
+    /// `data/finetune/clf/telco_refusal_flags_label_schema.json`.
     /// Kept for callers that have already parsed labels; the canonical
     /// path is `refusalFlagsFromBinaryVector(_:)` which is meta-agnostic.
-    static func refusalFlagsFromLabels(_ activeLabels: [String]) -> VerizonRefusalFlags {
+    static func refusalFlagsFromLabels(_ activeLabels: [String]) -> TelcoRefusalFlags {
         let set = Set(activeLabels)
-        return VerizonRefusalFlags(
+        return TelcoRefusalFlags(
             hasRagAnswer: set.contains("has_rag_answer"),
             navigationOnly: set.contains("navigation_only"),
             liveAgentTrigger: set.contains("live_agent_trigger")
@@ -225,11 +225,11 @@ public final class VerizonStageAClassifier: VerizonStageAClassifying, @unchecked
     /// reordered without a head re-export. Defensive against a stale or
     /// incomplete meta JSON: even if id2label is empty, the binary vector
     /// still reflects the sigmoid >= 0.5 decisions correctly.
-    static func refusalFlagsFromBinaryVector(_ binary: [Int]) -> VerizonRefusalFlags {
+    static func refusalFlagsFromBinaryVector(_ binary: [Int]) -> TelcoRefusalFlags {
         func bit(_ idx: Int) -> Bool {
             return idx < binary.count && binary[idx] == 1
         }
-        return VerizonRefusalFlags(
+        return TelcoRefusalFlags(
             hasRagAnswer: bit(0),
             navigationOnly: bit(1),
             liveAgentTrigger: bit(2)

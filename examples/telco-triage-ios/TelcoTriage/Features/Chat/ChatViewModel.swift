@@ -41,7 +41,7 @@ final class ChatViewModel: ObservableObject {
     /// support answer path from explicit state + BM25HierarchyRetriever
     /// evidence + deterministic composition. The legacy composite
     /// understanding stack is bypassed unless this dispatcher is absent.
-    let verizonDispatcher: VerizonChatDispatcher?
+    let telcoDispatcher: TelcoChatDispatcher?
 
     /// ADR-026 semantic control plane for normal Telco Triage turns:
     /// one LFM2.5-350M shared-adapter pass over 9 classifier heads.
@@ -84,10 +84,10 @@ final class ChatViewModel: ObservableObject {
     /// Latest Stage A + dispatcher result for the current turn. Captured
     /// from the AsyncStream events so the engineering-mode trace UI can
     /// render the new pipeline rows. Reset on every new turn.
-    @Published var lastVerizonStageA: VerizonStageADecision?
-    @Published var lastVerizonLane: VerizonLane?
-    @Published var lastVerizonStageBResponse: StageBResponse?
-    @Published var lastVerizonResult: VerizonDispatchResult?
+    @Published var lastTelcoStageA: TelcoStageADecision?
+    @Published var lastTelcoLane: TelcoLane?
+    @Published var lastTelcoStageBResponse: StageBResponse?
+    @Published var lastTelcoResult: TelcoDispatchResult?
 
     // Tool execution + result synthesis
     let toolExecutor: ToolExecutor
@@ -152,7 +152,7 @@ final class ChatViewModel: ObservableObject {
         queryExtractor: QueryExtractor = RegexQueryExtractor(),
         toolSelector: ToolSelector,
         toolExecutor: ToolExecutor,
-        verizonDispatcher: VerizonChatDispatcher? = nil,
+        telcoDispatcher: TelcoChatDispatcher? = nil,
         telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying? = nil,
         understandingClassifier: QueryUnderstandingClassifying? = nil,
         relationalStrategy: RelationalHeadsStrategy? = nil,
@@ -174,7 +174,7 @@ final class ChatViewModel: ObservableObject {
         self.queryExtractor = queryExtractor
         self.toolSelector = toolSelector
         self.toolExecutor = toolExecutor
-        self.verizonDispatcher = verizonDispatcher
+        self.telcoDispatcher = telcoDispatcher
         self.telcoUnderstandingClassifier = telcoUnderstandingClassifier
         // ADR-022 §4.3 — fall back to a composite classifier wrapping
         // the caller-supplied chatModeRouter when the host doesn't
@@ -314,7 +314,7 @@ final class ChatViewModel: ObservableObject {
 
         // ADR-023 Phase 2 — pre-classifier clarification recovery.
         // When the previous assistant turn asked a clarification
-        // question (Verizon .clarification lane, or a tool-action turn
+        // question (Telco .clarification lane, or a tool-action turn
         // with a missing required slot), the user's reply should be
         // tested as the answer to that question BEFORE running the
         // full understanding classifier. Two recovery paths:
@@ -499,7 +499,7 @@ final class ChatViewModel: ObservableObject {
         // enter the composer dispatcher. This path intentionally bypasses
         // QueryUnderstandingClassifier, chat-mode-router, Stage A LoRAs,
         // relational LoRA, and Stage B.
-        if let dispatcher = verizonDispatcher {
+        if let dispatcher = telcoDispatcher {
             let priorUserText = previousUserTurnText()
             // ADR-029 §5 selective probing. An explicit, unambiguous request for
             // a human is a hard, safe policy decision on its own — neither the
@@ -535,7 +535,7 @@ final class ChatViewModel: ObservableObject {
             AppLog.intelligence.info("composer runtime path: telco shared understanding + deterministic composer")
             lastUnderstanding = nil
             routingStage = .searching
-            await runVerizonDispatch(
+            await runTelcoDispatch(
                 query: query,
                 modePrediction: ChatModePrediction(
                     mode: .kbQuestion,
@@ -652,7 +652,7 @@ final class ChatViewModel: ObservableObject {
         // build OR first turn), the fusion router falls through to
         // the single-turn `decide(understanding:retrieval:)` path
         // with `actions: []` — behaviour identical to pre-ADR-024.
-        let decision = VerizonUnderstandingRouter.decideMultiTurn(
+        let decision = TelcoUnderstandingRouter.decideMultiTurn(
             understanding: enrichedUnderstanding,
             conversation: conversationState.snapshot,
             pendingClarification: conversationState.pendingClarification,
@@ -700,15 +700,15 @@ final class ChatViewModel: ObservableObject {
             ?? Self.modePredictionFromLane(lane)
 
         switch lane {
-        case .verizon(let verizonLane):
-            // The dispatcher takes over for every Verizon lane. The
+        case .telco(let telcoLane):
+            // The dispatcher takes over for every Telco lane. The
             // pre-built Stage A overload tells it not to re-run the
             // classifier (we already paid that cost in Layer 1). If
             // Stage A wasn't available (degraded build), the dispatcher
             // can't run — fall back to the legacy KB grounded-QA path.
-            guard let dispatcher = verizonDispatcher,
+            guard let dispatcher = telcoDispatcher,
                   let stageA = Self.stageADecisionFrom(understanding) else {
-                if verizonLane == .oosRefusal {
+                if telcoLane == .oosRefusal {
                     await runOutOfScope(
                         query: query,
                         modePrediction: modePrediction,
@@ -734,7 +734,7 @@ final class ChatViewModel: ObservableObject {
                 return
             }
             routingStage = .composing
-            await runVerizonDispatch(
+            await runTelcoDispatch(
                 query: query,
                 modePrediction: modePrediction,
                 extraction: extraction,
@@ -742,7 +742,7 @@ final class ChatViewModel: ObservableObject {
                 dispatcher: dispatcher,
                 understanding: enrichedUnderstanding,
                 prebuiltStageA: stageA,
-                prebuiltLane: verizonLane,
+                prebuiltLane: telcoLane,
                 retrievalContext: postActions.retrievalContext
             )
 
@@ -774,8 +774,8 @@ final class ChatViewModel: ObservableObject {
     private static func modePredictionFromLane(_ lane: UnderstandingLane) -> ChatModePrediction {
         let mode: ChatMode
         switch lane {
-        case .verizon(let verizonLane):
-            switch verizonLane {
+        case .telco(let telcoLane):
+            switch telcoLane {
             case .greeting, .ragStepByStep, .navOnlyDeeplink,
                  .unknownFeature, .clarification, .liveAgentEscalation:
                 mode = .kbQuestion
@@ -852,7 +852,7 @@ final class ChatViewModel: ObservableObject {
     }
 
     private static func routingPath(
-        for result: VerizonDispatchResult,
+        for result: TelcoDispatchResult,
         fallback: RoutingPath
     ) -> RoutingPath {
         switch result.composerRoute {
@@ -869,17 +869,17 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// Re-shape the `QueryUnderstanding` Stage A signals into the
-    /// dispatcher's `VerizonStageADecision` so we can pre-supply it
+    /// dispatcher's `TelcoStageADecision` so we can pre-supply it
     /// and skip the dispatcher's own Stage A classifier call. Returns
     /// nil when topic_gate or refusal_flags are missing (degraded
     /// build) — the caller falls back to the legacy KB grounded-QA
     /// path.
-    private static func stageADecisionFrom(_ understanding: QueryUnderstanding) -> VerizonStageADecision? {
+    private static func stageADecisionFrom(_ understanding: QueryUnderstanding) -> TelcoStageADecision? {
         guard let topic = understanding.topicGate,
               let flags = understanding.refusalFlags else {
             return nil
         }
-        return VerizonStageADecision(
+        return TelcoStageADecision(
             topicGate: topic.value,
             topicGateConfidence: topic.confidence,
             topicGateProbabilities: [],  // unused by the dispatcher; trace shows the v2 card instead
@@ -941,40 +941,40 @@ final class ChatViewModel: ObservableObject {
         return summary == expected
     }
 
-    /// Verizon RAG dispatch — Stage A (probe-validated heads) →
-    /// VerizonRagRouter → branches (Stage B for ragStepByStep, templates
+    /// Telco RAG dispatch — Stage A (probe-validated heads) →
+    /// TelcoRagRouter → branches (Stage B for ragStepByStep, templates
     /// for the refusal / nav / live-agent lanes, KeywordKBExtractor for
     /// the unknownFeature fallback). Subscribes to the dispatcher's
     /// AsyncStream so the engineering-mode trace can render Stage A
     /// outputs + lane decision + Stage B latency live as each step
     /// completes. Appends exactly ONE ChatMessage at the end —
-    /// progressive UI re-renders happen via the @Published Verizon
+    /// progressive UI re-renders happen via the @Published Telco
     /// state setters, not by appending then editing a placeholder.
-    private func runVerizonDispatch(
+    private func runTelcoDispatch(
         query: String,
         modePrediction: ChatModePrediction,
         extraction: ExtractionResult,
         containsPII: Bool,
-        dispatcher: VerizonChatDispatcher,
+        dispatcher: TelcoChatDispatcher,
         understanding: QueryUnderstanding? = nil,
         telcoUnderstanding: TelcoSharedUnderstanding? = nil,
         preDispatchMS: Int = 0,
         telcoUnderstandingMS: Int? = nil,
-        prebuiltStageA: VerizonStageADecision? = nil,
-        prebuiltLane: VerizonLane? = nil,
+        prebuiltStageA: TelcoStageADecision? = nil,
+        prebuiltLane: TelcoLane? = nil,
         retrievalContext: RetrievalContext = .empty,
         composerOnly: Bool = false
     ) async {
         // Reset trace state for this turn so a stale Stage B response
         // from the previous turn doesn't render under this bubble while
         // the new dispatch is still in flight.
-        lastVerizonStageA = nil
-        lastVerizonLane = nil
-        lastVerizonStageBResponse = nil
-        lastVerizonResult = nil
+        lastTelcoStageA = nil
+        lastTelcoLane = nil
+        lastTelcoStageBResponse = nil
+        lastTelcoResult = nil
 
         let dispatchStart = Date()
-        var finalResult: VerizonDispatchResult?
+        var finalResult: TelcoDispatchResult?
         var finalErrorMessage: String?
 
         // ADR-022 §4.3 Layer 1 → Layer 3: when caller pre-built the
@@ -982,7 +982,7 @@ final class ChatViewModel: ObservableObject {
         // to the dispatcher so it doesn't re-run Stage A. The
         // dispatcher's progressive trace still emits .stageAComplete
         // and .laneSelected so the existing UI doesn't break.
-        let dispatchStream: AsyncStream<VerizonDispatchEvent> = {
+        let dispatchStream: AsyncStream<TelcoDispatchEvent> = {
             if composerOnly {
                 return dispatcher.dispatchComposer(
                     query: query,
@@ -1011,9 +1011,9 @@ final class ChatViewModel: ObservableObject {
             case .stageAStarted:
                 routingStage = .understanding
             case .stageAComplete(let stageA):
-                lastVerizonStageA = stageA
+                lastTelcoStageA = stageA
             case .laneSelected(let lane):
-                lastVerizonLane = lane
+                lastTelcoLane = lane
                 routingStage = lane.requiresGeneration ? .composing : .searching
             case .retrievalStarted:
                 routingStage = .searching
@@ -1026,13 +1026,13 @@ final class ChatViewModel: ObservableObject {
             case .stageBStarted:
                 routingStage = .composing
             case .stageBComplete(let response):
-                lastVerizonStageBResponse = response
+                lastTelcoStageBResponse = response
             case .faithfulnessChecked(let score):
                 AppLog.intelligence.info(
                     "faithfulness jaccard=\(String(format: "%.3f", score.bigramJaccard), privacy: .public) floor=\(String(format: "%.2f", score.floor), privacy: .public) faithful=\(score.isFaithful, privacy: .public)"
                 )
             case .fallbackInvoked(let reason):
-                AppLog.intelligence.info("Verizon dispatcher fallback: \(reason, privacy: .public)")
+                AppLog.intelligence.info("Telco dispatcher fallback: \(reason, privacy: .public)")
             case .response(let result):
                 finalResult = result
             case .failed(let message):
@@ -1043,7 +1043,7 @@ final class ChatViewModel: ObservableObject {
         let dispatchLatencyMS = Int(Date().timeIntervalSince(dispatchStart) * 1000)
 
         if let finalResult {
-            lastVerizonResult = finalResult
+            lastTelcoResult = finalResult
             let dispatchWallMS = finalResult.totalMs > 0 ? finalResult.totalMs : Double(dispatchLatencyMS)
             let totalWallMS = Int((dispatchWallMS + Double(preDispatchMS)).rounded())
             let retrievalMS = finalResult.retrievalMs.map { Int($0.rounded()) }
@@ -1065,8 +1065,8 @@ final class ChatViewModel: ObservableObject {
             } else {
                 citationEntry = nil
             }
-            let resolvedLane = lastVerizonLane.map { UnderstandingLane.verizon($0) }
-                ?? UnderstandingLane.verizon(.ragStepByStep)
+            let resolvedLane = lastTelcoLane.map { UnderstandingLane.telco($0) }
+                ?? UnderstandingLane.telco(.ragStepByStep)
             var message = ChatMessage(
                 role: .assistant,
                 text: displayText,
@@ -1092,7 +1092,7 @@ final class ChatViewModel: ObservableObject {
                     topKBScore: finalResult.citedRAGUnit == nil ? nil : 1.0,
                     kbEntriesScanned: kb.entries.count,
                     inputTokens: 0,
-                    outputTokens: lastVerizonStageBResponse?.outputTokens ?? 0,
+                    outputTokens: lastTelcoStageBResponse?.outputTokens ?? 0,
                     chatMode: modePrediction.mode,
                     chatModeConfidence: modePrediction.confidence,
                     chatModeRuntimeMS: modePrediction.runtimeMS,
@@ -1130,7 +1130,7 @@ final class ChatViewModel: ObservableObject {
                 pendingToolConfirmation: composerToolDecision
             )
             // Compound RAG + tool — attach a "Want me to do this?" card
-            // when the Verizon lane carries content (RAG/unknown/clarification)
+            // when the Telco lane carries content (RAG/unknown/clarification)
             // and the user's query is an unambiguous imperative.
             maybeAttachCompoundTool(
                 to: &message,
@@ -1171,9 +1171,9 @@ final class ChatViewModel: ObservableObject {
         // sees a consistent error bubble across the legacy and new
         // routes.
         let error = NSError(
-            domain: "VerizonChatDispatcher",
+            domain: "TelcoChatDispatcher",
             code: 1,
-            userInfo: [NSLocalizedDescriptionKey: finalErrorMessage ?? "Verizon dispatcher failed without a result"]
+            userInfo: [NSLocalizedDescriptionKey: finalErrorMessage ?? "Telco dispatcher failed without a result"]
         )
         appendInferenceFailure(
             error: error,
@@ -1183,7 +1183,7 @@ final class ChatViewModel: ObservableObject {
     }
 
     private func recordDialogueBlackboardDispatch(
-        result: VerizonDispatchResult,
+        result: TelcoDispatchResult,
         assistantText: String,
         pendingToolConfirmation: ToolDecision?
     ) {
@@ -1291,20 +1291,20 @@ final class ChatViewModel: ObservableObject {
                 to: &message,
                 query: query,
                 extraction: extraction,
-                lane: .verizon(.ragStepByStep)
+                lane: .telco(.ragStepByStep)
             )
             attachNBAIfAvailable(
                 to: &message,
                 query: query,
                 understanding: understanding,
-                lane: .verizon(.ragStepByStep),
+                lane: .telco(.ragStepByStep),
                 toolIntent: nil
             )
             messages.append(message)
             sessionStats.recordLatency(visibleMS)
             recordTurnSideEffects(
                 query: query,
-                lane: .verizon(.ragStepByStep),
+                lane: .telco(.ragStepByStep),
                 toolDecision: message.toolDecision,
                 pendingIntent: nil,
                 missingSlots: [],
@@ -1362,20 +1362,20 @@ final class ChatViewModel: ObservableObject {
                 to: &message,
                 query: query,
                 extraction: extraction,
-                lane: .verizon(.ragStepByStep)
+                lane: .telco(.ragStepByStep)
             )
             attachNBAIfAvailable(
                 to: &message,
                 query: query,
                 understanding: understanding,
-                lane: .verizon(.ragStepByStep),
+                lane: .telco(.ragStepByStep),
                 toolIntent: nil
             )
             messages.append(message)
             sessionStats.recordLatency(message.trace?.customerVisibleMS ?? response.latencyMS)
             recordTurnSideEffects(
                 query: query,
-                lane: .verizon(.ragStepByStep),
+                lane: .telco(.ragStepByStep),
                 toolDecision: message.toolDecision,
                 pendingIntent: nil,
                 missingSlots: [],
@@ -1726,7 +1726,7 @@ final class ChatViewModel: ObservableObject {
         sessionStats.recordLatency(modePrediction.runtimeMS)
         recordTurnSideEffects(
             query: query,
-            lane: .verizon(.oosRefusal),
+            lane: .telco(.oosRefusal),
             toolDecision: nil,
             pendingIntent: nil,
             missingSlots: [],
@@ -1771,13 +1771,13 @@ final class ChatViewModel: ObservableObject {
 
     /// Synthesize a `KBEntry`-shaped citation from a ColBERT chunk so
     /// the existing "Read full article" chip in `ChatMessageRow` renders
-    /// for Verizon RAG bubbles. The chunk's section name becomes the
+    /// for Telco RAG bubbles. The chunk's section name becomes the
     /// citation topic ("Network > Wi-Fi password"), its body becomes
     /// the article text, and its canonical deep link (if present)
     /// rides along as the in-app deep link.
     private static func makeCitationEntry(from chunk: ColBERTChunk) -> KBEntry {
-        let section = chunk.section.isEmpty ? "Verizon Home Internet" : chunk.section
-        let category = section.components(separatedBy: " > ").first ?? "Verizon"
+        let section = chunk.section.isEmpty ? "Telco Home Internet" : chunk.section
+        let category = section.components(separatedBy: " > ").first ?? "Telco"
         let deepLinks: [DeepLink] = chunk.deepLink.map {
             [DeepLink(label: chunk.deepLinkLabel ?? "Open in app", url: $0)]
         } ?? []
@@ -2022,7 +2022,7 @@ final class ChatViewModel: ObservableObject {
         // the cited RAG unit's `pageID` / `linkID` so the NEXT turn's
         // `RetrievalContext` can carry them into the dispatcher's
         // short-followup override. Both args are nil today on every
-        // path EXCEPT the Verizon composer path, which passes
+        // path EXCEPT the Telco composer path, which passes
         // `finalResult.citedRAGUnit?.pageID` / `.linkID`. Nil ON THIS
         // turn is the explicit "no prior page" signal — greeting, OOS
         // refusal, live-agent, clarify, and ambiguous-yes-ignored
@@ -2196,7 +2196,7 @@ final class ChatViewModel: ObservableObject {
     /// view model formats arguments and lets `ConversationState` persist
     /// the pending confirmation.
     private func composerExecutableToolDecision(
-        from result: VerizonDispatchResult,
+        from result: TelcoDispatchResult,
         extraction: ExtractionResult
     ) -> ToolDecision? {
         guard let intent = result.executableToolIntent,
@@ -2228,13 +2228,13 @@ final class ChatViewModel: ObservableObject {
     /// in the same turn — neither is hidden behind the other.
     ///
     /// **Policy matrix** (see ADR-022 compound-response review):
-    ///   .verizon(.ragStepByStep)        → ATTACH (the regression case)
-    ///   .verizon(.unknownFeature)       → ATTACH (KB miss but user named a tool)
-    ///   .verizon(.clarification)        → ATTACH (retrieval ambiguous but verb clear)
-    ///   .verizon(.oosRefusal)           → SUPPRESS (refusal + tool = contradictory)
-    ///   .verizon(.liveAgentEscalation)  → SUPPRESS (don't muddy escape hatch)
-    ///   .verizon(.navOnlyDeeplink)      → SUPPRESS (intentional app handoff)
-    ///   .verizon(.greeting)             → SUPPRESS (detector won't fire anyway)
+    ///   .telco(.ragStepByStep)        → ATTACH (the regression case)
+    ///   .telco(.unknownFeature)       → ATTACH (KB miss but user named a tool)
+    ///   .telco(.clarification)        → ATTACH (retrieval ambiguous but verb clear)
+    ///   .telco(.oosRefusal)           → SUPPRESS (refusal + tool = contradictory)
+    ///   .telco(.liveAgentEscalation)  → SUPPRESS (don't muddy escape hatch)
+    ///   .telco(.navOnlyDeeplink)      → SUPPRESS (intentional app handoff)
+    ///   .telco(.greeting)             → SUPPRESS (detector won't fire anyway)
     ///   .toolAction                     → SUPPRESS (already a tool flow)
     ///   .personalSummary                → SUPPRESS (off-topic)
     ///
@@ -2578,7 +2578,7 @@ final class ChatViewModel: ObservableObject {
     /// Treat a short bare-noun reply as a slot value. Conservative:
     /// rejects question forms ("which one?"), greetings, single-word
     /// affirmatives, and very long replies (likely a topic change).
-    /// Tuned for the canonical clarification answers from the Verizon
+    /// Tuned for the canonical clarification answers from the Telco
     /// corpus: "kitchen tablet", "Sub account", "WiFi extends".
     private static func bareNounAsSlotValue(_ reply: String) -> String? {
         let trimmed = reply.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -2609,14 +2609,14 @@ final class ChatViewModel: ObservableObject {
     /// hops — the policy is data-free, no actor-bound state to guard.
     nonisolated static func laneAllowsCompoundTool(_ lane: UnderstandingLane) -> Bool {
         switch lane {
-        case .verizon(.ragStepByStep),
-             .verizon(.unknownFeature),
-             .verizon(.clarification):
+        case .telco(.ragStepByStep),
+             .telco(.unknownFeature),
+             .telco(.clarification):
             return true
-        case .verizon(.oosRefusal),
-             .verizon(.liveAgentEscalation),
-             .verizon(.navOnlyDeeplink),
-             .verizon(.greeting),
+        case .telco(.oosRefusal),
+             .telco(.liveAgentEscalation),
+             .telco(.navOnlyDeeplink),
+             .telco(.greeting),
              .toolAction,
              .personalSummary:
             return false

@@ -1,7 +1,7 @@
 import Foundation
 
 /// The 9 routes the Step 5 answer-layer evaluation considers. Mirrors
-/// `ALL_ROUTES` in `scripts/vz/answer_composer.py`.
+/// `ALL_ROUTES` in `scripts/telco/answer_composer.py`.
 ///
 /// The dispatcher derives the route from `(queryMood, retrievedUnit,
 /// ToolRegistry)` via guardrail #3 in the Step 6 plan — the composer

@@ -1,16 +1,16 @@
 import Foundation
 
-/// 10-class macro intent over the Verizon Home Internet domain.
+/// 10-class macro intent over the Telco Home Internet domain.
 ///
 /// Wire contract with the trained classifier head bundled in
-/// `Resources/Models/vz-macro-intent_classifier_weights.bin`. Integer
+/// `Resources/Models/telco-macro-intent_classifier_weights.bin`. Integer
 /// raw values are part of the contract — do not renumber after a model
 /// has been trained against them. See
-/// `docs/architecture-decisions/ADR-021-verizon-home-internet-rag-assistant.md` §2.1.
+/// `docs/architecture-decisions/ADR-021-telco-home-internet-rag-assistant.md` §2.1.
 ///
-/// Parallels the `MacroIntent` IntEnum in `scripts/vz/schemas.py`. The
+/// Parallels the `MacroIntent` IntEnum in `scripts/telco/schemas.py`. The
 /// two must stay in lock-step.
-public enum VerizonMacroIntent: Int, Sendable, CaseIterable, Codable {
+public enum TelcoMacroIntent: Int, Sendable, CaseIterable, Codable {
     case network = 0
     case equipment = 1
     case devices = 2

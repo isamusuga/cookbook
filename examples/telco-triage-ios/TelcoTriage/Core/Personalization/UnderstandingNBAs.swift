@@ -48,7 +48,7 @@ public struct EscalateOnFrustrationNBA: NextBestAction {
 
     public var headline: String { "Want a real person on this?" }
     public var body: String {
-        "If this isn't moving fast enough, I can hand you to a live Verizon agent — they'll see this conversation when they pick up."
+        "If this isn't moving fast enough, I can hand you to a live Telco agent — they'll see this conversation when they pick up."
     }
     public var impactTag: String? { "Live escalation" }
 
@@ -80,7 +80,7 @@ public struct EscalateOnFrustrationNBA: NextBestAction {
         // live-agent template is the answer in that case. Guard first
         // — both the head-driven AND counter-driven paths bail on
         // this lane.
-        if case .verizon(.liveAgentEscalation) = lane {
+        if case .telco(.liveAgentEscalation) = lane {
             return false
         }
 
@@ -94,7 +94,7 @@ public struct EscalateOnFrustrationNBA: NextBestAction {
 
         // Path B — counter signal (ADR-023 Phase 2). Fires when the
         // user has repeated friction in this session, regardless of
-        // affect. Catches the ~20% of Verizon conversations where the
+        // affect. Catches the ~20% of Telco conversations where the
         // escalation request is calm but persistent.
         if let conversation,
            conversation.liveAgentRequestCount >= Self.liveAgentEscalationThreshold {

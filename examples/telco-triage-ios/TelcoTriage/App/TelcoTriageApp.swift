@@ -98,7 +98,7 @@ final class AppState: ObservableObject {
     // Liquid Telco composer dispatcher. When the canonical RAG unit
     // corpus is bundled, this owns retrieval, deterministic route
     // policy, citation, and answer composition.
-    let verizonDispatcher: VerizonChatDispatcher?
+    let telcoDispatcher: TelcoChatDispatcher?
 
     /// Shared support-understanding classifier. One LFM2.5-350M adapter
     /// forward pass projects the 9 telco heads used by the normal
@@ -195,7 +195,7 @@ final class AppState: ObservableObject {
         self.toolSelector = stack.tool
         self.modelProvider = stack.chat
         self.toolExecutor = ToolExecutor(chatProvider: stack.chat)
-        self.verizonDispatcher = stack.verizonDispatcher
+        self.telcoDispatcher = stack.telcoDispatcher
         self.telcoUnderstandingClassifier = stack.telcoUnderstandingClassifier
         self.queryUnderstandingClassifier = stack.queryUnderstandingClassifier
         self.relationalStrategy = stack.relationalStrategy
@@ -275,7 +275,7 @@ final class AppState: ObservableObject {
         // corpus and lexical retriever load. The semantic control plane
         // is wired separately below because it classifies the turn before
         // retrieval/route policy.
-        var verizonDispatcher: VerizonChatDispatcher?
+        var telcoDispatcher: TelcoChatDispatcher?
         var telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying?
         var ragStatus: RAGStackStatus = .notInitialized
         // Step 6: composer-path dependencies. The composer is the only
@@ -314,7 +314,7 @@ final class AppState: ObservableObject {
         if let cc = composerCorpus, composerWired {
             ragStatus = .live(chunkCount: cc.count, embedDim: 0)
             AppLog.lfm.info("Liquid Telco dispatcher ready (composer-only path, \(cc.count, privacy: .public) RAG units)")
-            verizonDispatcher = VerizonChatDispatcher(
+            telcoDispatcher = TelcoChatDispatcher(
                 stageA: nil,
                 stageB: nil,
                 kbFallback: KeywordKBExtractor(),
@@ -365,7 +365,7 @@ final class AppState: ObservableObject {
 
         let chatModeRouterForStack: ChatModeRouter
         let queryUnderstandingClassifier: QueryUnderstandingClassifying
-        if verizonDispatcher != nil {
+        if telcoDispatcher != nil {
             chatModeRouterForStack = StubChatModeRouter(
                 mode: .kbQuestion,
                 confidence: 1.0,
@@ -384,8 +384,8 @@ final class AppState: ObservableObject {
                     adapterPath: chatModeRouterAdapter
                 )
                 chatModeRouterForStack = liveChatModeRouter
-                let stageAForUnderstanding: VerizonStageAClassifying? =
-                    (try? VerizonStageAClassifier.bundled(backend: backend))
+                let stageAForUnderstanding: TelcoStageAClassifying? =
+                    (try? TelcoStageAClassifier.bundled(backend: backend))
                 queryUnderstandingClassifier = QueryUnderstandingClassifier.bundled(
                     backend: backend,
                     chatModeRouter: liveChatModeRouter,
@@ -424,7 +424,7 @@ final class AppState: ObservableObject {
             kbExtractor: kbExtractor,
             tool: LFMToolSelector(backend: bridge, adapterPath: toolAdapter),
             chat: chat,
-            verizonDispatcher: verizonDispatcher,
+            telcoDispatcher: telcoDispatcher,
             telcoUnderstandingClassifier: telcoUnderstandingClassifier,
             queryUnderstandingClassifier: queryUnderstandingClassifier,
             ragStatus: ragStatus,
@@ -575,7 +575,7 @@ final class AppState: ObservableObject {
         let kbExtractor: KBExtractor
         let tool: ToolSelector
         let chat: LFMChatProvider
-        let verizonDispatcher: VerizonChatDispatcher?
+        let telcoDispatcher: TelcoChatDispatcher?
         let telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying?
         let queryUnderstandingClassifier: QueryUnderstandingClassifying
         let ragStatus: RAGStackStatus

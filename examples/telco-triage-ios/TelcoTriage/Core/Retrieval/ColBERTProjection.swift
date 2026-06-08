@@ -35,10 +35,10 @@ public enum ColBERTProjectionError: Error, LocalizedError {
 /// by llama.cpp's `convert_hf_to_gguf.py`. The 256 KB projection
 /// ships as a tiny separate asset.
 ///
-/// **Binary layout** (mirrors `scripts/vz/build_rag_index.py`):
+/// **Binary layout** (mirrors `scripts/telco/build_rag_index.py`):
 ///
 ///   HEADER (16 bytes)
-///     magic           : 4 bytes ASCII "VZPJ"
+///     magic           : 4 bytes ASCII "TLPJ"
 ///     version         : u32 little-endian
 ///     out_features    : u32 little-endian (128)
 ///     in_features     : u32 little-endian (1024)
@@ -70,8 +70,8 @@ public final class ColBERTProjection: @unchecked Sendable {
         }
 
         let magic = String(data: data.subdata(in: 0..<4), encoding: .ascii) ?? "?"
-        guard magic == "VZPJ" else {
-            throw ColBERTProjectionError.invalidMagic(expected: "VZPJ", found: magic)
+        guard magic == "TLPJ" else {
+            throw ColBERTProjectionError.invalidMagic(expected: "TLPJ", found: magic)
         }
 
         let version = Self.readU32(data, at: 4)

@@ -7,7 +7,7 @@ import Combine
 /// the intelligence layer reads on every turn:
 ///
 ///  - `pendingClarification` — the assistant's last reply asked a
-///    clarification question (Verizon `.clarification` lane OR a
+///    clarification question (Telco `.clarification` lane OR a
 ///    tool-action turn with missing required slots). The next user
 ///    message should be interpreted as the answer to that question
 ///    BEFORE running the full classifier.
@@ -112,7 +112,7 @@ public final class ConversationState: ObservableObject {
     /// iOS-integration follow-up.
     ///
     /// Populated by `ChatViewModel.recordTurnSideEffects` from the
-    /// turn's `VerizonDispatchResult.citedRAGUnit?.pageID`. Nil when
+    /// turn's `TelcoDispatchResult.citedRAGUnit?.pageID`. Nil when
     /// the prior turn produced no RAG citation (greeting, out-of-scope,
     /// live-agent escalation, clarify, ambiguous-yes-ignored).
     @Published public private(set) var priorPageID: String?
@@ -215,12 +215,12 @@ public final class ConversationState: ObservableObject {
 
         // Pending clarification — set when the assistant's reply
         // explicitly opened a clarification slot. Two sources:
-        //   1. Verizon `.clarification` lane (retrieval was ambiguous —
+        //   1. Telco `.clarification` lane (retrieval was ambiguous —
         //      we asked the user to pick).
         //   2. `.toolAction` lane with a required slot missing (we
         //      proposed a tool but need one more piece — the
         //      ClarifyMissingSlot NBA carries the question).
-        if case .verizon(.clarification) = assistantLane {
+        if case .telco(.clarification) = assistantLane {
             pendingClarification = PendingClarification(
                 askedAt: Date(),
                 source: .ragClarification,
@@ -299,7 +299,7 @@ public final class ConversationState: ObservableObject {
 
     /// Record the RAG unit cited on the just-finished turn so the next
     /// turn's `RetrievalContext` can carry it forward. Source is
-    /// `VerizonDispatchResult.citedRAGUnit` from the previous turn.
+    /// `TelcoDispatchResult.citedRAGUnit` from the previous turn.
     /// Pass nil when the turn produced no RAG citation (greeting,
     /// out-of-scope, live-agent escalation, clarify, ambiguous-yes-
     /// ignored) — that's the explicit "clear prior page" signal.
@@ -476,7 +476,7 @@ public struct ConversationSnapshot: Sendable, Equatable {
 /// re-fire the original intent with combined slots.
 public struct PendingClarification: Sendable, Equatable {
     public enum Source: String, Sendable, Equatable {
-        /// `.verizon(.clarification)` lane — Stage A flagged retrieval
+        /// `.telco(.clarification)` lane — Stage A flagged retrieval
         /// as ambiguous; we asked the user to disambiguate.
         case ragClarification
         /// `.toolAction` lane with a required slot missing — we
@@ -523,7 +523,7 @@ public enum ConversationStateRecorder {
     /// real KB questions into the escalation chip, so the patterns are
     /// scoped tight to phrases that unambiguously ask for a person.
     ///
-    /// Anchored to the 50-conversation Verizon corpus: covers "Agent",
+    /// Anchored to the 50-conversation Telco corpus: covers "Agent",
     /// "Chat agent", "Speak to live agent", "Talk to a representative",
     /// "transfer me", "real person", "human".
     public static func isLiveAgentRequest(_ message: String) -> Bool {
@@ -580,7 +580,7 @@ public enum ConversationStateRecorder {
     }
 
     /// Whole-phrase live-agent triggers. Anchored to the 50-conversation
-    /// Verizon corpus (CHAT_017/019/026/028/046/050 — every instance
+    /// Telco corpus (CHAT_017/019/026/028/046/050 — every instance
     /// uses one of these phrases).
     // swiftlint:disable:next force_try
     private static let liveAgentPatterns: NSRegularExpression = try! NSRegularExpression(

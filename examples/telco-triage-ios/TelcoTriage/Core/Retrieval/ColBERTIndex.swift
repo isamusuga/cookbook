@@ -1,14 +1,14 @@
 import Foundation
 import os.log
 
-/// One chunk from the bundled Verizon RAG corpus.
+/// One chunk from the bundled Telco RAG corpus.
 ///
 /// Mirrors the per-chunk record in `rag-chunks-v1.json`. The body is the
 /// verbatim section text; the contextual prefix is the Anthropic-style
 /// preamble that tells ColBERT what document and section the chunk
 /// belongs to (ADR-021 §11.4.1). The deep_link is the canonical
-/// vzhome:// route for the parent page — what Stage B will emit and
-/// what `VerizonLinkResolver` validates.
+/// telcohome:// route for the parent page — what Stage B will emit and
+/// what `TelcoLinkResolver` validates.
 public struct ColBERTChunk: Sendable, Equatable, Hashable, Identifiable {
     public var id: String { chunkID }
 
@@ -20,7 +20,7 @@ public struct ColBERTChunk: Sendable, Equatable, Hashable, Identifiable {
     public let body: String
     /// Optional because a handful of corpus pages (template detail
     /// pages like Equipment Details that cover router/gateway/extender
-    /// variants) don't have one canonical vzhome:// route. Chunks
+    /// variants) don't have one canonical telcohome:// route. Chunks
     /// without a deep link are still retrievable but the Stage B
     /// grounded-generation prompt will need to handle the no-link
     /// branch — answer descriptively without claiming a deep link.
@@ -83,10 +83,10 @@ public enum ColBERTIndexError: Error, LocalizedError {
 ///     layout. Slurped into memory on init (4 MB for the 149-chunk
 ///     v1 corpus, well within mobile budget).
 ///
-/// **Binary layout** (mirrors `scripts/vz/build_rag_index.py` writer):
+/// **Binary layout** (mirrors `scripts/telco/build_rag_index.py` writer):
 ///
 ///   HEADER (16 bytes)
-///     magic        : 4 bytes ASCII "VZRG"
+///     magic        : 4 bytes ASCII "TLRG"
 ///     version      : u32 little-endian
 ///     n_chunks     : u32 little-endian
 ///     embed_dim    : u32 little-endian (128 for LFM2-ColBERT-350M)
@@ -156,7 +156,7 @@ public final class ColBERTIndex: @unchecked Sendable {
             }
             // deep_link is intentionally optional — a handful of corpus
             // pages (template detail pages) don't have a canonical
-            // vzhome:// route. See ColBERTChunk.deepLink for the
+            // telcohome:// route. See ColBERTChunk.deepLink for the
             // semantic.
             parsed.append(
                 ColBERTChunk(
@@ -187,8 +187,8 @@ public final class ColBERTIndex: @unchecked Sendable {
 
         let magic = binData.subdata(in: 0..<4)
         let magicStr = String(data: magic, encoding: .ascii) ?? "?"
-        guard magicStr == "VZRG" else {
-            throw ColBERTIndexError.invalidMagic(expected: "VZRG", found: magicStr)
+        guard magicStr == "TLRG" else {
+            throw ColBERTIndexError.invalidMagic(expected: "TLRG", found: magicStr)
         }
 
         // Header fields, little-endian u32

@@ -2,9 +2,9 @@ import XCTest
 @testable import TelcoTriage
 
 /// Swift parity tests for the Step 5b multi-turn acceptance fixtures
-/// (`data/finetune/vz-home-internet/multi_turn_acceptance_v1.jsonl`).
+/// (`data/finetune/telco-home-internet/multi_turn_acceptance_v1.jsonl`).
 ///
-/// **What this verifies.** The iOS `VerizonChatDispatcher` produces the
+/// **What this verifies.** The iOS `TelcoChatDispatcher` produces the
 /// same per-turn route + cited page + cited link as the Python
 /// `simulate_turn` harness for the 8 scenarios that lock in the Step 5b
 /// acceptance gates. The Swift dispatcher today only owns the
@@ -23,7 +23,7 @@ import XCTest
 ///    increment / escalate; bare-yes without pending → clarify) or
 ///    forward through to `dispatcher.dispatch(query:retrievalContext:)`
 ///    with the prior turn's page/link threaded in.
-/// 3. Updates state from the dispatcher's `VerizonDispatchResult`.
+/// 3. Updates state from the dispatcher's `TelcoDispatchResult`.
 ///
 /// **Why this is a real parity test.** The dispatcher's
 /// short-followup override is the production code path that needs to
@@ -54,8 +54,8 @@ final class MultiTurnIntegrationTests: XCTestCase {
         toolAliasMap = ToolAliasMap.default()
     }
 
-    private func makeDispatcher() -> VerizonChatDispatcher {
-        VerizonChatDispatcher(
+    private func makeDispatcher() -> TelcoChatDispatcher {
+        TelcoChatDispatcher(
             stageA: StubStageAClassifier(),
             stageB: nil,
             kbFallback: StubKBExtractor(),
@@ -268,14 +268,14 @@ final class MultiTurnIntegrationTests: XCTestCase {
 // MARK: - Step 5b parity turn simulator
 
 /// In-test reproduction of the Python `simulate_turn` multi-turn glue.
-/// Mirrors `scripts/vz/eval/multi_turn_acceptance.py::simulate_turn`
+/// Mirrors `scripts/telco/eval/multi_turn_acceptance.py::simulate_turn`
 /// for the branches that don't live in the iOS dispatcher today —
 /// pending-tool firing, didn't-work counter, bare-yes-ignored,
 /// topic-switch clear. The dispatcher itself handles retrieval,
 /// route derivation, composition, and the short-followup override.
 @MainActor
 final class Step5bParityTurnSimulator {
-    private let dispatcher: VerizonChatDispatcher
+    private let dispatcher: TelcoChatDispatcher
     private let toolRegistry: ToolRegistry
     private let toolAliasMap: ToolAliasMap
 
@@ -290,7 +290,7 @@ final class Step5bParityTurnSimulator {
     private static let frustrationEscalationThreshold = 2
 
     init(
-        dispatcher: VerizonChatDispatcher,
+        dispatcher: TelcoChatDispatcher,
         toolRegistry: ToolRegistry,
         toolAliasMap: ToolAliasMap
     ) {
@@ -388,14 +388,14 @@ final class Step5bParityTurnSimulator {
             return
         }
 
-        // --- Normal dispatch path: forward to VerizonChatDispatcher ---
+        // --- Normal dispatch path: forward to TelcoChatDispatcher ---
         let retrievalContext = RetrievalContext(
             priorAssistantText: priorAssistantText,
             priorPageID: priorPageID,
             priorLinkID: priorLinkID
         )
         let stageA = Self.makeStageADecision()
-        var finalResult: VerizonDispatchResult?
+        var finalResult: TelcoDispatchResult?
         for await event in dispatcher.dispatch(
             query: query,
             prebuiltStageA: stageA,
@@ -467,8 +467,8 @@ final class Step5bParityTurnSimulator {
         priorAssistantText = result.text
     }
 
-    private static func makeStageADecision() -> VerizonStageADecision {
-        VerizonStageADecision(
+    private static func makeStageADecision() -> TelcoStageADecision {
+        TelcoStageADecision(
             topicGate: .inScope,
             topicGateConfidence: 0.95,
             topicGateProbabilities: [0.05, 0.95],
@@ -479,11 +479,11 @@ final class Step5bParityTurnSimulator {
     }
 }
 
-// MARK: - Stage A stub (shared with VerizonDispatcherComposerPathTests)
+// MARK: - Stage A stub (shared with TelcoDispatcherComposerPathTests)
 
-private struct StubStageAClassifier: VerizonStageAClassifying {
-    func classify(query: String) async throws -> VerizonStageADecision {
-        VerizonStageADecision(
+private struct StubStageAClassifier: TelcoStageAClassifying {
+    func classify(query: String) async throws -> TelcoStageADecision {
+        TelcoStageADecision(
             topicGate: .inScope,
             topicGateConfidence: 0.95,
             topicGateProbabilities: [0.05, 0.95],

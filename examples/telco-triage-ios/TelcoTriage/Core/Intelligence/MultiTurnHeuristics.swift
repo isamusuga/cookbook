@@ -1,9 +1,9 @@
 import Foundation
 
 /// Swift port of the Step 5b pure-function dispatcher heuristics
-/// (`scripts/vz/eval/multi_turn_acceptance.py`).
+/// (`scripts/telco/eval/multi_turn_acceptance.py`).
 ///
-/// These six functions are the spec for `VerizonChatDispatcher`'s
+/// These six functions are the spec for `TelcoChatDispatcher`'s
 /// multi-turn behaviour:
 ///
 /// * `isAffirmative(_:)`            — bare "yes" / "ok" / "do it" detector.
@@ -172,7 +172,7 @@ enum MultiTurnHeuristicsConstants {
 
 }
 
-/// Minimal Verizon-domain tokenizer — keeps the dispatcher's
+/// Minimal Telco-domain tokenizer — keeps the dispatcher's
 /// short-followup detector self-contained without dragging in the
 /// retriever's `tokenize` (which lives in `BM25HierarchyRetriever` and
 /// would force a circular import at the Swift level).

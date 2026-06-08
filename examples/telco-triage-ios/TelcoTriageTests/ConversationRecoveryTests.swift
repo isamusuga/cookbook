@@ -150,7 +150,7 @@ final class ConversationRecoveryTests: XCTestCase {
 
         XCTAssertTrue(nba.matchesUnderstanding(
             understanding,
-            lane: .verizon(.ragStepByStep),
+            lane: .telco(.ragStepByStep),
             toolIntent: nil,
             conversation: snap
         ))
@@ -165,7 +165,7 @@ final class ConversationRecoveryTests: XCTestCase {
 
         XCTAssertFalse(nba.matchesUnderstanding(
             understanding,
-            lane: .verizon(.ragStepByStep),
+            lane: .telco(.ragStepByStep),
             toolIntent: nil,
             conversation: snap
         ))
@@ -178,7 +178,7 @@ final class ConversationRecoveryTests: XCTestCase {
 
         XCTAssertTrue(nba.matchesUnderstanding(
             understanding,
-            lane: .verizon(.ragStepByStep),
+            lane: .telco(.ragStepByStep),
             toolIntent: nil,
             conversation: snap
         ))
@@ -194,7 +194,7 @@ final class ConversationRecoveryTests: XCTestCase {
 
         XCTAssertFalse(nba.matchesUnderstanding(
             understanding,
-            lane: .verizon(.liveAgentEscalation),
+            lane: .telco(.liveAgentEscalation),
             toolIntent: nil,
             conversation: snap
         ))
@@ -209,7 +209,7 @@ final class ConversationRecoveryTests: XCTestCase {
 
         XCTAssertTrue(nba.matchesUnderstanding(
             understanding,
-            lane: .verizon(.ragStepByStep),
+            lane: .telco(.ragStepByStep),
             toolIntent: nil,
             conversation: nil
         ))
@@ -231,7 +231,7 @@ final class ConversationRecoveryTests: XCTestCase {
 
         let match = engine.bestMatchForUnderstanding(
             understanding,
-            lane: .verizon(.ragStepByStep),
+            lane: .telco(.ragStepByStep),
             toolIntent: nil,
             conversation: snap
         )

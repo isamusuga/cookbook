@@ -125,8 +125,8 @@ The normal customer path does not invoke:
 | Artifact | Current status |
 | --- | --- |
 | `chat-mode-router-v2.gguf` | Legacy router; bypassed by composer path. |
-| `vz-topic-gate-clf-v1.lora.gguf` | Legacy topic gate; bypassed by composer path. |
-| `vz-refusal-flags-clf-v1.lora.gguf` | Legacy refusal adapter; bypassed by composer path. |
+| `telco-topic-gate-clf-v1.lora.gguf` | Legacy topic gate; bypassed by composer path. |
+| `telco-refusal-flags-clf-v1.lora.gguf` | Legacy refusal adapter; bypassed by composer path. |
 | `telco-relational-v1.gguf` | Legacy pairwise relational pass; superseded by `telco-turn-relation-v4`. |
 | Stage B answer generator | Not part of normal grounded answers. |
 | ColBERT | Not adopted for this closed corpus; BM25 hierarchy plus aliases is the current retrieval path. |

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Swift port of `scripts/vz/eval/multi_turn_acceptance.py::ToolAliasMap`
+/// Swift port of `scripts/telco/eval/multi_turn_acceptance.py::ToolAliasMap`
 /// (Step 5b Pre-flight Fix A).
 ///
 /// The corpus `link_id` doesn't always match the `ToolIntent.toolID` that

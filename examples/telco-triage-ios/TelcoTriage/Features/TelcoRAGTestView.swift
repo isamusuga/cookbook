@@ -1,15 +1,15 @@
-// VerizonRAGTestView.swift
+// TelcoRAGTestView.swift
 //
-// Engineering-mode probe view for the Verizon Stage B step-format
+// Engineering-mode probe view for the Telco Stage B step-format
 // generator (ADR-021 §5.2). Loads the merged Q4_K_M GGUF on first
 // appear, lets the operator type a query, runs it through
 // LlamaBackend, and shows the response + on-device latency. The
-// router (VerizonRagRouter) is NOT consulted — this view tests the
+// router (TelcoRagRouter) is NOT consulted — this view tests the
 // generator in isolation so latency / format compliance can be
 // measured against the 89-query probe set in
-// data/finetune/vz-home-internet/probe_intents.json.
+// data/finetune/telco-home-internet/probe_intents.json.
 //
-// Reachable from Settings → "Verizon RAG Test" when appMode =
+// Reachable from Settings → "Telco RAG Test" when appMode =
 // .engineering. Hidden from customer-facing surfaces.
 
 // NOTE: no `import LFMEngine` — the LFMEngine sources are compiled
@@ -18,7 +18,7 @@
 // already in this module's namespace.
 import SwiftUI
 
-struct VerizonRAGTestView: View {
+struct TelcoRAGTestView: View {
 
     // MARK: - State
 
@@ -30,40 +30,40 @@ struct VerizonRAGTestView: View {
     @State private var loadError: String?
     @State private var backend: LlamaBackend?
 
-    // System prompt mirrors scripts/vz/generate/prompts.py
-    // VERIZON_SYSTEM_PROMPT_SUMMARY — the same contract the teacher,
+    // System prompt mirrors scripts/telco/generate/prompts.py
+    // TELCO_SYSTEM_PROMPT_SUMMARY — the same contract the teacher,
     // Phase 0a baseline, Stage B scorer, and Q4+GBNF scorer all used.
     // Kept in-source (not bundled as a resource) so the view runs even
-    // when the Resources/Verizon/_source/ docs aren't checked in.
+    // when the Resources/Telco/_source/ docs aren't checked in.
     private let systemPrompt = """
-You are the Verizon Home Internet GenAI RAG Assistant. Help customers \
+You are the Telco Home Internet GenAI RAG Assistant. Help customers \
 with router, network, devices, parental controls, equipment, and \
 Digital Secure Home questions.
 
 OUTPUT CONTRACT (when an answer is grounded):
 - One-sentence intro ending in a colon, then a single line of the form:
-  Go to [Link Name](vzhome://link-path) > Step 1 > Step 2 > ...
+  Go to [Link Name](telcohome://link-path) > Step 1 > Step 2 > ...
 - Steps separated by " > ", no periods inside steps, optional terminal period.
 - No emojis. No exclamation points. No markdown bullets.
 
 REFUSAL PATTERNS:
-- Out-of-scope: "I'm here to help with topics related to Verizon Home \
+- Out-of-scope: "I'm here to help with topics related to Telco Home \
 Internet. Please try asking a different question."
 - In-scope but no RAG match: "It looks like I don't have information about that."
 - Account/billing question (cannot fetch data): "I can't [thing] here. \
-Go to [Account](vzhome://tab-more?launchPoint=verizonAssistant) > Bills > ..."
+Go to [Account](telcohome://tab-more?launchPoint=telcoAssistant) > Bills > ..."
 
 LIVE-AGENT ESCALATION:
 - Trigger on: explicit human request, outage, technician issue, security \
 incident, Wi-Fi Backup malfunction, equipment-return logistics.
-- Response: "Connecting you to a Verizon support agent. Estimated wait: N minutes."
+- Response: "Connecting you to a Telco support agent. Estimated wait: N minutes."
 
 DEEP-LINK SCHEME:
-- All in-app links use vzhome:// URI scheme. Examples:
-  vzhome://tab-home, vzhome://network?launchPoint=verizonAssistant,
-  vzhome://equipment, vzhome://restart-router, vzhome://speed-test,
-  vzhome://tab-devices?launchPoint=verizonAssistant,
-  vzhome://tab-more?launchPoint=verizonAssistant.
+- All in-app links use telcohome:// URI scheme. Examples:
+  telcohome://tab-home, telcohome://network?launchPoint=telcoAssistant,
+  telcohome://equipment, telcohome://restart-router, telcohome://speed-test,
+  telcohome://tab-devices?launchPoint=telcoAssistant,
+  telcohome://tab-more?launchPoint=telcoAssistant.
 """
 
     // Canonical probe queries — one per RAG-eligible intent. Tapping a
@@ -99,7 +99,7 @@ DEEP-LINK SCHEME:
     @ViewBuilder
     private var statusSection: some View {
         Section(header: Text("Generator")) {
-            LabeledContent("Model", value: TelcoModelBundle.verizonStageBGeneratorName)
+            LabeledContent("Model", value: TelcoModelBundle.telcoStageBGeneratorName)
             if let err = loadError {
                 Text(err).font(.caption).foregroundStyle(.red)
             } else if backend == nil {
@@ -163,8 +163,8 @@ DEEP-LINK SCHEME:
 
     private func loadBackendIfNeeded() async {
         guard backend == nil else { return }
-        guard let path = TelcoModelBundle.verizonStageBGeneratorPath() else {
-            loadError = "vz-stage-b-v1.Q4_K_M.gguf missing from app bundle. " +
+        guard let path = TelcoModelBundle.telcoStageBGeneratorPath() else {
+            loadError = "telco-stage-b-v1.Q4_K_M.gguf missing from app bundle. " +
                         "Add it to the Liquid Telco app target in Xcode."
             return
         }
@@ -226,6 +226,6 @@ DEEP-LINK SCHEME:
 
 #Preview {
     NavigationStack {
-        VerizonRAGTestView()
+        TelcoRAGTestView()
     }
 }

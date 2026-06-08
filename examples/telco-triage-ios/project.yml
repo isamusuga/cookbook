@@ -117,7 +117,7 @@ targets:
       - TelcoTriageTests/TelcoPolicyEngineTests.swift
       - TelcoTriageTests/TelcoStateOperationResolverTests.swift
       - TelcoTriageTests/ToolExecutorTests.swift
-      - TelcoTriageTests/VerizonDispatcherComposerPathTests.swift
+      - TelcoTriageTests/TelcoDispatcherComposerPathTests.swift
       - TelcoTriageTests/Fixtures/ScriptedBackend.swift
       - TelcoTriageTests/Fixtures/TestChatHarness.swift
       - TelcoTriageTests/Fixtures/retriever_parity_v1.json

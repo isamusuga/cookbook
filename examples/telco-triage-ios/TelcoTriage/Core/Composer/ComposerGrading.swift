@@ -1,6 +1,6 @@
 import Foundation
 
-/// Swift mirror of the grading helpers in `scripts/vz/answer_composer.py`.
+/// Swift mirror of the grading helpers in `scripts/telco/answer_composer.py`.
 ///
 /// These are used by:
 ///
@@ -13,8 +13,8 @@ import Foundation
 ///   disabled in RELEASE.
 public enum ComposerGrading {
     public static let approvedExternalURLs: Set<String> = [
-        AnswerComposerConstants.myVerizonURL,
-        AnswerComposerConstants.verizonInternetURL,
+        AnswerComposerConstants.myTelcoURL,
+        AnswerComposerConstants.telcoInternetURL,
         AnswerComposerConstants.liveAgentPhone,
     ]
 
@@ -24,14 +24,14 @@ public enum ComposerGrading {
         switch answer.route {
         case .ragAnswer, .answerPlusAction, .toolAction:
             if answer.usedFallback {
-                return text.contains("verizon.com/home/internet")
+                return text.contains("telco.com/home/internet")
             }
             return !answer.renderedLinks.isEmpty
         case .accountNav, .liveAgent:
             return !answer.renderedLinks.isEmpty
         case .greeting, .outOfScope, .clarify:
-            // No vzhome:// link allowed on these routes.
-            return !answer.renderedLinks.contains { $0.hasPrefix("vzhome://") }
+            // No telcohome:// link allowed on these routes.
+            return !answer.renderedLinks.contains { $0.hasPrefix("telcohome://") }
         case .noRagAnswer:
             return !answer.renderedLinks.isEmpty
         }
@@ -41,13 +41,13 @@ public enum ComposerGrading {
     /// one of the approved external URLs. Mirrors `is_link_valid`.
     public static func isLinkValid(
         _ answer: ComposedAnswer,
-        knownVzhomeURLs: Set<String>,
+        knownTelcoHomeURLs: Set<String>,
         knownExternalURLs: Set<String> = approvedExternalURLs
     ) -> Bool {
         for url in answer.renderedLinks {
             if knownExternalURLs.contains(url) { continue }
             let bare = url.split(separator: "?").first.map(String.init) ?? url
-            if knownVzhomeURLs.contains(url) || knownVzhomeURLs.contains(bare) {
+            if knownTelcoHomeURLs.contains(url) || knownTelcoHomeURLs.contains(bare) {
                 continue
             }
             return false
@@ -68,14 +68,14 @@ public enum ComposerGrading {
         return renderedBare == expectedBare
     }
 
-    /// No vzhome:// rendered link outside the selected evidence's
+    /// No telcohome:// rendered link outside the selected evidence's
     /// canonicalURL. Mirrors `is_grounded`.
     public static func isGrounded(_ answer: ComposedAnswer, evidence: RAGUnit?) -> Bool {
         if let evidence {
             let canonical = evidence.canonicalURL
             let canonicalBare = evidence.canonicalURLBare
             for url in answer.renderedLinks {
-                guard url.hasPrefix("vzhome://") else { continue }
+                guard url.hasPrefix("telcohome://") else { continue }
                 let bare = url.split(separator: "?").first.map(String.init) ?? url
                 if url != canonical && bare != canonicalBare {
                     return false
@@ -83,9 +83,9 @@ public enum ComposerGrading {
             }
             return true
         }
-        // No evidence — composer fallback. Allowed iff no vzhome://
+        // No evidence — composer fallback. Allowed iff no telcohome://
         // link rendered.
-        return !answer.renderedLinks.contains { $0.hasPrefix("vzhome://") }
+        return !answer.renderedLinks.contains { $0.hasPrefix("telcohome://") }
     }
 
     /// tool_action must carry the "confirm" handshake. Composer must
@@ -104,19 +104,19 @@ public enum ComposerGrading {
         let lowered = text.lowercased()
         switch answer.route {
         case .greeting:
-            return text.contains("Hello! How can I assist you with Verizon Home Internet today?")
+            return text.contains("Hello! How can I assist you with Telco Home Internet today?")
         case .outOfScope:
-            return text.contains("I'm here to help with topics related to Verizon Home Internet. Please try asking a different question.")
+            return text.contains("I'm here to help with topics related to Telco Home Internet. Please try asking a different question.")
         case .liveAgent:
             return lowered.contains("support agent") && text.contains(AnswerComposerConstants.liveAgentPhone)
         case .accountNav:
-            return lowered.contains("my verizon") && text.contains(AnswerComposerConstants.myVerizonURL)
+            return lowered.contains("my telco") && text.contains(AnswerComposerConstants.myTelcoURL)
         case .noRagAnswer:
             return (lowered.contains("don't have specific information") || lowered.contains("don't have information"))
-                && text.contains(AnswerComposerConstants.verizonInternetURL)
+                && text.contains(AnswerComposerConstants.telcoInternetURL)
         case .clarify:
             return (lowered.contains("clarify") || lowered.contains("could you"))
-                && !answer.renderedLinks.contains { $0.hasPrefix("vzhome://") }
+                && !answer.renderedLinks.contains { $0.hasPrefix("telcohome://") }
         default:
             return true
         }

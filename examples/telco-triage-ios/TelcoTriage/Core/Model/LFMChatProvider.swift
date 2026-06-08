@@ -148,7 +148,7 @@ public final class LFMChatProvider: ChatModelProvider {
         // leak from reaching `cleanResponseText`.
         let promptLeakMarkers = [
             "\nYou are Telco",
-            "\nYou are Verizon",
+            "\nYou are Telco",
             "\nReference:",
             "\nShort answer:",     // legacy terminator — kept as safety
             "\nComplete answer:",  // current groundedQA terminator
@@ -200,7 +200,7 @@ public final class LFMChatProvider: ChatModelProvider {
             "\nAssistant:",
             "\nReply:",
             "\nYou are Telco",
-            "\nYou are Verizon",
+            "\nYou are Telco",
             "\nReference:",
             "\nShort answer:",
             "\nComplete answer:",

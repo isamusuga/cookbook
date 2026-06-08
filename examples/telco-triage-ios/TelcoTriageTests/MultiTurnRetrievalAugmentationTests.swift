@@ -23,7 +23,7 @@ import XCTest
 ///   - `PostActionResult` — the typed envelope that replaces the old
 ///     `Bool` short-circuit return so actions can communicate
 ///     downstream intent.
-///   - `VerizonUnderstandingRouter` — emits
+///   - `TelcoUnderstandingRouter` — emits
 ///     `.augmentRetrievalWithPriorAssistant` on the ANAPHORIC path,
 ///     which is the load-bearing test for the user's Turn 2 bug.
 final class MultiTurnRetrievalAugmentationTests: XCTestCase {
@@ -77,7 +77,7 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
         // The Turn 2 happy-path test. With prior assistant text in
         // context, the encoder receives BOTH segments — prior on the
         // left, query on the right, joined by double-newline.
-        let prior = "To restart your router, open My Verizon, tap My Devices, then tap the Equipment tile."
+        let prior = "To restart your router, open My Telco, tap My Devices, then tap the Equipment tile."
         let result = ColBERTRetriever.composeEncodingPayload(
             query: "i cannot find equipment tile",
             context: RetrievalContext(priorAssistantText: prior)
@@ -161,10 +161,10 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
         let state = ConversationState()
         XCTAssertNil(state.priorAssistantText)
 
-        state.cacheTurnText(assistant: "To restart your router, open My Verizon → My Devices → Equipment tile.")
+        state.cacheTurnText(assistant: "To restart your router, open My Telco → My Devices → Equipment tile.")
         XCTAssertEqual(
             state.priorAssistantText,
-            "To restart your router, open My Verizon → My Devices → Equipment tile."
+            "To restart your router, open My Telco → My Devices → Equipment tile."
         )
 
         // Snapshot carries the field across actor boundaries.
@@ -261,7 +261,7 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
             turnRelationship: .anaphoric
         )
 
-        let decision = VerizonUnderstandingRouter.decideMultiTurn(
+        let decision = TelcoUnderstandingRouter.decideMultiTurn(
             understanding: understanding,
             conversation: .empty
         )
@@ -280,7 +280,7 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
             turnRelationship: .independent
         )
 
-        let decision = VerizonUnderstandingRouter.decideMultiTurn(
+        let decision = TelcoUnderstandingRouter.decideMultiTurn(
             understanding: understanding,
             conversation: .empty
         )
@@ -302,7 +302,7 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
         // We're stitching steps 1+3 here — confirming that if the
         // ConversationState had a cached prior reply, it flows all the
         // way into the composer's output.
-        let priorReply = "To restart: open My Verizon → My Devices → tap Equipment tile."
+        let priorReply = "To restart: open My Telco → My Devices → tap Equipment tile."
         let ctx = RetrievalContext(priorAssistantText: priorReply)
 
         let composition = ColBERTRetriever.composeEncodingPayload(
@@ -324,7 +324,7 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
 
     private func makeUnderstanding(
         chatMode: ChatMode = .kbQuestion,
-        topicGate: VerizonTopicGate = .inScope,
+        topicGate: TelcoTopicGate = .inScope,
         turnRelationship: TurnRelationship? = nil
     ) -> QueryUnderstanding {
         QueryUnderstanding(
@@ -336,7 +336,7 @@ final class MultiTurnRetrievalAugmentationTests: XCTestCase {
             ),
             topicGate: TopicGateOutcome(value: topicGate, confidence: 0.95),
             refusalFlags: RefusalFlagsOutcome(
-                value: VerizonRefusalFlags(
+                value: TelcoRefusalFlags(
                     hasRagAnswer: true,
                     navigationOnly: false,
                     liveAgentTrigger: false

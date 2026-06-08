@@ -133,7 +133,7 @@ final class ChatViewModelIntegrationTests: XCTestCase {
         let state = ConversationState()
         let harness = TestChatHarness(
             conversationState: state,
-            verizonDispatcher: dispatcher
+            telcoDispatcher: dispatcher
         )
         await harness.whenChatPrompt(
             contains: "Customer-facing summary:",
@@ -200,7 +200,7 @@ final class ChatViewModelIntegrationTests: XCTestCase {
         XCTAssertEqual(reply.trace?.chatMode, .outOfScope)
         // The legacy `TelcoTopicGate` keyword pre-filter was removed —
         // every query now flows through the trained ChatModeRouter
-        // (or the Verizon Stage A heads). The confidence here mirrors
+        // (or the Telco Stage A heads). The confidence here mirrors
         // the harness mock at line ~158 (0.22), which is what the
         // router actually reports for low-signal out-of-scope queries.
         XCTAssertEqual(reply.trace?.chatModeConfidence ?? 0, 0.22, accuracy: 0.01)
@@ -273,12 +273,12 @@ final class ChatViewModelIntegrationTests: XCTestCase {
         XCTAssertEqual(reply.routing?.path, .answerWithRAG)
     }
 
-    private static func makeComposerDispatcher() throws -> VerizonChatDispatcher {
+    private static func makeComposerDispatcher() throws -> TelcoChatDispatcher {
         let corpus = try RAGUnitCorpus.loadFromBundle()
         let retriever = BM25HierarchyRetriever(corpus: corpus)
         let composer = DeterministicAnswerComposer()
         let routeRegistry = ToolRegistry.default(customerContext: CustomerContext())
-        return VerizonChatDispatcher(
+        return TelcoChatDispatcher(
             stageA: nil,
             stageB: nil,
             kbFallback: StubKBExtractor(),

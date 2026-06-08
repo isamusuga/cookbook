@@ -350,7 +350,7 @@ final class ChatViewModelHolder: ObservableObject {
             nbaEngine: appState.nbaEngine,
             toolSelector: appState.toolSelector,
             toolExecutor: appState.toolExecutor,
-            verizonDispatcher: appState.verizonDispatcher,
+            telcoDispatcher: appState.telcoDispatcher,
             telcoUnderstandingClassifier: appState.telcoUnderstandingClassifier,
             // ADR-022 §4.3 Layer 1 — the unified understanding classifier
             // produces the QueryUnderstanding vector used for routing,

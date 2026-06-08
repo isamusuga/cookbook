@@ -2,7 +2,7 @@ import Foundation
 
 /// Layer 2 of the ADR-022 architecture: the **pure-function router**
 /// that maps a `QueryUnderstanding` + optional retrieval signal into a
-/// `VerizonLane`. Zero I/O. Zero state. Zero LFM calls. Sub-millisecond.
+/// `TelcoLane`. Zero I/O. Zero state. Zero LFM calls. Sub-millisecond.
 ///
 /// **This is the architecturally-load-bearing component of ADR-022.**
 /// The router is the contract between the heads (which INFORM) and the
@@ -16,7 +16,7 @@ import Foundation
 /// > still trusts its top-1 — the trace surfaces the low confidence
 /// > for engineering review, NOT for runtime gating.
 ///
-/// **Decision order** (matches §4.3 and supersedes `VerizonRagRouter`):
+/// **Decision order** (matches §4.3 and supersedes `TelcoRagRouter`):
 ///
 ///  1. Topic gate short-circuits (greeting / OOS) — covers Layer 1's
 ///     finest-grained scope signal.
@@ -29,7 +29,7 @@ import Foundation
 ///     the NBA layer — we don't unilaterally escalate on subjective
 ///     signal alone.
 ///  3. Explicit `live_agent_trigger` flag → escalation (mirrors
-///     `VerizonRagRouter` order).
+///     `TelcoRagRouter` order).
 ///  4. `navigation_only` flag → in-app deep link.
 ///  5. `chat_mode` Layer 1 categorical: tool_action / personal_summary
 ///     map to non-RAG lanes carried as new lane cases.
@@ -38,15 +38,15 @@ import Foundation
 ///  8. RAG-eligible with ambiguous retrieval → clarification.
 ///  9. Default → step-by-step RAG.
 ///
-/// **Lanes returned**: this router emits the existing `VerizonLane` set
+/// **Lanes returned**: this router emits the existing `TelcoLane` set
 /// PLUS two new "carrier" values that previously lived implicitly in
 /// ChatViewModel's switch (`toolAction`, `personalSummary`). The new
-/// lanes are added to `UnderstandingLane` (a superset of `VerizonLane`)
+/// lanes are added to `UnderstandingLane` (a superset of `TelcoLane`)
 /// so the workflow handler can pattern-match exhaustively.
-public enum VerizonUnderstandingRouter {
+public enum TelcoUnderstandingRouter {
 
     /// Confidence floor for retrieval — same number as the legacy
-    /// `VerizonRagRouter.retrievalConfidenceFloor` per ADR-021 §3.
+    /// `TelcoRagRouter.retrievalConfidenceFloor` per ADR-021 §3.
     /// Kept here as a separate constant because the v2 router OWNS
     /// the policy; we don't want the legacy file's constant to drift
     /// independently.
@@ -72,16 +72,16 @@ public enum VerizonUnderstandingRouter {
         retrieval: ColBERTRetrievalResult? = nil
     ) -> UnderstandingLane {
         // ----------------------------------------------------------------
-        // Step 1: topic-gate short-circuits. The Verizon-trained topic
+        // Step 1: topic-gate short-circuits. The Telco-trained topic
         // gate is the finest in-domain scope detector we have; trust it
         // first when present, fall through to `chat_mode` when absent.
         // ----------------------------------------------------------------
         if let topic = understanding.topicGate?.value {
             switch topic {
             case .greeting:
-                return .verizon(.greeting)
+                return .telco(.greeting)
             case .outOfScope:
-                return .verizon(.oosRefusal)
+                return .telco(.oosRefusal)
             case .inScope:
                 break  // Continue to flag-based routing below.
             }
@@ -89,7 +89,7 @@ public enum VerizonUnderstandingRouter {
             // No topic gate → fall back to chat_mode's coarse scope.
             switch mode {
             case .outOfScope:
-                return .verizon(.oosRefusal)
+                return .telco(.oosRefusal)
             case .personalSummary:
                 return .personalSummary
             case .toolAction:
@@ -101,7 +101,7 @@ public enum VerizonUnderstandingRouter {
             // Neither head present — degraded build. Safe default is
             // OOS refusal so we don't silently engage downstream stages
             // with no scope signal at all.
-            return .verizon(.oosRefusal)
+            return .telco(.oosRefusal)
         }
 
         // ----------------------------------------------------------------
@@ -113,7 +113,7 @@ public enum VerizonUnderstandingRouter {
         // ----------------------------------------------------------------
         if understanding.emotionalState?.value == .urgent,
            understanding.refusalFlags?.value.liveAgentTrigger == true {
-            return .verizon(.liveAgentEscalation)
+            return .telco(.liveAgentEscalation)
         }
 
         // ----------------------------------------------------------------
@@ -122,21 +122,21 @@ public enum VerizonUnderstandingRouter {
         // escalate, not silently navigate).
         // ----------------------------------------------------------------
         if understanding.refusalFlags?.value.liveAgentTrigger == true {
-            return .verizon(.liveAgentEscalation)
+            return .telco(.liveAgentEscalation)
         }
 
         // ----------------------------------------------------------------
         // Step 4: navigation-only flag → deep link.
         // ----------------------------------------------------------------
         if understanding.refusalFlags?.value.navigationOnly == true {
-            return .verizon(.navOnlyDeeplink)
+            return .telco(.navOnlyDeeplink)
         }
 
         // ----------------------------------------------------------------
         // Step 5: chat_mode categorical for non-question lanes. Done
-        // AFTER topic_gate so a Verizon-trained `topic_gate=in_scope`
+        // AFTER topic_gate so a Telco-trained `topic_gate=in_scope`
         // dominates a coarse `chat_mode=tool_action` — the topic gate
-        // says "this is a Verizon question worth a RAG answer".
+        // says "this is a Telco question worth a RAG answer".
         // ----------------------------------------------------------------
         if let mode = understanding.chatMode?.mode {
             switch mode {
@@ -157,12 +157,12 @@ public enum VerizonUnderstandingRouter {
         let hasRagAnswerFlag = understanding.refusalFlags?.value.hasRagAnswer ?? true
 
         if !hasRagAnswerFlag {
-            return .verizon(.unknownFeature)
+            return .telco(.unknownFeature)
         }
 
         // Resolve retrieval. If the retriever didn't return a result
         // (degraded ColBERT, cold start), fall back to a permissive
-        // synthetic confidence — same as the legacy `VerizonRagRouter`
+        // synthetic confidence — same as the legacy `TelcoRagRouter`
         // overload that takes an optional retrieval result. The
         // engineering trace will surface the missing signal so the
         // degradation isn't silent.
@@ -172,14 +172,14 @@ public enum VerizonUnderstandingRouter {
         )
 
         if confidence < retrievalConfidenceFloor {
-            return .verizon(.unknownFeature)
+            return .telco(.unknownFeature)
         }
 
         if gap < ambiguityGapThreshold && confidence < highConfidenceCeiling {
-            return .verizon(.clarification)
+            return .telco(.clarification)
         }
 
-        return .verizon(.ragStepByStep)
+        return .telco(.ragStepByStep)
     }
 
     /// Resolve the retrieval (confidence, gap) pair. Defensive against
@@ -423,7 +423,7 @@ public enum VerizonUnderstandingRouter {
 
     // MARK: - Back-compat bridge
 
-    /// Bridge that consumes a `VerizonStageADecision` (the PR #30
+    /// Bridge that consumes a `TelcoStageADecision` (the PR #30
     /// shape) and produces an `UnderstandingLane`. Useful while the
     /// shared-backbone v2 retrain is in flight — Stage A still
     /// produces the same two heads, we just wrap them into the
@@ -435,7 +435,7 @@ public enum VerizonUnderstandingRouter {
     /// query were a KB question (the existing PR #30 default for
     /// the `.kbQuestion` chat branch).
     public static func decide(
-        stageA: VerizonStageADecision,
+        stageA: TelcoStageADecision,
         chatMode: ChatModePrediction? = nil,
         retrieval: ColBERTRetrievalResult? = nil
     ) -> UnderstandingLane {
@@ -459,30 +459,30 @@ public enum VerizonUnderstandingRouter {
 }
 
 /// Lane returned by the v2 understanding router. A superset of the
-/// existing `VerizonLane` plus two carrier values for the chat-mode
+/// existing `TelcoLane` plus two carrier values for the chat-mode
 /// branches the dispatcher used to handle implicitly via the
 /// ChatViewModel switch.
 ///
-/// **Why a separate enum**: the legacy `VerizonLane` lives in a file
-/// the Verizon dispatcher still owns, and adding `toolAction` /
+/// **Why a separate enum**: the legacy `TelcoLane` lives in a file
+/// the Telco dispatcher still owns, and adding `toolAction` /
 /// `personalSummary` to it would force every existing call site to
 /// handle them. The cleaner migration is a new outer enum that maps
-/// 1:1 to `VerizonLane` for the existing 7 cases and adds the two
+/// 1:1 to `TelcoLane` for the existing 7 cases and adds the two
 /// chat-mode carriers separately. The dispatcher only sees
-/// `.verizon(...)`; the chat layer pattern-matches the carriers.
+/// `.telco(...)`; the chat layer pattern-matches the carriers.
 public enum UnderstandingLane: Sendable, Equatable {
-    /// Maps directly to a `VerizonLane`. The dispatcher handles these.
-    case verizon(VerizonLane)
+    /// Maps directly to a `TelcoLane`. The dispatcher handles these.
+    case telco(TelcoLane)
     /// Tool-action lane — handled by `ChatViewModel.runToolProposal`.
     case toolAction
     /// Personal-summary lane — handled by `ChatViewModel.runPersonalizedSummary`.
     case personalSummary
 
     /// Stable wire string for logs + telemetry. Adds the two new
-    /// carriers to the existing `VerizonLane.wireName` namespace.
+    /// carriers to the existing `TelcoLane.wireName` namespace.
     public var wireName: String {
         switch self {
-        case .verizon(let lane):     return lane.wireName
+        case .telco(let lane):     return lane.wireName
         case .toolAction:            return "tool_action"
         case .personalSummary:       return "personal_summary"
         }
@@ -492,11 +492,11 @@ public enum UnderstandingLane: Sendable, Equatable {
     /// `.toolAction` triggers the LFMToolSelector or ImperativeToolDetector
     /// fast-path (both produce a structured selection without an
     /// open-ended generation). `.personalSummary` runs deterministic
-    /// Swift composition today (no LFM). Only `.verizon(.ragStepByStep)`
+    /// Swift composition today (no LFM). Only `.telco(.ragStepByStep)`
     /// runs Stage B.
     public var requiresStageBGeneration: Bool {
         switch self {
-        case .verizon(let lane):  return lane.requiresGeneration
+        case .telco(let lane):  return lane.requiresGeneration
         case .toolAction,
              .personalSummary:    return false
         }
@@ -515,10 +515,10 @@ public enum UnderstandingLane: Sendable, Equatable {
     /// Mapping (closed-world — every case exhaustive):
     ///  - `.toolAction`               → `.toolCall`
     ///  - `.personalSummary`          → `.personalized`
-    ///  - `.verizon(.oosRefusal)`     → `.outOfScope`
-    ///  - `.verizon(.liveAgentEscalation)` → `.outOfScope` (template
+    ///  - `.telco(.oosRefusal)`     → `.outOfScope`
+    ///  - `.telco(.liveAgentEscalation)` → `.outOfScope` (template
     ///    response, not a RAG answer — fits the "declined" surface)
-    ///  - all other verizon lanes (ragStepByStep, unknownFeature,
+    ///  - all other telco lanes (ragStepByStep, unknownFeature,
     ///    clarification, navOnlyDeeplink, greeting) → `.answerWithRAG`
     ///    since they all produce content the user reads (article,
     ///    clarification, deep link, hello).
@@ -528,7 +528,7 @@ public enum UnderstandingLane: Sendable, Equatable {
             return .toolCall
         case .personalSummary:
             return .personalized
-        case .verizon(let v):
+        case .telco(let v):
             switch v {
             case .oosRefusal, .liveAgentEscalation:
                 return .outOfScope

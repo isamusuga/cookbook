@@ -1,6 +1,6 @@
 import Foundation
 
-/// Inputs to the Verizon deterministic router for one conversation turn.
+/// Inputs to the Telco deterministic router for one conversation turn.
 ///
 /// Aggregates the signals produced by the single LFM2.5-350M forward
 /// pass (topic gate, refusal flags) plus the ColBERT retrieval
@@ -14,20 +14,20 @@ import Foundation
 /// compatibility with call sites and tests; the router itself no
 /// longer consults it. See ADR-021 §6.5 for the postmortem.
 ///
-/// See `docs/architecture-decisions/ADR-021-verizon-home-internet-rag-assistant.md` §2.2, §3, §6.5.
-public struct VerizonRouterInputs: Sendable, Equatable {
+/// See `docs/architecture-decisions/ADR-021-telco-home-internet-rag-assistant.md` §2.2, §3, §6.5.
+public struct TelcoRouterInputs: Sendable, Equatable {
     /// Topic gate output.
-    public let topicGate: VerizonTopicGate
+    public let topicGate: TelcoTopicGate
 
     /// Macro intent (10-class). **Ignored by the router as of May 2026** —
     /// kept optional for backward compatibility with call sites that
     /// still produce it (e.g., for link-resolver fallback selection in
-    /// `VerizonLinkResolver.levelOneFallback`). The router decision
+    /// `TelcoLinkResolver.levelOneFallback`). The router decision
     /// flows purely through `topicGate` + `flags` + retrieval signals.
-    public let intent: VerizonMacroIntent?
+    public let intent: TelcoMacroIntent?
 
     /// Multi-label sigmoid output.
-    public let flags: VerizonRefusalFlags
+    public let flags: TelcoRefusalFlags
 
     /// Top-1 ColBERT retrieval confidence in `[0.0, 1.0]`. The router
     /// uses this to decide between RAG step-by-step (high confidence)
@@ -39,9 +39,9 @@ public struct VerizonRouterInputs: Sendable, Equatable {
     public let retrievalTopGap: Double
 
     public init(
-        topicGate: VerizonTopicGate,
-        intent: VerizonMacroIntent? = nil,
-        flags: VerizonRefusalFlags,
+        topicGate: TelcoTopicGate,
+        intent: TelcoMacroIntent? = nil,
+        flags: TelcoRefusalFlags,
         topRetrievalConfidence: Double,
         retrievalTopGap: Double
     ) {
@@ -55,13 +55,13 @@ public struct VerizonRouterInputs: Sendable, Equatable {
 
 /// 3-class topic gate output. Distinct from the macro intent — topic
 /// gate runs first and short-circuits the pipeline for OOS / greeting.
-public enum VerizonTopicGate: Int, Sendable, CaseIterable, Codable {
+public enum TelcoTopicGate: Int, Sendable, CaseIterable, Codable {
     case inScope = 0
     case outOfScope = 1
     case greeting = 2
 }
 
-/// Deterministic policy that picks a `VerizonLane` from router inputs.
+/// Deterministic policy that picks a `TelcoLane` from router inputs.
 ///
 /// Pure function (no I/O, no state). Sub-millisecond. The model emits
 /// signals; this router owns the decision. Per
@@ -69,8 +69,8 @@ public enum VerizonTopicGate: Int, Sendable, CaseIterable, Codable {
 /// *"anything checkable in O(1) belongs in code, not a model."*
 ///
 /// Implements the routing policy from
-/// `docs/architecture-decisions/ADR-021-verizon-home-internet-rag-assistant.md` §3.
-public enum VerizonRagRouter {
+/// `docs/architecture-decisions/ADR-021-telco-home-internet-rag-assistant.md` §3.
+public enum TelcoRagRouter {
     /// Confidence threshold below which retrieval is considered to have
     /// no RAG answer, even if the sigmoid says `hasRagAnswer = true`.
     /// Tuned at 0.45 per the Ottoguard precedent — adjustable after
@@ -97,7 +97,7 @@ public enum VerizonRagRouter {
     /// Ordering matters: live-agent fires before nav-only so an explicit
     /// "talk to a person" question about billing escalates rather than
     /// silently navigating away.
-    public static func route(_ inputs: VerizonRouterInputs) -> VerizonLane {
+    public static func route(_ inputs: TelcoRouterInputs) -> TelcoLane {
         switch inputs.topicGate {
         case .greeting:
             return .greeting
@@ -155,9 +155,9 @@ public enum VerizonRagRouter {
     /// Tests covering this overload double as regression tests for the
     /// underlying `route(_:)` decision tree.
     public static func route(
-        stageA: VerizonStageADecision,
+        stageA: TelcoStageADecision,
         retrieval: ColBERTRetrievalResult?
-    ) -> VerizonLane {
+    ) -> TelcoLane {
         let confidence: Double
         let gap: Double
         if let retrieval, let topConfidence = retrieval.hits.first.map({ _ in retrieval.topConfidence }) {
@@ -174,7 +174,7 @@ public enum VerizonRagRouter {
             confidence = stageA.refusalFlags.hasRagAnswer ? 0.95 : 0.0
             gap = stageA.refusalFlags.hasRagAnswer ? 0.5 : 0.0
         }
-        return route(VerizonRouterInputs(
+        return route(TelcoRouterInputs(
             topicGate: stageA.topicGate,
             intent: nil,
             flags: stageA.refusalFlags,
@@ -187,7 +187,7 @@ public enum VerizonRagRouter {
     /// that don't have retrieval data. Routes as if retrieval succeeded
     /// with high confidence when `hasRagAnswer` is true. Production
     /// chat path uses `route(stageA:retrieval:)` above.
-    public static func route(stageA: VerizonStageADecision) -> VerizonLane {
+    public static func route(stageA: TelcoStageADecision) -> TelcoLane {
         return route(stageA: stageA, retrieval: nil)
     }
 }

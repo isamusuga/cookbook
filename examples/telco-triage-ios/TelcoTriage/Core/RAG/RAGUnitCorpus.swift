@@ -3,11 +3,11 @@ import os.log
 
 /// In-memory canonical RAG corpus loaded once at app start from
 /// `Resources/rag-units-v1.json`. Mirrors
-/// `data/finetune/vz-home-internet/rag_units.json`.
+/// `data/finetune/telco-home-internet/rag_units.json`.
 ///
 /// The corpus is the single source of truth for:
 ///
-/// * what `vzhome://` URLs the composer is allowed to render,
+/// * what `telcohome://` URLs the composer is allowed to render,
 /// * citation labels + steps per page,
 /// * link_id → page_id index used by the BM25HierarchyRetriever
 ///   history-hint mechanism,

@@ -2,14 +2,14 @@ import XCTest
 @testable import TelcoTriage
 
 /// End-to-end smoke tests for the Step 6.4 composer path through
-/// `VerizonChatDispatcher`. Exercises the route-derivation gate
+/// `TelcoChatDispatcher`. Exercises the route-derivation gate
 /// (`ToolRegistry`) + lexical retrieval + composer wiring.
 ///
 /// These tests use a stub Stage A classifier so they don't need
 /// llama_cpp models or the full app stack — the composer path only
 /// requires `composer + corpus + lexicalRetriever + toolRegistry`.
 @MainActor
-final class VerizonDispatcherComposerPathTests: XCTestCase {
+final class TelcoDispatcherComposerPathTests: XCTestCase {
     private var corpus: RAGUnitCorpus!
     private var retriever: BM25HierarchyRetriever!
     private var composer: DeterministicAnswerComposer!
@@ -150,7 +150,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
 
         XCTAssertEqual(result.composerRoute, .accountNav)
         XCTAssertNil(result.citedRAGUnit)
-        XCTAssertEqual(result.deepLink, AnswerComposerConstants.myVerizonURL)
+        XCTAssertEqual(result.deepLink, AnswerComposerConstants.myTelcoURL)
     }
 
     func test_fallbackPolicyRoutesHumanHelpBeforeRetrieval() async {
@@ -537,7 +537,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
             guard let link = result.deepLink else { continue }
             XCTAssertTrue(
                 known.contains(link) || known.contains(link.split(separator: "?").first.map(String.init) ?? link),
-                "composer rendered an unknown vzhome:// URL on query '\(query)': \(link)"
+                "composer rendered an unknown telcohome:// URL on query '\(query)': \(link)"
             )
         }
     }
@@ -548,7 +548,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         let stageA = CountingStageAClassifier()
         let dispatcher = makeDispatcher(stageA: stageA)
 
-        var events: [VerizonDispatchEvent] = []
+        var events: [TelcoDispatchEvent] = []
         for await event in dispatcher.dispatchComposer(query: "restart my router") {
             events.append(event)
         }
@@ -570,7 +570,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         let relational = CountingRelationalStrategy()
         let dispatcher = makeDispatcher(stageA: stageA)
         let harness = TestChatHarness(
-            verizonDispatcher: dispatcher,
+            telcoDispatcher: dispatcher,
             telcoUnderstandingClassifier: telcoUnderstanding,
             understandingClassifier: understanding,
             relationalStrategy: relational
@@ -604,7 +604,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         ])
         let dispatcher = makeDispatcher()
         let harness = TestChatHarness(
-            verizonDispatcher: dispatcher,
+            telcoDispatcher: dispatcher,
             telcoUnderstandingClassifier: CountingTelcoUnderstandingClassifier(),
             relationalStrategy: relational
         )
@@ -631,7 +631,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         ])
         let dispatcher = makeDispatcher()
         let harness = TestChatHarness(
-            verizonDispatcher: dispatcher,
+            telcoDispatcher: dispatcher,
             telcoUnderstandingClassifier: CountingTelcoUnderstandingClassifier(),
             relationalStrategy: relational
         )
@@ -652,10 +652,10 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
     // MARK: - Helpers
 
     private func makeDispatcher(
-        stageA: VerizonStageAClassifying? = nil,
+        stageA: TelcoStageAClassifying? = nil,
         verbalizer: DialogueRepairVerbalizing? = nil
-    ) -> VerizonChatDispatcher {
-        VerizonChatDispatcher(
+    ) -> TelcoChatDispatcher {
+        TelcoChatDispatcher(
             stageA: stageA,
             stageB: nil,
             kbFallback: StubKBExtractor(),
@@ -677,7 +677,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         telcoUnderstanding: TelcoSharedUnderstanding? = nil,
         dialogueState: DialogueRepairConversationState = .empty,
         verbalizer: DialogueRepairVerbalizing? = nil
-    ) async -> VerizonDispatchResult {
+    ) async -> TelcoDispatchResult {
         let dispatcher = makeDispatcher(verbalizer: verbalizer)
         // Mirror the V4 dialogue state into the policy-engine state snapshot the
         // production path builds from the blackboard, so these dispatcher-level
@@ -691,7 +691,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
             frustrationCount: dialogueState.frustrationCount,
             hasPriorAssistantTurn: context.priorAssistantText != nil
         )
-        var finalResult: VerizonDispatchResult?
+        var finalResult: TelcoDispatchResult?
         for await event in dispatcher.dispatchComposer(
             query: query,
             retrievalContext: context,
@@ -702,7 +702,7 @@ final class VerizonDispatcherComposerPathTests: XCTestCase {
         ) {
             if case .response(let r) = event { finalResult = r }
         }
-        return finalResult ?? VerizonDispatchResult(
+        return finalResult ?? TelcoDispatchResult(
             text: "<no response>", lane: .ragStepByStep, source: .composer, totalMs: 0
         )
     }
@@ -750,8 +750,8 @@ private actor StubDialogueRepairVerbalizer: DialogueRepairVerbalizing {
 
 // MARK: - Stage A stub
 
-private func makeStageADecision() -> VerizonStageADecision {
-    VerizonStageADecision(
+private func makeStageADecision() -> TelcoStageADecision {
+    TelcoStageADecision(
         topicGate: .inScope,
         topicGateConfidence: 0.95,
         topicGateProbabilities: [0.05, 0.95],
@@ -817,16 +817,16 @@ private func makeTelcoUnderstanding(
     )
 }
 
-private struct StubStageAClassifier: VerizonStageAClassifying {
-    func classify(query: String) async throws -> VerizonStageADecision {
+private struct StubStageAClassifier: TelcoStageAClassifying {
+    func classify(query: String) async throws -> TelcoStageADecision {
         makeStageADecision()
     }
 }
 
-private actor CountingStageAClassifier: VerizonStageAClassifying {
+private actor CountingStageAClassifier: TelcoStageAClassifying {
     private var calls = 0
 
-    func classify(query: String) async throws -> VerizonStageADecision {
+    func classify(query: String) async throws -> TelcoStageADecision {
         calls += 1
         return makeStageADecision()
     }

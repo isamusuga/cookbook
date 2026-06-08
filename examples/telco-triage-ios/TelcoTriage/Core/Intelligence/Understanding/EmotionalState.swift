@@ -5,7 +5,7 @@ import Foundation
 /// analytics; never used by the routing decision tree itself.
 ///
 /// **Schema commitments** (frozen — must not be re-ordered without a
-/// head re-export; the label2id map in `vz_emotional_state_label_schema.json`
+/// head re-export; the label2id map in `telco_emotional_state_label_schema.json`
 /// is the wire contract):
 ///
 ///  - `neutral`     index 0 — calm, informational, transactional. Default.
@@ -49,7 +49,7 @@ public enum EmotionalState: Int, Sendable, Equatable, Codable, CaseIterable {
 
     /// True for states that should bias the workflow toward proactive
     /// escalation. The router itself is unaware — only the NBA layer
-    /// and the workflow upgrade in `VerizonUnderstandingRouter.escalationOverride`
+    /// and the workflow upgrade in `TelcoUnderstandingRouter.escalationOverride`
     /// consult this.
     public var warrantsProactiveEscalation: Bool {
         switch self {

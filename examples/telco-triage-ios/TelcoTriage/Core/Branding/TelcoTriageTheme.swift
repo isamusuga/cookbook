@@ -48,4 +48,4 @@ public struct TelcoTriageTheme: BrandTheme {
     public init() {}
 }
 
-public typealias VerizonTheme = TelcoTriageTheme
+public typealias TelcoTheme = TelcoTriageTheme

@@ -14,7 +14,7 @@ final class ConversationStateTests: XCTestCase {
     // MARK: - Detector: live-agent requests
 
     func test_detector_acceptsCanonicalLiveAgentPhrases() {
-        // Anchored to the Verizon production corpus: every escalation
+        // Anchored to the Telco production corpus: every escalation
         // request in the 50-conversation set uses one of these phrasings.
         XCTAssertTrue(ConversationStateRecorder.isLiveAgentRequest("Agent"))
         XCTAssertTrue(ConversationStateRecorder.isLiveAgentRequest("Live agent"))
@@ -98,14 +98,14 @@ final class ConversationStateTests: XCTestCase {
 
         state.recordTurn(
             userMessage: "Speak to live agent",
-            assistantLane: .verizon(.liveAgentEscalation),
+            assistantLane: .telco(.liveAgentEscalation),
             toolDecision: nil
         )
         XCTAssertEqual(state.liveAgentRequestCount, 1)
 
         state.recordTurn(
             userMessage: "Agent",
-            assistantLane: .verizon(.liveAgentEscalation),
+            assistantLane: .telco(.liveAgentEscalation),
             toolDecision: nil
         )
         XCTAssertEqual(state.liveAgentRequestCount, 2)
@@ -117,12 +117,12 @@ final class ConversationStateTests: XCTestCase {
 
         state.recordTurn(
             userMessage: "didn't work",
-            assistantLane: .verizon(.ragStepByStep),
+            assistantLane: .telco(.ragStepByStep),
             toolDecision: nil
         )
         state.recordTurn(
             userMessage: "still broken",
-            assistantLane: .verizon(.ragStepByStep),
+            assistantLane: .telco(.ragStepByStep),
             toolDecision: nil
         )
         XCTAssertEqual(state.didntWorkCount, 2)
@@ -135,7 +135,7 @@ final class ConversationStateTests: XCTestCase {
         let state = ConversationState()
         state.recordTurn(
             userMessage: "how do I run a speed test",
-            assistantLane: .verizon(.ragStepByStep),
+            assistantLane: .telco(.ragStepByStep),
             toolDecision: nil
         )
         XCTAssertEqual(state.liveAgentRequestCount, 0)
@@ -150,7 +150,7 @@ final class ConversationStateTests: XCTestCase {
         let state = ConversationState()
         state.recordTurn(
             userMessage: "extender problems",
-            assistantLane: .verizon(.clarification),
+            assistantLane: .telco(.clarification),
             toolDecision: nil,
             missingSlots: [.location],
             pendingIntent: .rebootExtender,
@@ -199,7 +199,7 @@ final class ConversationStateTests: XCTestCase {
         // missing slots / clarification. Must clear pending.
         state.recordTurn(
             userMessage: "what's my plan",
-            assistantLane: .verizon(.ragStepByStep),
+            assistantLane: .telco(.ragStepByStep),
             toolDecision: nil
         )
         XCTAssertNil(state.pendingClarification)
@@ -210,7 +210,7 @@ final class ConversationStateTests: XCTestCase {
         let state = ConversationState()
         state.recordTurn(
             userMessage: "x",
-            assistantLane: .verizon(.clarification),
+            assistantLane: .telco(.clarification),
             toolDecision: nil,
             missingSlots: [.device],
             pendingIntent: .toggleParentalControls
@@ -267,7 +267,7 @@ final class ConversationStateTests: XCTestCase {
         )
         state.recordTurn(
             userMessage: "how do I pause my son's tablet",
-            assistantLane: .verizon(.ragStepByStep),
+            assistantLane: .telco(.ragStepByStep),
             toolDecision: compound
         )
         XCTAssertNil(state.pendingToolConfirmation)
@@ -303,12 +303,12 @@ final class ConversationStateTests: XCTestCase {
         let state = ConversationState()
         state.recordTurn(
             userMessage: "Agent",
-            assistantLane: .verizon(.liveAgentEscalation),
+            assistantLane: .telco(.liveAgentEscalation),
             toolDecision: nil
         )
         state.recordTurn(
             userMessage: "didn't work",
-            assistantLane: .verizon(.ragStepByStep),
+            assistantLane: .telco(.ragStepByStep),
             toolDecision: nil,
             missingSlots: [.device],
             pendingIntent: .toggleParentalControls
@@ -331,7 +331,7 @@ final class ConversationStateTests: XCTestCase {
         let state = ConversationState()
         state.recordTurn(
             userMessage: "Speak to live agent",
-            assistantLane: .verizon(.liveAgentEscalation),
+            assistantLane: .telco(.liveAgentEscalation),
             toolDecision: nil
         )
         let snap = state.snapshot
@@ -348,7 +348,7 @@ final class ConversationStateTests: XCTestCase {
         let snap = state.snapshot
         state.recordTurn(
             userMessage: "Agent",
-            assistantLane: .verizon(.liveAgentEscalation),
+            assistantLane: .telco(.liveAgentEscalation),
             toolDecision: nil
         )
         XCTAssertEqual(snap.liveAgentRequestCount, 0,

@@ -20,7 +20,7 @@ import Foundation
 
 /// 5-way taxonomy of relationships between the current user turn and
 /// the assistant's PRIOR reply. Closed-world: every observed multi-turn
-/// pattern in the Verizon 50-conversation corpus maps to exactly one
+/// pattern in the Telco 50-conversation corpus maps to exactly one
 /// of these. Adding a 6th case requires a corpus re-audit + retrain.
 ///
 /// **Wire contract** (frozen — index → meaning maps directly into the
@@ -46,7 +46,7 @@ public enum TurnRelationship: Int, Sendable, Equatable, Codable, CaseIterable {
     case affirmativeContinuation = 4
 
     /// Stable wire string for logs + telemetry. Matches the training-
-    /// data label vocabulary in `scripts/vz/relational/`.
+    /// data label vocabulary in `scripts/telco/relational/`.
     public var wireName: String {
         switch self {
         case .independent:             return "independent"
@@ -508,7 +508,7 @@ public final class ChatTemplateRelationalStrategy: RelationalHeadsStrategy, @unc
     // MARK: - System prompt (must match prepare_training_data.py EXACTLY)
 
     private static let systemPrompt =
-        "You are a multi-turn understanding classifier for Verizon home internet support. " +
+        "You are a multi-turn understanding classifier for Telco home internet support. " +
         "Classify the relationship between the current user turn and the prior assistant turn."
 
     public init(backend: LlamaBackend, adapterPath: String) {

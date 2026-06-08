@@ -4,7 +4,7 @@ import SwiftUI
 /// primitives come from here — views must never hardcode `.red`, `.black`,
 /// or literal strings for app-name / assistant-name. That keeps the generic
 /// Telco skin one-swap-removed from any carrier (T-Mobile, AT&T, Bell,
-/// Rogers, Vodafone, Verizon) that wants the same POC reskinned.
+/// Rogers, Vodafone, Telco) that wants the same POC reskinned.
 public protocol BrandTheme: Sendable {
     var id: String { get }
     var displayName: String { get }

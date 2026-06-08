@@ -44,7 +44,7 @@ public enum QueryUnderstandingError: Error, LocalizedError {
 ///    shared-backbone multi-head pattern is the most underutilized
 ///    leverage in our stack").
 ///  - `CompositeFallbackStrategy` — wraps the existing
-///    `LFMChatModeRouter` (generative chat_mode) + `VerizonStageAClassifier`
+///    `LFMChatModeRouter` (generative chat_mode) + `TelcoStageAClassifier`
 ///    (topic_gate + refusal_flags, private adapters). Used when v2
 ///    isn't bundled. Costs 1 generative call + 2 forward passes.
 ///    `emotionalState` and `slotCompleteness` are nil in this mode —
@@ -122,13 +122,13 @@ public final class QueryUnderstandingClassifier: QueryUnderstandingClassifying, 
     /// Selection order:
     ///  1. v2 shared backbone if `telco-shared-clf-v2` + at least one
     ///     head are bundled.
-    ///  2. Composite (LFMChatModeRouter + VerizonStageAClassifier) if
+    ///  2. Composite (LFMChatModeRouter + TelcoStageAClassifier) if
     ///     PR #30 artifacts are bundled.
     ///  3. Unavailable (caller falls back to non-classified routing).
     public static func bundled(
         backend: LlamaBackend,
         chatModeRouter: ChatModeRouter,
-        stageA: VerizonStageAClassifying?,
+        stageA: TelcoStageAClassifying?,
         bundle: Bundle = .main
     ) -> QueryUnderstandingClassifier {
         if let shared = try? SharedBackboneStrategy.bundled(backend: backend, bundle: bundle) {
@@ -270,7 +270,7 @@ public final class SharedBackboneStrategy: UnderstandingStrategy, @unchecked Sen
         let topicGateOutcome: TopicGateOutcome? = topicGateHead.map { head in
             let pred = head.classify(hidden)
             return TopicGateOutcome(
-                value: VerizonStageAClassifier.topicGateFromLabel(pred.label),
+                value: TelcoStageAClassifier.topicGateFromLabel(pred.label),
                 confidence: Double(pred.confidence)
             )
         }
@@ -278,7 +278,7 @@ public final class SharedBackboneStrategy: UnderstandingStrategy, @unchecked Sen
         let refusalFlagsOutcome: RefusalFlagsOutcome? = refusalFlagsHead.map { head in
             let pred = head.classifyMultiLabel(hidden)
             return RefusalFlagsOutcome(
-                value: VerizonStageAClassifier.refusalFlagsFromBinaryVector(pred.binaryVector),
+                value: TelcoStageAClassifier.refusalFlagsFromBinaryVector(pred.binaryVector),
                 probabilities: pred.probabilities.map(Double.init)
             )
         }
@@ -320,7 +320,7 @@ public final class SharedBackboneStrategy: UnderstandingStrategy, @unchecked Sen
 
 // MARK: - Composite fallback (PR #30 path)
 
-/// Wraps the existing `LFMChatModeRouter` + (optional) `VerizonStageAClassifier`
+/// Wraps the existing `LFMChatModeRouter` + (optional) `TelcoStageAClassifier`
 /// into the v2 contract. Pays 1 generative call (chat_mode, ~600 ms
 /// on simulator, ~1.2 s on device) + 2 forward passes (Stage A, ~150 ms
 /// each) when Stage A is reachable. Two new heads (`emotionalState`,
@@ -338,9 +338,9 @@ public final class SharedBackboneStrategy: UnderstandingStrategy, @unchecked Sen
 /// chat_mode's coarse scope.
 public struct CompositeFallbackStrategy: UnderstandingStrategy {
     private let chatModeRouter: ChatModeRouter
-    private let stageA: VerizonStageAClassifying?
+    private let stageA: TelcoStageAClassifying?
 
-    public init(chatModeRouter: ChatModeRouter, stageA: VerizonStageAClassifying? = nil) {
+    public init(chatModeRouter: ChatModeRouter, stageA: TelcoStageAClassifying? = nil) {
         self.chatModeRouter = chatModeRouter
         self.stageA = stageA
     }
@@ -358,9 +358,9 @@ public struct CompositeFallbackStrategy: UnderstandingStrategy {
         // chat_mode prompt.
         async let modePredictionTask = chatModeRouter.classify(query: query)
 
-        let stageADecision: VerizonStageADecision?
+        let stageADecision: TelcoStageADecision?
         if let stageA {
-            async let stageATask: VerizonStageADecision = stageA.classify(query: query)
+            async let stageATask: TelcoStageADecision = stageA.classify(query: query)
             do {
                 stageADecision = try await stageATask
             } catch {

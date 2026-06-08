@@ -163,7 +163,7 @@ public struct RegexQueryExtractor: QueryExtractor {
         // user-visible.
         let patterns = [
             // "pause [internet/wifi/network] for [my|the] X" → target = X.
-            // Canonical Verizon parental-controls phrasing. The
+            // Canonical Telco parental-controls phrasing. The
             // internet-noun is consumed non-capturing so X is the
             // device or person.
             #"(?:block|pause|resume|unblock|stop|shut\s+off|disable|kill|cut\s+off)\s+(?:the\s+)?(?:internet|wifi|wi-fi|wi\s+fi|network|connection|access|data)\s+(?:for|on)\s+(?:my\s+|the\s+|his\s+|her\s+|their\s+)?(.+?)(?:\s+(?:until|tonight|tomorrow|this\s+\w+)\b|[,.!?]|$)"#,

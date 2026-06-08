@@ -11,7 +11,7 @@ import Foundation
 /// Every head output is **optional**. Production rolls v2 heads in
 /// gradually: today only `chatMode` + `topicGate` + `refusalFlags` are
 /// trained (carry over from PR #30); `emotionalState` and `slotCompleteness`
-/// land after the Phase 1/2 H100 retrain. The downstream `VerizonUnderstandingRouter`
+/// land after the Phase 1/2 H100 retrain. The downstream `TelcoUnderstandingRouter`
 /// only consults the heads that ARE present — it never invents a
 /// fallback value when a head is missing.
 ///
@@ -36,8 +36,8 @@ public struct QueryUnderstanding: Sendable, Equatable {
     /// re-bundled into the v2 shared backbone.
     public let chatMode: ChatModePrediction?
 
-    /// 3-class Verizon-specific scope gate: in_scope / out_of_scope /
-    /// greeting. Trained on the Verizon RAG corpus probe-set. Catches
+    /// 3-class Telco-specific scope gate: in_scope / out_of_scope /
+    /// greeting. Trained on the Telco RAG corpus probe-set. Catches
     /// in-domain queries the generic `chatMode` head might mis-route.
     public let topicGate: TopicGateOutcome?
 
@@ -124,14 +124,14 @@ public struct QueryUnderstanding: Sendable, Equatable {
 // `confidence`; it reads `value`. Tests can construct these directly
 // without spinning up a classifier.
 
-/// Topic-gate head output. Mirrors `VerizonStageADecision.topicGate` +
+/// Topic-gate head output. Mirrors `TelcoStageADecision.topicGate` +
 /// `topicGateConfidence` but in a self-contained shape callers can
 /// build in tests.
 public struct TopicGateOutcome: Sendable, Equatable {
-    public let value: VerizonTopicGate
+    public let value: TelcoTopicGate
     public let confidence: Double
 
-    public init(value: VerizonTopicGate, confidence: Double) {
+    public init(value: TelcoTopicGate, confidence: Double) {
         self.value = value
         self.confidence = confidence
     }
@@ -143,13 +143,13 @@ public struct TopicGateOutcome: Sendable, Equatable {
 /// the router resolves precedence (live-agent beats nav-only per
 /// ADR-021 §3).
 public struct RefusalFlagsOutcome: Sendable, Equatable {
-    public let value: VerizonRefusalFlags
+    public let value: TelcoRefusalFlags
     /// Per-flag sigmoid scores [has_rag_answer, navigation_only,
     /// live_agent_trigger]. Surfaced in the trace; never consulted by
     /// the router.
     public let probabilities: [Double]
 
-    public init(value: VerizonRefusalFlags, probabilities: [Double]) {
+    public init(value: TelcoRefusalFlags, probabilities: [Double]) {
         self.value = value
         self.probabilities = probabilities
     }
@@ -195,7 +195,7 @@ public struct SlotCompletenessOutcome: Sendable, Equatable {
 /// - `shared`: one adapter swap + one forward pass + N head projections.
 ///   The architectural target for v2 (telco-shared-clf-v2 bundled).
 /// - `composite`: per-head adapter swaps + per-head forward passes.
-///   Today's PR #30 path (vz-topic-gate + vz-refusal-flags private
+///   Today's PR #30 path (telco-topic-gate + telco-refusal-flags private
 ///   adapters) plus the existing `LFMChatModeRouter` for chat_mode.
 /// - `unavailable`: the classifier couldn't load (degraded build).
 ///   Caller should fall back to existing piecemeal routing.

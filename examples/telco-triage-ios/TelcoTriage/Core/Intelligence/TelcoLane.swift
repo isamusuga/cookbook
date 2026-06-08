@@ -3,15 +3,15 @@ import Foundation
 /// Routing outcome for a single conversation turn.
 ///
 /// Six customer-facing lanes plus the `clarification` multi-turn case.
-/// See `docs/architecture-decisions/ADR-021-verizon-home-internet-rag-assistant.md` §3.
+/// See `docs/architecture-decisions/ADR-021-telco-home-internet-rag-assistant.md` §3.
 ///
-/// Parallels the `Lane` IntEnum in `scripts/vz/schemas.py`.
-public enum VerizonLane: Int, Sendable, CaseIterable, Codable {
+/// Parallels the `Lane` IntEnum in `scripts/telco/schemas.py`.
+public enum TelcoLane: Int, Sendable, CaseIterable, Codable {
     /// User said hi / hello / thanks. Friendly template response.
     case greeting = 0
 
     /// In-scope query with a RAG-grounded answer. Generates a
-    /// `Go to [Link](vzhome://...) > Step > Step` response via the
+    /// `Go to [Link](telcohome://...) > Step > Step` response via the
     /// 1.2B LM + GBNF grammar.
     case ragStepByStep = 1
 
@@ -21,7 +21,7 @@ public enum VerizonLane: Int, Sendable, CaseIterable, Codable {
     case navOnlyDeeplink = 2
 
     /// In-scope but the RAG corpus has no answer. Offers escalation
-    /// to a Verizon support agent.
+    /// to a Telco support agent.
     case unknownFeature = 3
 
     /// Explicit live-agent request or operational urgency. Triggers
@@ -29,7 +29,7 @@ public enum VerizonLane: Int, Sendable, CaseIterable, Codable {
     case liveAgentEscalation = 4
 
     /// Out-of-scope query (weather, prompt injection, generic chitchat).
-    /// Verizon's canonical refusal template.
+    /// Telco's canonical refusal template.
     case oosRefusal = 5
 
     /// Multi-turn special case: retrieval is ambiguous between two or

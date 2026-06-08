@@ -106,8 +106,8 @@ public enum TelcoModelBundle {
     // Retired answer-generator artifacts. They are not part of normal support
     // Q&A, where BM25 selects a structured RAG unit and Swift composes the
     // cited answer. Kept only so engineering builds can compare old probes.
-    public static let verizonStageBMergedName = "vz-stage-b-v1.Q4_K_M"
-    public static let verizonStageBLoraName = "vz-stage-b-v1.lora.f16"
+    public static let telcoStageBMergedName = "telco-stage-b-v1.Q4_K_M"
+    public static let telcoStageBLoraName = "telco-stage-b-v1.lora.f16"
 
     // Dialogue-repair verbalizer v4.
     //
@@ -119,20 +119,20 @@ public enum TelcoModelBundle {
 
     // Legacy two-head router artifacts. The active bundle uses
     // `telco-shared-clf-v1` and the 9 telco heads instead.
-    public static let verizonTopicGateAdapterName = "vz-topic-gate-clf-v1.lora"
-    public static let verizonRefusalFlagsAdapterName = "vz-refusal-flags-clf-v1.lora"
-    public static let verizonTopicGateHeadTask = "vz-topic-gate"
-    public static let verizonRefusalFlagsHeadTask = "vz-refusal-flags"
+    public static let telcoTopicGateAdapterName = "telco-topic-gate-clf-v1.lora"
+    public static let telcoRefusalFlagsAdapterName = "telco-refusal-flags-clf-v1.lora"
+    public static let telcoTopicGateHeadTask = "telco-topic-gate"
+    public static let telcoRefusalFlagsHeadTask = "telco-refusal-flags"
 
     // Legacy v2 understanding layer retained for compatibility probes.
     // The current customer path uses `sharedClfAdapterName` plus
     // `adr015TelcoHeadNames`.
     public static let understandingV2AdapterName = "telco-shared-clf-v2"
-    public static let understandingV2ChatModeHeadTask = "vz-chat-mode-v2"
-    public static let understandingV2TopicGateHeadTask = "vz-topic-gate-v2"
-    public static let understandingV2RefusalFlagsHeadTask = "vz-refusal-flags-v2"
-    public static let understandingV2EmotionalStateHeadTask = "vz-emotional-state-v2"
-    public static let understandingV2SlotCompletenessHeadTask = "vz-slot-completeness-v2"
+    public static let understandingV2ChatModeHeadTask = "telco-chat-mode-v2"
+    public static let understandingV2TopicGateHeadTask = "telco-topic-gate-v2"
+    public static let understandingV2RefusalFlagsHeadTask = "telco-refusal-flags-v2"
+    public static let understandingV2EmotionalStateHeadTask = "telco-emotional-state-v2"
+    public static let understandingV2SlotCompletenessHeadTask = "telco-slot-completeness-v2"
 
     // Retired pairwise relational heads. Superseded by
     // `telco-turn-relation-v4`; retained only for historical/degraded
@@ -185,29 +185,29 @@ public enum TelcoModelBundle {
     }
 
     // Backwards-compatible alias for the merged Stage B GGUF.
-    // VerizonRAGTestView still loads this via loadModel() to isolate the
+    // TelcoRAGTestView still loads this via loadModel() to isolate the
     // generator from the chat backend; the merged GGUF stays bundled for
-    // that probe view. Production chat now uses verizonStageBLoraPath via
+    // that probe view. Production chat now uses telcoStageBLoraPath via
     // adapter swapping on the shared base.
-    public static let verizonStageBGeneratorName = verizonStageBMergedName
+    public static let telcoStageBGeneratorName = telcoStageBMergedName
 
-    /// Path to the Verizon Stage B MERGED GGUF (350M + step-format LoRA
+    /// Path to the Telco Stage B MERGED GGUF (350M + step-format LoRA
     /// fused, Q4_K_M, ~219 MB). Self-contained — loaded via `loadModel()`
-    /// directly. Kept for the engineering probe view (VerizonRAGTestView)
+    /// directly. Kept for the engineering probe view (TelcoRAGTestView)
     /// where isolating Stage B from the chat backend lets us measure its
     /// latency without other state in the way. Returns nil when not
     /// bundled (engineering builds / CI clones without the artifact).
-    public static func verizonStageBGeneratorPath(in bundle: Bundle = .main) -> String? {
-        bundle.path(forResource: verizonStageBMergedName, ofType: ext)
+    public static func telcoStageBGeneratorPath(in bundle: Bundle = .main) -> String? {
+        bundle.path(forResource: telcoStageBMergedName, ofType: ext)
     }
 
-    /// Path to the Verizon Stage B LoRA-adapter GGUF (~23 MB, r=32).
+    /// Path to the Telco Stage B LoRA-adapter GGUF (~23 MB, r=32).
     /// Applied to the shared base via `setAdapter(path:scale:)` on the
     /// `.ragStepByStep` lane. One foundation model, adapters change per
     /// lane — the single-backbone architecture the merged chat dispatcher
     /// runs on. Returns nil when not bundled.
-    public static func verizonStageBLoraPath(in bundle: Bundle = .main) -> String? {
-        bundle.path(forResource: verizonStageBLoraName, ofType: ext)
+    public static func telcoStageBLoraPath(in bundle: Bundle = .main) -> String? {
+        bundle.path(forResource: telcoStageBLoraName, ofType: ext)
     }
 
     public static func dialogueRepairV4AdapterPath(in bundle: Bundle = .main) -> String? {
@@ -216,45 +216,45 @@ public enum TelcoModelBundle {
 
     // MARK: - Legacy Stage A (topic_gate + refusal_flags)
 
-    /// Path to the Verizon topic-gate Stage A classification LoRA
+    /// Path to the Telco topic-gate Stage A classification LoRA
     /// (~11 MB, r=16). Must be applied via `setAdapter` before the
     /// mean-pool forward pass that feeds the topic-gate classifier head
     /// — the head was trained with this adapter active.
-    public static func verizonTopicGateAdapterPath(in bundle: Bundle = .main) -> String? {
-        bundle.path(forResource: verizonTopicGateAdapterName, ofType: ext)
+    public static func telcoTopicGateAdapterPath(in bundle: Bundle = .main) -> String? {
+        bundle.path(forResource: telcoTopicGateAdapterName, ofType: ext)
     }
 
-    /// Path to the Verizon refusal-flags Stage A classification LoRA
-    /// (~11 MB, r=16). Same contract as `verizonTopicGateAdapterPath`.
-    public static func verizonRefusalFlagsAdapterPath(in bundle: Bundle = .main) -> String? {
-        bundle.path(forResource: verizonRefusalFlagsAdapterName, ofType: ext)
+    /// Path to the Telco refusal-flags Stage A classification LoRA
+    /// (~11 MB, r=16). Same contract as `telcoTopicGateAdapterPath`.
+    public static func telcoRefusalFlagsAdapterPath(in bundle: Bundle = .main) -> String? {
+        bundle.path(forResource: telcoRefusalFlagsAdapterName, ofType: ext)
     }
 
-    /// Resolved paths for the Verizon topic-gate head triplet
-    /// (`vz-topic-gate_classifier_{weights,bias,meta}`).
-    public static func verizonTopicGateHeadPaths(in bundle: Bundle = .main) -> ClassifierHeadPaths? {
-        classifierHeadPaths(task: verizonTopicGateHeadTask, in: bundle)
+    /// Resolved paths for the Telco topic-gate head triplet
+    /// (`telco-topic-gate_classifier_{weights,bias,meta}`).
+    public static func telcoTopicGateHeadPaths(in bundle: Bundle = .main) -> ClassifierHeadPaths? {
+        classifierHeadPaths(task: telcoTopicGateHeadTask, in: bundle)
     }
 
-    /// Resolved paths for the Verizon refusal-flags head triplet
-    /// (`vz-refusal-flags_classifier_{weights,bias,meta}`).
-    public static func verizonRefusalFlagsHeadPaths(in bundle: Bundle = .main) -> ClassifierHeadPaths? {
-        classifierHeadPaths(task: verizonRefusalFlagsHeadTask, in: bundle)
+    /// Resolved paths for the Telco refusal-flags head triplet
+    /// (`telco-refusal-flags_classifier_{weights,bias,meta}`).
+    public static func telcoRefusalFlagsHeadPaths(in bundle: Bundle = .main) -> ClassifierHeadPaths? {
+        classifierHeadPaths(task: telcoRefusalFlagsHeadTask, in: bundle)
     }
 
     /// True when the legacy Stage A stack is fully bundled. This is retained
     /// for engineering probes and is not the current customer ship gate.
-    public static func verizonStageABundled(in bundle: Bundle = .main) -> Bool {
-        return verizonTopicGateAdapterPath(in: bundle) != nil
-            && verizonRefusalFlagsAdapterPath(in: bundle) != nil
-            && verizonTopicGateHeadPaths(in: bundle) != nil
-            && verizonRefusalFlagsHeadPaths(in: bundle) != nil
+    public static func telcoStageABundled(in bundle: Bundle = .main) -> Bool {
+        return telcoTopicGateAdapterPath(in: bundle) != nil
+            && telcoRefusalFlagsAdapterPath(in: bundle) != nil
+            && telcoTopicGateHeadPaths(in: bundle) != nil
+            && telcoRefusalFlagsHeadPaths(in: bundle) != nil
     }
 
     /// Legacy router bundle check. The normal answer layer is deterministic
     /// composer over `rag-units-v1.json`.
-    public static func verizonRagStackBundled(in bundle: Bundle = .main) -> Bool {
-        return verizonStageABundled(in: bundle)
+    public static func telcoRagStackBundled(in bundle: Bundle = .main) -> Bool {
+        return telcoStageABundled(in: bundle)
     }
 
     // MARK: - Legacy v2 understanding layer

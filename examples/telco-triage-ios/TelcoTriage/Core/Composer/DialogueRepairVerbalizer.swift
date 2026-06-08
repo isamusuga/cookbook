@@ -254,7 +254,7 @@ public final class DialogueRepairVerbalizer: DialogueRepairVerbalizing, @uncheck
 
         let lower = text.lowercased()
         let forbiddenAlways = [
-            "vzhome://", "http://", "https://", "tel://", "source_page_id",
+            "telcohome://", "http://", "https://", "tel://", "source_page_id",
             "source_link_id", "unsafe_action", "telco.dialogue_reply",
             "<|tool_call", "](", "forbids_contact", "unsafe_contact",
             "unsafe_", "turn_style", "language=", "act=", "handoff="

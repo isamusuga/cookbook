@@ -2,9 +2,9 @@ import Foundation
 import os.log
 
 /// One probe-set entry as parsed from `probe-set-v1.json`.
-public struct VerizonProbe: Sendable, Equatable, Codable {
+public struct TelcoProbe: Sendable, Equatable, Codable {
     public let query: String
-    /// Expected `VerizonLane.wireName` (e.g. `"rag_step_by_step"`).
+    /// Expected `TelcoLane.wireName` (e.g. `"rag_step_by_step"`).
     public let expectedLane: String
     /// Optional: when set, the retrieved chunk's page_id must start
     /// with this prefix (e.g. `"03."` for any Network-section page).
@@ -20,11 +20,11 @@ public struct VerizonProbe: Sendable, Equatable, Codable {
 }
 
 /// One probe's outcome.
-public struct VerizonProbeResult: Sendable {
-    public let probe: VerizonProbe
-    public let actualLane: VerizonLane?
+public struct TelcoProbeResult: Sendable {
+    public let probe: TelcoProbe
+    public let actualLane: TelcoLane?
     public let actualPageID: String?
-    public let actualSource: VerizonDispatchResult.Source?
+    public let actualSource: TelcoDispatchResult.Source?
     public let latencyMs: Double
     public let lanePass: Bool
     public let pagePass: Bool
@@ -35,11 +35,11 @@ public struct VerizonProbeResult: Sendable {
 }
 
 /// Aggregate result of running the full probe set.
-public struct VerizonProbeReport: Sendable {
+public struct TelcoProbeReport: Sendable {
     public let total: Int
     public let lanePassed: Int
     public let pagePassed: Int
-    public let results: [VerizonProbeResult]
+    public let results: [TelcoProbeResult]
     public let totalElapsedMs: Double
 
     public var laneAccuracy: Double {
@@ -63,7 +63,7 @@ public struct VerizonProbeReport: Sendable {
 }
 
 /// Errors raised when loading or running the probe set.
-public enum VerizonProbeRunnerError: Error, LocalizedError {
+public enum TelcoProbeRunnerError: Error, LocalizedError {
     case missingResource(String)
     case malformedJSON(String)
 
@@ -75,22 +75,22 @@ public enum VerizonProbeRunnerError: Error, LocalizedError {
     }
 }
 
-/// Runs the bundled probe set against a live `VerizonChatDispatcher`
+/// Runs the bundled probe set against a live `TelcoChatDispatcher`
 /// and produces a structured report. Per ADR-021 §11.5 L3, this is
 /// the on-device continuous-integration gate for retrieval quality.
 ///
 /// Engineering settings will surface a "Run probe" button that calls
 /// this and renders the report. Tests can also invoke with a stub
 /// dispatcher to verify scoring math without spinning the model.
-public final class VerizonProbeRunner: @unchecked Sendable {
-    private let dispatcher: VerizonChatDispatcher
-    private let probes: [VerizonProbe]
+public final class TelcoProbeRunner: @unchecked Sendable {
+    private let dispatcher: TelcoChatDispatcher
+    private let probes: [TelcoProbe]
     private let logger = Logger(
         subsystem: "ai.liquid.demos.telcotriage",
         category: "ProbeRunner"
     )
 
-    public init(dispatcher: VerizonChatDispatcher, probes: [VerizonProbe]) {
+    public init(dispatcher: TelcoChatDispatcher, probes: [TelcoProbe]) {
         self.dispatcher = dispatcher
         self.probes = probes
     }
@@ -100,43 +100,43 @@ public final class VerizonProbeRunner: @unchecked Sendable {
     /// bundled" rather than crashing.
     public static func loadBundledProbes(
         in bundle: Bundle = .main
-    ) throws -> [VerizonProbe] {
+    ) throws -> [TelcoProbe] {
         guard let url = bundle.url(forResource: "probe-set-v1", withExtension: "json") else {
-            throw VerizonProbeRunnerError.missingResource("probe-set-v1.json")
+            throw TelcoProbeRunnerError.missingResource("probe-set-v1.json")
         }
         let data = try Data(contentsOf: url)
         do {
             // The JSON has a top-level { version, probes: [...] } envelope.
             let root = try JSONSerialization.jsonObject(with: data) as? [String: Any]
             guard let probesRaw = root?["probes"] as? [[String: Any]] else {
-                throw VerizonProbeRunnerError.malformedJSON("missing 'probes' array")
+                throw TelcoProbeRunnerError.malformedJSON("missing 'probes' array")
             }
             let probesData = try JSONSerialization.data(withJSONObject: probesRaw)
-            let probes = try JSONDecoder().decode([VerizonProbe].self, from: probesData)
+            let probes = try JSONDecoder().decode([TelcoProbe].self, from: probesData)
             return probes
-        } catch let err as VerizonProbeRunnerError {
+        } catch let err as TelcoProbeRunnerError {
             throw err
         } catch {
-            throw VerizonProbeRunnerError.malformedJSON(error.localizedDescription)
+            throw TelcoProbeRunnerError.malformedJSON(error.localizedDescription)
         }
     }
 
     /// Convenience: load bundled probes and construct a runner.
     public static func bundled(
-        dispatcher: VerizonChatDispatcher,
+        dispatcher: TelcoChatDispatcher,
         in bundle: Bundle = .main
-    ) throws -> VerizonProbeRunner {
+    ) throws -> TelcoProbeRunner {
         let probes = try loadBundledProbes(in: bundle)
-        return VerizonProbeRunner(dispatcher: dispatcher, probes: probes)
+        return TelcoProbeRunner(dispatcher: dispatcher, probes: probes)
     }
 
     /// Run every probe through the dispatcher; collect results.
     /// Sequential (not concurrent) because the dispatcher serializes
     /// on the shared backend anyway. ~1-2 s per probe on warm caches
     /// for RAG turns; instant for template lanes.
-    public func run() async -> VerizonProbeReport {
+    public func run() async -> TelcoProbeReport {
         let runStart = CFAbsoluteTimeGetCurrent()
-        var results: [VerizonProbeResult] = []
+        var results: [TelcoProbeResult] = []
         results.reserveCapacity(probes.count)
 
         for probe in probes {
@@ -146,7 +146,7 @@ public final class VerizonProbeRunner: @unchecked Sendable {
         let totalMs = (CFAbsoluteTimeGetCurrent() - runStart) * 1000
         let lanePassed = results.filter { $0.lanePass }.count
         let pagePassed = results.filter { $0.pagePass && $0.probe.expectedPagePrefix != nil }.count
-        let report = VerizonProbeReport(
+        let report = TelcoProbeReport(
             total: results.count,
             lanePassed: lanePassed,
             pagePassed: pagePassed,
@@ -157,10 +157,10 @@ public final class VerizonProbeRunner: @unchecked Sendable {
         return report
     }
 
-    private func runOne(_ probe: VerizonProbe) async -> VerizonProbeResult {
+    private func runOne(_ probe: TelcoProbe) async -> TelcoProbeResult {
         let t0 = CFAbsoluteTimeGetCurrent()
-        var finalResult: VerizonDispatchResult?
-        var lastLane: VerizonLane?
+        var finalResult: TelcoDispatchResult?
+        var lastLane: TelcoLane?
         var failure: String?
         for await event in dispatcher.dispatch(query: probe.query) {
             switch event {
@@ -186,7 +186,7 @@ public final class VerizonProbeRunner: @unchecked Sendable {
             pagePass = true  // no expectation = trivially satisfied
         }
 
-        return VerizonProbeResult(
+        return TelcoProbeResult(
             probe: probe,
             actualLane: actualLane,
             actualPageID: actualPage,

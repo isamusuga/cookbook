@@ -28,7 +28,7 @@
     {
      "turn_index": 1,
      "user_query": "Hi",
-     "expected_assistant": "Hello! How can I assist you with Verizon Home Internet today?",
+     "expected_assistant": "Hello! How can I assist you with Telco Home Internet today?",
      "expected_route": "greeting",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -68,7 +68,7 @@
     {
      "turn_index": 5,
      "user_query": "The system indicates that the order is awaiting completion.",
-     "expected_assistant": "It looks like I don't have specific information about the order completion process. For this question, I recommend checking our website Verizon Home Internet or contacting support directly.",
+     "expected_assistant": "It looks like I don't have specific information about the order completion process. For this question, I recommend checking our website Telco Home Internet or contacting support directly.",
      "expected_route": "no_rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -76,7 +76,7 @@
      "expected_policy_link_id": null,
      "must_include": [
       "specific information",
-      "Verizon Home Internet"
+      "Telco Home Internet"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -137,7 +137,7 @@
     {
      "turn_index": 5,
      "user_query": "What home page?",
-     "expected_assistant": "The Home Page is the main screen of the Verizon Home App where you can access various features and settings related to your Verizon Home Internet service. From there, you can select the Network icon to manage your Wi-Fi settings.",
+     "expected_assistant": "The Home Page is the main screen of the Telco Home App where you can access various features and settings related to your Telco Home Internet service. From there, you can select the Network icon to manage your Wi-Fi settings.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "01.00",
      "expected_page_section": "01",
@@ -185,7 +185,7 @@
     {
      "turn_index": 3,
      "user_query": "i need to adjust the band on the device and not here in this app?",
-     "expected_assistant": "Yes, to switch a device to a different band, you'll typically need to adjust the settings directly on the device itself, rather than through the Verizon Home App. The app provides information about the current band your device is connected to, but changing the band often requires accessing the device's network settings or Wi-Fi settings.",
+     "expected_assistant": "Yes, to switch a device to a different band, you'll typically need to adjust the settings directly on the device itself, rather than through the Telco Home App. The app provides information about the current band your device is connected to, but changing the band often requires accessing the device's network settings or Wi-Fi settings.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "03",
@@ -245,14 +245,14 @@
     {
      "turn_index": 1,
      "user_query": "Hello I need my bill",
-     "expected_assistant": "To view and manage your billing information, please use the My Verizon App. You can access it directly through this link: My Verizon.",
+     "expected_assistant": "To view and manage your billing information, please use the My Telco App. You can access it directly through this link: My Telco.",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -265,17 +265,17 @@
     {
      "turn_index": 3,
      "user_query": "Send for email",
-     "expected_assistant": "I\u2019m here to help with topics related to Verizon Home Internet. Please try asking a different question.",
+     "expected_assistant": "I\u2019m here to help with topics related to Telco Home Internet. Please try asking a different question.",
      "expected_route": "out_of_scope",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
      "expected_policy_link_id": null,
      "must_include": [
-      "Verizon Home Internet"
+      "Telco Home Internet"
      ],
      "must_not_include": [
-      "vzhome://"
+      "telcohome://"
      ],
      "label_confidence": "high",
      "label_reason": "assistant out-of-scope wording; route has no content page",
@@ -333,7 +333,7 @@
     {
      "turn_index": 1,
      "user_query": "Privacy separator",
-     "expected_assistant": "The Privacy separator in the Verizon Home App is part of the Parental Controls feature. It includes toggleable categories to block Google Safe Search and YouTube Restricted Mode, which are determined by Google and YouTube respectively. This section is found beneath the Age group tile on the Filter Content page.",
+     "expected_assistant": "The Privacy separator in the Telco Home App is part of the Parental Controls feature. It includes toggleable categories to block Google Safe Search and YouTube Restricted Mode, which are determined by Google and YouTube respectively. This section is found beneath the Age group tile on the Filter Content page.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.04",
      "expected_page_section": "13",
@@ -353,7 +353,7 @@
     {
      "turn_index": 3,
      "user_query": "Where do I find it",
-     "expected_assistant": "To access the Privacy separator in the Verizon Home App: Go to Parental Controls > Select Filter Content > Review the Privacy separator beneath the Age group tile. This section includes options to block Google Safe Search and YouTube Restricted Mode.",
+     "expected_assistant": "To access the Privacy separator in the Telco Home App: Go to Parental Controls > Select Filter Content > Review the Privacy separator beneath the Age group tile. This section includes options to block Google Safe Search and YouTube Restricted Mode.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.04",
      "expected_page_section": "13",
@@ -374,7 +374,7 @@
     {
      "turn_index": 5,
      "user_query": "Where do I find the parental controls",
-     "expected_assistant": "To find Parental Controls in the Verizon Home App: Go to Parental Controls. This section allows you to manage and customize settings for different profiles and devices.",
+     "expected_assistant": "To find Parental Controls in the Telco Home App: Go to Parental Controls. This section allows you to manage and customize settings for different profiles and devices.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.00",
      "expected_page_section": "13",
@@ -394,7 +394,7 @@
     {
      "turn_index": 7,
      "user_query": "Take me to privacy separator",
-     "expected_assistant": "To access the Privacy separator in the Verizon Home App: Go to Parental Controls > Select Filter Content > Review the Privacy separator beneath the Age group tile. This section includes options to block Google Safe Search and YouTube Restricted Mode.",
+     "expected_assistant": "To access the Privacy separator in the Telco Home App: Go to Parental Controls > Select Filter Content > Review the Privacy separator beneath the Age group tile. This section includes options to block Google Safe Search and YouTube Restricted Mode.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.04",
      "expected_page_section": "13",
@@ -414,7 +414,7 @@
     {
      "turn_index": 9,
      "user_query": "The app isn\u2019t giving me that option",
-     "expected_assistant": "If the app isn't displaying the Privacy separator option, you can report this issue through the Help & feedback page. Go to Help & feedback and provide details about the problem you're experiencing. This will allow Verizon to assist you further.",
+     "expected_assistant": "If the app isn't displaying the Privacy separator option, you can report this issue through the Help & feedback page. Go to Help & feedback and provide details about the problem you're experiencing. This will allow Telco to assist you further.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.04",
      "expected_page_section": "13",
@@ -433,7 +433,7 @@
     {
      "turn_index": 11,
      "user_query": "I can\u2019t even find parental controls other than creating a profile",
-     "expected_assistant": "If you're unable to find the full Parental Controls options beyond creating a profile, it might be an issue with the app. You can report this through the Help & feedback page. Go to Help & feedback and describe the issue you're facing. This will help Verizon address the problem.",
+     "expected_assistant": "If you're unable to find the full Parental Controls options beyond creating a profile, it might be an issue with the app. You can report this through the Help & feedback page. Go to Help & feedback and describe the issue you're facing. This will help Telco address the problem.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -453,7 +453,7 @@
     {
      "turn_index": 13,
      "user_query": "WiFi access point settings",
-     "expected_assistant": "To access Wi-Fi access point settings in the Verizon Home App: Go to Network Map. The Network Map displays your primary Wi-Fi Access Point, along with connected devices and their connection types.",
+     "expected_assistant": "To access Wi-Fi access point settings in the Telco Home App: Go to Network Map. The Network Map displays your primary Wi-Fi Access Point, along with connected devices and their connection types.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "04.01",
      "expected_page_section": "04",
@@ -473,7 +473,7 @@
     {
      "turn_index": 15,
      "user_query": "Disable privacy separator",
-     "expected_assistant": "To disable the Privacy separator in the Verizon Home App: Go to Parental Controls > Select Filter Content > Toggle off the options under the Privacy separator, such as Google Safe Search and YouTube Restricted Mode. This will disable the privacy settings associated with these features.",
+     "expected_assistant": "To disable the Privacy separator in the Telco Home App: Go to Parental Controls > Select Filter Content > Toggle off the options under the Privacy separator, such as Google Safe Search and YouTube Restricted Mode. This will disable the privacy settings associated with these features.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.04",
      "expected_page_section": "13",
@@ -500,7 +500,7 @@
     {
      "turn_index": 2,
      "user_query": "My Bluetooth printer won\u2019t print. Says something about a privacy setting being disabled.",
-     "expected_assistant": "It looks like I don't have specific information about Bluetooth printer privacy settings being disabled. For this question, I recommend checking our website Verizon Home Internet or contacting support directly.",
+     "expected_assistant": "It looks like I don't have specific information about Bluetooth printer privacy settings being disabled. For this question, I recommend checking our website Telco Home Internet or contacting support directly.",
      "expected_route": "no_rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -508,7 +508,7 @@
      "expected_policy_link_id": null,
      "must_include": [
       "specific information",
-      "Verizon Home Internet"
+      "Telco Home Internet"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -656,14 +656,14 @@
     {
      "turn_index": 5,
      "user_query": "Internet after 150gb has slowed dy",
-     "expected_assistant": "It looks like I don't have specific information about data throttling after 150 GB usage. For this question, I recommend checking your plan details in My Verizon or contacting support directly.",
+     "expected_assistant": "It looks like I don't have specific information about data throttling after 150 GB usage. For this question, I recommend checking your plan details in My Telco or contacting support directly.",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -682,7 +682,7 @@
     {
      "turn_index": 1,
      "user_query": "Where is the 5g compass",
-     "expected_assistant": "The 5G Compass is not explicitly mentioned in the provided documents. It looks like I don't have specific information about this feature. For further assistance, I recommend checking Verizon's website or contacting support directly.",
+     "expected_assistant": "The 5G Compass is not explicitly mentioned in the provided documents. It looks like I don't have specific information about this feature. For further assistance, I recommend checking Telco's website or contacting support directly.",
      "expected_route": "no_rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -690,7 +690,7 @@
      "expected_policy_link_id": null,
      "must_include": [
       "specific information",
-      "Verizon Home Internet"
+      "Telco Home Internet"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -704,7 +704,7 @@
     {
      "turn_index": 3,
      "user_query": "Do I have 5g network",
-     "expected_assistant": "To check if you have a 5G network, review the equipment listed on the Equipment page in the Verizon Home App. If you are a Verizon 5G Home Internet customer, your equipment will include a Gateway and possibly a Receiver. Go to Equipment > Review the equipment list > Look for Gateway or Receiver equipment.",
+     "expected_assistant": "To check if you have a 5G network, review the equipment listed on the Equipment page in the Telco Home App. If you are a Telco 5G Home Internet customer, your equipment will include a Gateway and possibly a Receiver. Go to Equipment > Review the equipment list > Look for Gateway or Receiver equipment.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "02",
@@ -726,7 +726,7 @@
     {
      "turn_index": 5,
      "user_query": "Wifi compass",
-     "expected_assistant": "The Wi-Fi Compass is not explicitly mentioned in the provided documents. It looks like I don't have specific information about this feature. For further assistance, I recommend checking Verizon's website or contacting support directly.",
+     "expected_assistant": "The Wi-Fi Compass is not explicitly mentioned in the provided documents. It looks like I don't have specific information about this feature. For further assistance, I recommend checking Telco's website or contacting support directly.",
      "expected_route": "no_rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -734,7 +734,7 @@
      "expected_policy_link_id": null,
      "must_include": [
       "specific information",
-      "Verizon Home Internet"
+      "Telco Home Internet"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -754,7 +754,7 @@
     {
      "turn_index": 1,
      "user_query": "Why can\u2019t I remove the password from my WiFi",
-     "expected_assistant": "You cannot remove the password from your Wi-Fi because Verizon routers require a security protocol to ensure network safety. The security settings available are WPA2, WPA3, or WPA2/WPA3 Mixed mode, which all require a password for access. This is a standard security measure to protect your network from unauthorized access .",
+     "expected_assistant": "You cannot remove the password from your Wi-Fi because Telco routers require a security protocol to ensure network safety. The security settings available are WPA2, WPA3, or WPA2/WPA3 Mixed mode, which all require a password for access. This is a standard security measure to protect your network from unauthorized access .",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "03",
@@ -771,7 +771,7 @@
     {
      "turn_index": 3,
      "user_query": "Can I bypass that",
-     "expected_assistant": "It is not possible to bypass the requirement for a password on Verizon routers. The security protocols (WPA2, WPA3, or WPA2/WPA3 Mixed mode) are mandatory to ensure the safety and integrity of your network.",
+     "expected_assistant": "It is not possible to bypass the requirement for a password on Telco routers. The security protocols (WPA2, WPA3, or WPA2/WPA3 Mixed mode) are mandatory to ensure the safety and integrity of your network.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "03",
@@ -789,7 +789,7 @@
     {
      "turn_index": 5,
      "user_query": "Even on guest networks?",
-     "expected_assistant": "Even on guest networks, Verizon routers require a password for security purposes. The guest network settings include a name and password, and these cannot be removed due to mandatory encryption protocols like WPA2, WPA3, or WPA2/WPA3 Mixed mode.",
+     "expected_assistant": "Even on guest networks, Telco routers require a password for security purposes. The guest network settings include a name and password, and these cannot be removed due to mandatory encryption protocols like WPA2, WPA3, or WPA2/WPA3 Mixed mode.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "03",
@@ -836,7 +836,7 @@
     {
      "turn_index": 3,
      "user_query": "Will this internet Support 2.4",
-     "expected_assistant": "Yes, Verizon Home Internet supports the 2.4 GHz frequency band. This is available as part of the IoT network, which is dedicated to smart devices and appliances. You can manage this network through the Verizon Home App.",
+     "expected_assistant": "Yes, Telco Home Internet supports the 2.4 GHz frequency band. This is available as part of the IoT network, which is dedicated to smart devices and appliances. You can manage this network through the Telco Home App.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "06",
@@ -880,14 +880,14 @@
     {
      "turn_index": 5,
      "user_query": "No I want to add a user to my account",
-     "expected_assistant": "To add a user to your account, you need to manage account settings through the My Verizon App. Go to My Verizon > Follow the instructions within the app to add a user to your account. Let me know if you need further assistance!",
+     "expected_assistant": "To add a user to your account, you need to manage account settings through the My Telco App. Go to My Telco > Follow the instructions within the app to add a user to your account. Let me know if you need further assistance!",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -1133,7 +1133,7 @@
     {
      "turn_index": 4,
      "user_query": "My son is changing his pc mac address to bypass parental controls. What can i do",
-     "expected_assistant": "To prevent your son from bypassing Parental Controls by changing his PC's MAC address, you can take the following steps: 1. Use the **Pause Internet** feature to block new online activity for the profile associated with his devices. This will prevent newly loaded content from accessing the internet, even if the MAC address changes. Go to Home Page > Select Parental Controls > Select the profile > Select **Pause Internet**. 2. Set up **Filter Content** to block specific categories, apps, or websites. This ensures that even if the MAC address changes, the content restrictions remain in place. Go to Home Page > Select Parental Controls > Select the profile > Select **Filter Content** > Choose categories or manually enter URLs to block. 3. Use **Set Schedules** to restrict internet access during specific times. This limits the ability to bypass controls by changing the MAC address. Go to Home Page > Select Parental Controls > Select the profile > Select **Set Schedules** > Add or edit schedules. 4. Monitor the **Usage History** to identify unusual activity or new devices attempting to connect. Go to Home Page > Select Parental Controls > Select the profile > Select **View Usage**. If these measures do not resolve the issue, you may need to contact Verizon support for advanced security options.",
+     "expected_assistant": "To prevent your son from bypassing Parental Controls by changing his PC's MAC address, you can take the following steps: 1. Use the **Pause Internet** feature to block new online activity for the profile associated with his devices. This will prevent newly loaded content from accessing the internet, even if the MAC address changes. Go to Home Page > Select Parental Controls > Select the profile > Select **Pause Internet**. 2. Set up **Filter Content** to block specific categories, apps, or websites. This ensures that even if the MAC address changes, the content restrictions remain in place. Go to Home Page > Select Parental Controls > Select the profile > Select **Filter Content** > Choose categories or manually enter URLs to block. 3. Use **Set Schedules** to restrict internet access during specific times. This limits the ability to bypass controls by changing the MAC address. Go to Home Page > Select Parental Controls > Select the profile > Select **Set Schedules** > Add or edit schedules. 4. Monitor the **Usage History** to identify unusual activity or new devices attempting to connect. Go to Home Page > Select Parental Controls > Select the profile > Select **View Usage**. If these measures do not resolve the issue, you may need to contact Telco support for advanced security options.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "03.03",
      "expected_page_section": "03",
@@ -1153,7 +1153,7 @@
     {
      "turn_index": 6,
      "user_query": "I need the time controls to work. He bypasses them when he changes mac address",
-     "expected_assistant": "To ensure time controls work effectively and prevent bypassing through MAC address changes, you can take the following steps: 1. **Pause Internet for the Profile**: This will block all new online activity for devices in the profile, regardless of MAC address changes. Go to Home Page > Select Parental Controls > Select the profile > Select **Pause Internet**. 2. **Set Schedules**: Restrict internet access during specific times by setting schedules for the profile. Go to Home Page > Select Parental Controls > Select the profile > Select **Set Schedules** > Add or edit schedules. 3. **Monitor Usage History**: Regularly check the usage history to identify unusual activity or new devices attempting to connect. Go to Home Page > Select Parental Controls > Select the profile > Select **View Usage**. 4. **Assign Devices to Profiles**: Ensure all known devices are assigned to the profile. This limits the ability to bypass controls by changing MAC addresses. Go to Home Page > Select Parental Controls > Select the profile > Select **Manage Devices** > Add or remove devices. If these measures do not resolve the issue, you may need to contact Verizon support for advanced security options.",
+     "expected_assistant": "To ensure time controls work effectively and prevent bypassing through MAC address changes, you can take the following steps: 1. **Pause Internet for the Profile**: This will block all new online activity for devices in the profile, regardless of MAC address changes. Go to Home Page > Select Parental Controls > Select the profile > Select **Pause Internet**. 2. **Set Schedules**: Restrict internet access during specific times by setting schedules for the profile. Go to Home Page > Select Parental Controls > Select the profile > Select **Set Schedules** > Add or edit schedules. 3. **Monitor Usage History**: Regularly check the usage history to identify unusual activity or new devices attempting to connect. Go to Home Page > Select Parental Controls > Select the profile > Select **View Usage**. 4. **Assign Devices to Profiles**: Ensure all known devices are assigned to the profile. This limits the ability to bypass controls by changing MAC addresses. Go to Home Page > Select Parental Controls > Select the profile > Select **Manage Devices** > Add or remove devices. If these measures do not resolve the issue, you may need to contact Telco support for advanced security options.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "13.08",
      "expected_page_section": "13",
@@ -1197,7 +1197,7 @@
     {
      "turn_index": 4,
      "user_query": "Hello",
-     "expected_assistant": "Hi! How can I assist you with your Verizon Home Internet today?",
+     "expected_assistant": "Hi! How can I assist you with your Telco Home Internet today?",
      "expected_route": "greeting",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1216,7 +1216,7 @@
     {
      "turn_index": 7,
      "user_query": "Yes",
-     "expected_assistant": "To restore your services, you can use the Restore or Reset feature in the Verizon Home App. Here's how: Go to Equipment > Select your router or gateway > Select **Reset or restore settings** > Choose one of the following options: - **Restore from backup**: Restores settings from a previously saved backup (requires a saved backup). - **Factory reset, but keep credentials**: Resets the router/gateway while keeping your current network names and passwords. - **Factory reset all settings**: Erases all settings and restarts the router/gateway. Select **Continue** to initiate the process. Each option may take up to 5 minutes to complete. If the process fails, try again. If you encounter any issues or need further assistance, please Call us.",
+     "expected_assistant": "To restore your services, you can use the Restore or Reset feature in the Telco Home App. Here's how: Go to Equipment > Select your router or gateway > Select **Reset or restore settings** > Choose one of the following options: - **Restore from backup**: Restores settings from a previously saved backup (requires a saved backup). - **Factory reset, but keep credentials**: Resets the router/gateway while keeping your current network names and passwords. - **Factory reset all settings**: Erases all settings and restarts the router/gateway. Select **Continue** to initiate the process. Each option may take up to 5 minutes to complete. If the process fails, try again. If you encounter any issues or need further assistance, please Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1238,7 +1238,7 @@
     {
      "turn_index": 9,
      "user_query": "Hello",
-     "expected_assistant": "Hi! How can I assist you with your Verizon Home Internet today?",
+     "expected_assistant": "Hi! How can I assist you with your Telco Home Internet today?",
      "expected_route": "greeting",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1257,7 +1257,7 @@
     {
      "turn_index": 11,
      "user_query": "Please restore my internet",
-     "expected_assistant": "To restore your internet, you can reset your router using the Verizon Home App. Here's how: Go to Equipment > Select your router > Select **Restart Router** > Confirm by selecting **Restart**. The process may take a few minutes. If your internet is still not restored after restarting the router, you can try the Restore or Reset feature: Go to Equipment > Select your router > Select **Reset or restore settings** > Choose one of the following options: - **Restore from backup**: Restores settings from a previously saved backup. - **Factory reset, but keep credentials**: Resets the router while keeping your current network names and passwords. - **Factory reset all settings**: Erases all settings and restarts the router. Select **Continue** to initiate the process. Each option may take up to 5 minutes to complete. If the issue persists, please Call us for further assistance.",
+     "expected_assistant": "To restore your internet, you can reset your router using the Telco Home App. Here's how: Go to Equipment > Select your router > Select **Restart Router** > Confirm by selecting **Restart**. The process may take a few minutes. If your internet is still not restored after restarting the router, you can try the Restore or Reset feature: Go to Equipment > Select your router > Select **Reset or restore settings** > Choose one of the following options: - **Restore from backup**: Restores settings from a previously saved backup. - **Factory reset, but keep credentials**: Resets the router while keeping your current network names and passwords. - **Factory reset all settings**: Erases all settings and restarts the router. Select **Continue** to initiate the process. Each option may take up to 5 minutes to complete. If the issue persists, please Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": "02.07",
      "expected_page_section": "02",
@@ -1279,7 +1279,7 @@
     {
      "turn_index": 13,
      "user_query": "I can\u2019t do that",
-     "expected_assistant": "If you're unable to restore your internet through the Verizon Home App, I recommend contacting a live agent for further assistance. Please Call us. They can help resolve your issue promptly.",
+     "expected_assistant": "If you're unable to restore your internet through the Telco Home App, I recommend contacting a live agent for further assistance. Please Call us. They can help resolve your issue promptly.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1345,8 +1345,8 @@
     },
     {
      "turn_index": 5,
-     "user_query": "How can I identify the devices Verizon app says are online?",
-     "expected_assistant": "To identify devices that are online in the Verizon Home App: Go to Devices > Review the Device List > Select a device to view its **Device Details** page. This page shows the device's connection status, type, and nickname.",
+     "user_query": "How can I identify the devices Telco app says are online?",
+     "expected_assistant": "To identify devices that are online in the Telco Home App: Go to Devices > Review the Device List > Select a device to view its **Device Details** page. This page shows the device's connection status, type, and nickname.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "04",
@@ -1373,7 +1373,7 @@
     {
      "turn_index": 3,
      "user_query": "I would like to know why the technician who installed my internet connection did not seal the hole where he ran the wire\u2014to prevent moisture and insects from getting in\u2014and did not clean up the debris.",
-     "expected_assistant": "It looks like I don't have specific information about technician installation practices or procedures. For this concern, I recommend contacting Verizon support directly to address the issue. You can Call us for further assistance.",
+     "expected_assistant": "It looks like I don't have specific information about technician installation practices or procedures. For this concern, I recommend contacting Telco support directly to address the issue. You can Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1393,14 +1393,14 @@
     {
      "turn_index": 5,
      "user_query": "Chat agent",
-     "expected_assistant": "To connect with a live chat agent, I recommend using the My Verizon App. You can access it here: My Verizon.",
+     "expected_assistant": "To connect with a live chat agent, I recommend using the My Telco App. You can access it here: My Telco.",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -1413,14 +1413,14 @@
     {
      "turn_index": 7,
      "user_query": "Agent online",
-     "expected_assistant": "To connect with an online agent, you can use the My Verizon App. Access it here: My Verizon.",
+     "expected_assistant": "To connect with an online agent, you can use the My Telco App. Access it here: My Telco.",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -1509,7 +1509,7 @@
     {
      "turn_index": 1,
      "user_query": "How much would it cost to add another Igor line",
-     "expected_assistant": "It looks like I don't have specific information about the cost of adding another Igor line. For this question, I recommend checking our website Verizon Home Internet or contacting support directly at Call us.",
+     "expected_assistant": "It looks like I don't have specific information about the cost of adding another Igor line. For this question, I recommend checking our website Telco Home Internet or contacting support directly at Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1528,7 +1528,7 @@
     {
      "turn_index": 3,
      "user_query": "Phone",
-     "expected_assistant": "It seems like you're asking about a phone-related topic. Could you clarify your question? Are you asking about Verizon landline services, mobile services, or something else?",
+     "expected_assistant": "It seems like you're asking about a phone-related topic. Could you clarify your question? Are you asking about Telco landline services, mobile services, or something else?",
      "expected_route": "clarify",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1536,7 +1536,7 @@
      "expected_policy_link_id": null,
      "must_include": [],
      "must_not_include": [
-      "vzhome://"
+      "telcohome://"
      ],
      "label_confidence": "low",
      "label_reason": "assistant asks clarification question; route has no content page",
@@ -1547,14 +1547,14 @@
     {
      "turn_index": 5,
      "user_query": "How much would it cost to add another mobile phone line on my account",
-     "expected_assistant": "I\u2019m here to help with Verizon Home internet related topics. For questions about mobile phone services, I recommend visiting the My Verizon app for assistance.",
+     "expected_assistant": "I\u2019m here to help with Telco Home internet related topics. For questions about mobile phone services, I recommend visiting the My Telco app for assistance.",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -1573,7 +1573,7 @@
     {
      "turn_index": 5,
      "user_query": "Do I have 2.4?",
-     "expected_assistant": "Yes, your Verizon router supports the 2.4 GHz Wi-Fi band. This is typically used for IoT devices and smart appliances. You can manage this network through the IoT section in the Wi-Fi Management page. To access it: Go to Network > Select Wi-Fi Management > Select IoT tab > Review or edit the 2.4 GHz network settings.",
+     "expected_assistant": "Yes, your Telco router supports the 2.4 GHz Wi-Fi band. This is typically used for IoT devices and smart appliances. You can manage this network through the IoT section in the Wi-Fi Management page. To access it: Go to Network > Select Wi-Fi Management > Select IoT tab > Review or edit the 2.4 GHz network settings.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "03",
@@ -1594,7 +1594,7 @@
     {
      "turn_index": 7,
      "user_query": "Do I have a 2.4 available",
-     "expected_assistant": "Yes, your Verizon router supports the 2.4 GHz Wi-Fi band. You can check its availability and manage its settings through the IoT section in the Wi-Fi Management page. To access it: Go to Network > Select Wi-Fi Management > Select IoT tab > Review the 2.4 GHz network settings.",
+     "expected_assistant": "Yes, your Telco router supports the 2.4 GHz Wi-Fi band. You can check its availability and manage its settings through the IoT section in the Wi-Fi Management page. To access it: Go to Network > Select Wi-Fi Management > Select IoT tab > Review the 2.4 GHz network settings.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "03",
@@ -1620,7 +1620,7 @@
     {
      "turn_index": 5,
      "user_query": "Setup WiFi booster",
-     "expected_assistant": "To set up a Wi-Fi booster (extender) for your Verizon network: Go to Equipment Page > Select your Extender > Follow the on-screen setup instructions. If you encounter issues during setup or need additional extenders, you may need to contact Verizon support for assistance. You can Call us for further help.",
+     "expected_assistant": "To set up a Wi-Fi booster (extender) for your Telco network: Go to Equipment Page > Select your Extender > Follow the on-screen setup instructions. If you encounter issues during setup or need additional extenders, you may need to contact Telco support for assistance. You can Call us for further help.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1647,7 +1647,7 @@
     {
      "turn_index": 1,
      "user_query": "Does router save data",
-     "expected_assistant": "Yes, Verizon routers can save data related to their settings. Users can save custom router settings, including Wi-Fi names, passwords, and more, either automatically or manually. Automatic saving occurs every 7 days, while manual saves can be initiated at any time. These backups are stored for 14 days and timestamped by default.",
+     "expected_assistant": "Yes, Telco routers can save data related to their settings. Users can save custom router settings, including Wi-Fi names, passwords, and more, either automatically or manually. Automatic saving occurs every 7 days, while manual saves can be initiated at any time. These backups are stored for 14 days and timestamped by default.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "02",
@@ -1666,7 +1666,7 @@
     {
      "turn_index": 3,
      "user_query": "Do they see what the devices connected to them are doing",
-     "expected_assistant": "Verizon routers do not monitor or record the activities of devices connected to them. However, users can view details about connected devices, such as their connection type, signal strength, and data rate, through the Device Details page. Additionally, features like Digital Secure Home can detect abnormal device behavior and protect against vulnerabilities, but this does not involve tracking user activity.",
+     "expected_assistant": "Telco routers do not monitor or record the activities of devices connected to them. However, users can view details about connected devices, such as their connection type, signal strength, and data rate, through the Device Details page. Additionally, features like Digital Secure Home can detect abnormal device behavior and protect against vulnerabilities, but this does not involve tracking user activity.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "12",
@@ -1685,7 +1685,7 @@
     {
      "turn_index": 5,
      "user_query": "Can I delete all data on router",
-     "expected_assistant": "Yes, you can delete all data on your Verizon router by performing a factory reset. To do this: Go to Equipment Details Page > Select Reset or Restore Settings > Choose **Factory reset all settings** > Select **Continue**. This process will erase all router settings and restart the router, which may take up to 5 minutes. If you want to keep your network names and passwords, you can select **Factory reset, but keep credentials** instead.",
+     "expected_assistant": "Yes, you can delete all data on your Telco router by performing a factory reset. To do this: Go to Equipment Details Page > Select Reset or Restore Settings > Choose **Factory reset all settings** > Select **Continue**. This process will erase all router settings and restart the router, which may take up to 5 minutes. If you want to keep your network names and passwords, you can select **Factory reset, but keep credentials** instead.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "02",
@@ -1711,7 +1711,7 @@
     {
      "turn_index": 1,
      "user_query": "The extender is super unreliable.",
-     "expected_assistant": "To address the reliability issues with your extender, here are some troubleshooting steps: 1. Verify that the extender is plugged in and receiving power. 2. Power cycle the extender by unplugging it, waiting 30 seconds, and plugging it back in. 3. Ensure the extender is unobstructed and placed in an optimal location. Avoid corners, floors, or areas near large appliances. 4. Check for physical barriers like walls or floors that might block the signal. 5. If the extender is still unreliable, you can manage its settings or restart it through the Verizon Home App. Go to Equipment > Select your extender > Restart Equipment. Extenders improve coverage but do not necessarily boost speed. If the issue persists, consider repositioning the extender closer to the router or in a central location to improve signal strength. If these steps do not resolve the issue, you may need further assistance. Please Call us for support.",
+     "expected_assistant": "To address the reliability issues with your extender, here are some troubleshooting steps: 1. Verify that the extender is plugged in and receiving power. 2. Power cycle the extender by unplugging it, waiting 30 seconds, and plugging it back in. 3. Ensure the extender is unobstructed and placed in an optimal location. Avoid corners, floors, or areas near large appliances. 4. Check for physical barriers like walls or floors that might block the signal. 5. If the extender is still unreliable, you can manage its settings or restart it through the Telco Home App. Go to Equipment > Select your extender > Restart Equipment. Extenders improve coverage but do not necessarily boost speed. If the issue persists, consider repositioning the extender closer to the router or in a central location to improve signal strength. If these steps do not resolve the issue, you may need further assistance. Please Call us for support.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -1872,7 +1872,7 @@
     {
      "turn_index": 1,
      "user_query": "Bring me back to my chat",
-     "expected_assistant": "I\u2019m here to help with Verizon Home internet related topics. Please try asking a specific question.",
+     "expected_assistant": "I\u2019m here to help with Telco Home internet related topics. Please try asking a specific question.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "10",
@@ -1907,7 +1907,7 @@
     {
      "turn_index": 5,
      "user_query": "I was over text",
-     "expected_assistant": "It looks like I don't have specific information about text-based support. For further assistance, I recommend contacting Verizon support directly through Call us or checking the My Verizon App for additional support options.",
+     "expected_assistant": "It looks like I don't have specific information about text-based support. For further assistance, I recommend contacting Telco support directly through Call us or checking the My Telco App for additional support options.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2039,7 +2039,7 @@
     {
      "turn_index": 1,
      "user_query": "M this is stating I have high network, which is baloney. I hardly have any network. What the heck is going on this is one going on for two weeks. You need to fix this.",
-     "expected_assistant": "It seems like you're experiencing ongoing network issues, and I understand how frustrating that can be. To address this, here are some steps you can take to troubleshoot and improve your network performance: 1. **Run a Router Speed Test**: This will help determine if your router is delivering the expected internet speed. Go to Speed Test > Start Speed Test. 2. **Check Wi-Fi Performance**: Review your Wi-Fi health and device health to identify any weak connections. Go to Network > Select Wi-Fi Performance > Review Wi-Fi health and device health. 3. **Optimize Wi-Fi**: Use the Wi-Fi Optimizer to analyze signal strength in different areas of your home. Go to Network > Select Advanced Tools > Select Wi-Fi Optimizer. 4. **Restart Your Router**: Restarting your router can often resolve connectivity issues. Go to Network > Select Advanced Tools > Select Restart Router. 5. **Reset Wi-Fi Settings**: If the issue persists, reset your Wi-Fi settings to default. This won't affect your network name or password. Go to Network > Select Advanced Tools > Select Reset Wi-Fi. If these steps do not resolve the issue, it may be necessary to escalate the problem. You can report the issue through the app by going to Help & feedback, or contact Verizon support directly at Call us for further assistance.",
+     "expected_assistant": "It seems like you're experiencing ongoing network issues, and I understand how frustrating that can be. To address this, here are some steps you can take to troubleshoot and improve your network performance: 1. **Run a Router Speed Test**: This will help determine if your router is delivering the expected internet speed. Go to Speed Test > Start Speed Test. 2. **Check Wi-Fi Performance**: Review your Wi-Fi health and device health to identify any weak connections. Go to Network > Select Wi-Fi Performance > Review Wi-Fi health and device health. 3. **Optimize Wi-Fi**: Use the Wi-Fi Optimizer to analyze signal strength in different areas of your home. Go to Network > Select Advanced Tools > Select Wi-Fi Optimizer. 4. **Restart Your Router**: Restarting your router can often resolve connectivity issues. Go to Network > Select Advanced Tools > Select Restart Router. 5. **Reset Wi-Fi Settings**: If the issue persists, reset your Wi-Fi settings to default. This won't affect your network name or password. Go to Network > Select Advanced Tools > Select Reset Wi-Fi. If these steps do not resolve the issue, it may be necessary to escalate the problem. You can report the issue through the app by going to Help & feedback, or contact Telco support directly at Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": "02.07",
      "expected_page_section": "02",
@@ -2101,7 +2101,7 @@
     {
      "turn_index": 1,
      "user_query": "How many gigs of WiFi did we use",
-     "expected_assistant": "To check your Wi-Fi data usage: Go to All Devices > Select a device > Select **Data Usage History** > Review usage by time or gigabytes. This feature tracks network usage by categories like streaming, social media, gaming, and more. It is only available on certain Verizon routers and gateways.",
+     "expected_assistant": "To check your Wi-Fi data usage: Go to All Devices > Select a device > Select **Data Usage History** > Review usage by time or gigabytes. This feature tracks network usage by categories like streaming, social media, gaming, and more. It is only available on certain Telco routers and gateways.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "04.00",
      "expected_page_section": "04",
@@ -2189,7 +2189,7 @@
     {
      "turn_index": 5,
      "user_query": "I want to get a new set top box",
-     "expected_assistant": "It looks like I don't have specific information about obtaining a new set-top box. For this, I recommend visiting the My Verizon app or contacting Verizon support directly at Call us. They can assist you with upgrading or replacing your set-top box.",
+     "expected_assistant": "It looks like I don't have specific information about obtaining a new set-top box. For this, I recommend visiting the My Telco app or contacting Telco support directly at Call us. They can assist you with upgrading or replacing your set-top box.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2208,7 +2208,7 @@
     {
      "turn_index": 7,
      "user_query": "Speak with live agent",
-     "expected_assistant": "To speak with a live agent, please contact Verizon support directly at Call us. They will assist you further with your request.",
+     "expected_assistant": "To speak with a live agent, please contact Telco support directly at Call us. They will assist you further with your request.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2364,7 +2364,7 @@
     {
      "turn_index": 7,
      "user_query": "Is there a new update for my router?",
-     "expected_assistant": "To check for new updates for your router: Go to Equipment > Select your router > Review the **Technical information** section > Locate **Firmware version** > Compare it with the latest version available on Verizon's website or contact support for confirmation.",
+     "expected_assistant": "To check for new updates for your router: Go to Equipment > Select your router > Review the **Technical information** section > Locate **Firmware version** > Compare it with the latest version available on Telco's website or contact support for confirmation.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "02",
@@ -2392,7 +2392,7 @@
     {
      "turn_index": 1,
      "user_query": "Is there a new update on my router ?",
-     "expected_assistant": "It looks like I don't have specific information about whether there is a new update available for your router. For this question, I recommend checking the Equipment Details page in the Verizon Home App or contacting support directly at Call us for further assistance.",
+     "expected_assistant": "It looks like I don't have specific information about whether there is a new update available for your router. For this question, I recommend checking the Equipment Details page in the Telco Home App or contacting support directly at Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2411,7 +2411,7 @@
     {
      "turn_index": 3,
      "user_query": "Why is my router blinking white ?",
-     "expected_assistant": "If your router is blinking white, it indicates that a firmware update is in progress. Wait for the update to complete, which may take some time. If the blinking persists or you encounter issues, you can restart your router through the Verizon Home App: Go to Restart Router > Select **Restart Router** > Follow on-screen instructions. The restart process may take up to 10 minutes. If the issue continues, contact support at Call us.",
+     "expected_assistant": "If your router is blinking white, it indicates that a firmware update is in progress. Wait for the update to complete, which may take some time. If the blinking persists or you encounter issues, you can restart your router through the Telco Home App: Go to Restart Router > Select **Restart Router** > Follow on-screen instructions. The restart process may take up to 10 minutes. If the issue continues, contact support at Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": "02.07",
      "expected_page_section": "02",
@@ -2432,7 +2432,7 @@
     {
      "turn_index": 5,
      "user_query": "How long does it take to update ?",
-     "expected_assistant": "A firmware update on your router typically takes up to 10 minutes to complete. During this time, the router may blink white. If the update takes longer or you encounter issues, you can restart your router through the Verizon Home App or contact support at Call us.",
+     "expected_assistant": "A firmware update on your router typically takes up to 10 minutes to complete. During this time, the router may blink white. If the update takes longer or you encounter issues, you can restart your router through the Telco Home App or contact support at Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": "02.07",
      "expected_page_section": "02",
@@ -2451,7 +2451,7 @@
     {
      "turn_index": 7,
      "user_query": "Thanks",
-     "expected_assistant": "You're welcome! If you have any more questions about your Verizon Home Internet, feel free to ask. Have a great day!",
+     "expected_assistant": "You're welcome! If you have any more questions about your Telco Home Internet, feel free to ask. Have a great day!",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "06",
@@ -2468,7 +2468,7 @@
     {
      "turn_index": 9,
      "user_query": "Is there a new update for my router?",
-     "expected_assistant": "It looks like I don't have specific information about whether there is a new update available for your router. For this question, I recommend checking the Equipment Details page in the Verizon Home App or contacting support directly at Call us for further assistance.",
+     "expected_assistant": "It looks like I don't have specific information about whether there is a new update available for your router. For this question, I recommend checking the Equipment Details page in the Telco Home App or contacting support directly at Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2515,7 +2515,7 @@
     {
      "turn_index": 3,
      "user_query": "its not on the list",
-     "expected_assistant": "If your Wi-Fi extender is not appearing on the list, try the following steps: 1. Ensure the extender is powered on and connected to the network. 2. Restart your router and extender. 3. Verify that the extender is compatible with your Verizon router. If the issue persists, please Call us for further assistance.",
+     "expected_assistant": "If your Wi-Fi extender is not appearing on the list, try the following steps: 1. Ensure the extender is powered on and connected to the network. 2. Restart your router and extender. 3. Verify that the extender is compatible with your Telco router. If the issue persists, please Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": "02.07",
      "expected_page_section": "02",
@@ -2535,7 +2535,7 @@
     {
      "turn_index": 5,
      "user_query": "how to add extender to the network",
-     "expected_assistant": "To add an extender to your network: 1. Ensure the extender is powered on and connected to the network. 2. Go to Equipment > Select your extender from the list > Follow the on-screen instructions to set it up. If the extender is not appearing on the list, verify compatibility with your Verizon router and restart both the router and extender. If the issue persists, please Call us for further assistance.",
+     "expected_assistant": "To add an extender to your network: 1. Ensure the extender is powered on and connected to the network. 2. Go to Equipment > Select your extender from the list > Follow the on-screen instructions to set it up. If the extender is not appearing on the list, verify compatibility with your Telco router and restart both the router and extender. If the issue persists, please Call us for further assistance.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2629,7 +2629,7 @@
     {
      "turn_index": 2,
      "user_query": "Agent",
-     "expected_assistant": "Could you clarify your request? Are you looking for assistance with contacting a live agent, troubleshooting an issue, or something else related to Verizon Home Internet? Let me know so I can assist you better.",
+     "expected_assistant": "Could you clarify your request? Are you looking for assistance with contacting a live agent, troubleshooting an issue, or something else related to Telco Home Internet? Let me know so I can assist you better.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2649,7 +2649,7 @@
     {
      "turn_index": 5,
      "user_query": "Yes I\u2019d like to set up a plan",
-     "expected_assistant": "It looks like I don\u2019t have specific information about setting up a Verizon service plan. For this, I recommend visiting the Verizon website at Verizon Home Internet or contacting support directly. You can also reach out to a live agent for assistance by selecting Call us.",
+     "expected_assistant": "It looks like I don\u2019t have specific information about setting up a Telco service plan. For this, I recommend visiting the Telco website at Telco Home Internet or contacting support directly. You can also reach out to a live agent for assistance by selecting Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2675,7 +2675,7 @@
     {
      "turn_index": 3,
      "user_query": "WiFi extends",
-     "expected_assistant": "To extend your Wi-Fi coverage using Verizon equipment, you can use Verizon Wi-Fi extenders. These extenders improve coverage but do not necessarily boost speed. They are ideal for areas in your home where the Wi-Fi signal is weak due to distance or physical barriers like walls. Here are some key points about extenders: 1. **Extender Models**: Verizon offers models like the Fios Extender (E3200), Wi-Fi Extender Mini (CME1000), and others. These are compatible with both Fios and 5G Home Internet services. 2. **Placement**: Proper placement of the extender is crucial. Avoid corners, floors, or areas near large appliances to ensure optimal signal strength. 3. **Setup**: If you have a Verizon extender, it will appear on the Equipment page in the Verizon Home App. You can manage its settings and location from there. If you need further assistance with extenders or have specific issues, let me know!",
+     "expected_assistant": "To extend your Wi-Fi coverage using Telco equipment, you can use Telco Wi-Fi extenders. These extenders improve coverage but do not necessarily boost speed. They are ideal for areas in your home where the Wi-Fi signal is weak due to distance or physical barriers like walls. Here are some key points about extenders: 1. **Extender Models**: Telco offers models like the Fios Extender (E3200), Wi-Fi Extender Mini (CME1000), and others. These are compatible with both Fios and 5G Home Internet services. 2. **Placement**: Proper placement of the extender is crucial. Avoid corners, floors, or areas near large appliances to ensure optimal signal strength. 3. **Setup**: If you have a Telco extender, it will appear on the Equipment page in the Telco Home App. You can manage its settings and location from there. If you need further assistance with extenders or have specific issues, let me know!",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "02",
@@ -2693,14 +2693,14 @@
     {
      "turn_index": 5,
      "user_query": "Order one",
-     "expected_assistant": "To order a Wi-Fi extender, you can visit the My Verizon app or website. From there, you can browse available extenders and place an order. Let me know if you need further assistance!",
+     "expected_assistant": "To order a Wi-Fi extender, you can visit the My Telco app or website. From there, you can browse available extenders and place an order. Let me know if you need further assistance!",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -2737,7 +2737,7 @@
     {
      "turn_index": 3,
      "user_query": "No parent control",
-     "expected_assistant": "It seems I don't have specific information on disabling safety block features without using Parental Controls. For further assistance, I recommend contacting Verizon support directly at Call us.",
+     "expected_assistant": "It seems I don't have specific information on disabling safety block features without using Parental Controls. For further assistance, I recommend contacting Telco support directly at Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2756,7 +2756,7 @@
     {
      "turn_index": 5,
      "user_query": "Home internet safety off",
-     "expected_assistant": "It seems I don't have specific instructions for turning off home internet safety features without using Parental Controls or similar tools. For further assistance, I recommend contacting Verizon support directly at Call us.",
+     "expected_assistant": "It seems I don't have specific instructions for turning off home internet safety features without using Parental Controls or similar tools. For further assistance, I recommend contacting Telco support directly at Call us.",
      "expected_route": "live_agent",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2782,7 +2782,7 @@
     {
      "turn_index": 1,
      "user_query": "Need to connect",
-     "expected_assistant": "Could you clarify what you need to connect? Are you referring to connecting a device to your Verizon Home Internet, setting up a router, or something else?",
+     "expected_assistant": "Could you clarify what you need to connect? Are you referring to connecting a device to your Telco Home Internet, setting up a router, or something else?",
      "expected_route": "clarify",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2790,7 +2790,7 @@
      "expected_policy_link_id": null,
      "must_include": [],
      "must_not_include": [
-      "vzhome://"
+      "telcohome://"
      ],
      "label_confidence": "low",
      "label_reason": "assistant asks clarification question; route has no content page",
@@ -2800,8 +2800,8 @@
     },
     {
      "turn_index": 3,
-     "user_query": "Home Verizon",
-     "expected_assistant": "To connect to Verizon Home Internet, are you looking to set up your router, connect a device to Wi-Fi, or troubleshoot a connection issue? Let me know so I can guide you with the right steps.",
+     "user_query": "Home Telco",
+     "expected_assistant": "To connect to Telco Home Internet, are you looking to set up your router, connect a device to Wi-Fi, or troubleshoot a connection issue? Let me know so I can guide you with the right steps.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "10",
@@ -2818,7 +2818,7 @@
     {
      "turn_index": 5,
      "user_query": "Troubleshoot",
-     "expected_assistant": "To troubleshoot your Verizon Home Internet connection: Go to Troubleshoot > Follow the on-screen instructions to identify and resolve the issue. If the issue persists, let me know for further assistance.",
+     "expected_assistant": "To troubleshoot your Telco Home Internet connection: Go to Troubleshoot > Follow the on-screen instructions to identify and resolve the issue. If the issue persists, let me know for further assistance.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "01.01",
      "expected_page_section": "01",
@@ -2840,11 +2840,11 @@
   {
    "account_id": "ACCOUNT_040",
    "conversation_id": "CHAT_042",
-   "title": "This is the Home Assistant, Verizon\u2019s tool to help you manage your home internet.",
+   "title": "This is the Home Assistant, Telco\u2019s tool to help you manage your home internet.",
    "turns": [
     {
      "turn_index": 1,
-     "user_query": "This is the Home Assistant, Verizon\u2019s tool to help you manage your home internet.\n\n You can use one of these suggestions or ask a question to get started:\n- How do I change my Wi-Fi password?",
+     "user_query": "This is the Home Assistant, Telco\u2019s tool to help you manage your home internet.\n\n You can use one of these suggestions or ask a question to get started:\n- How do I change my Wi-Fi password?",
      "expected_assistant": "To change your Wi-Fi password: Go to Network > Select Wi-Fi Management > Select Edit Wi-Fi > Enter new Wi-Fi password > Save changes.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
@@ -2873,7 +2873,7 @@
      "expected_policy_link_id": null,
      "must_include": [],
      "must_not_include": [
-      "vzhome://"
+      "telcohome://"
      ],
      "label_confidence": "low",
      "label_reason": "assistant asks clarification question; route has no content page",
@@ -2884,7 +2884,7 @@
     {
      "turn_index": 5,
      "user_query": "The password field would not let me alter it",
-     "expected_assistant": "If the password field is not editable, it could be due to restrictions or an issue with the app. Try restarting the Verizon Home App and attempting the steps again. If the issue persists, you can report it directly through the app. Go to Help & feedback > Describe the issue > Submit feedback.",
+     "expected_assistant": "If the password field is not editable, it could be due to restrictions or an issue with the app. Try restarting the Telco Home App and attempting the steps again. If the issue persists, you can report it directly through the app. Go to Help & feedback > Describe the issue > Submit feedback.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -2918,7 +2918,7 @@
      "expected_policy_link_id": null,
      "must_include": [],
      "must_not_include": [
-      "vzhome://"
+      "telcohome://"
      ],
      "label_confidence": "low",
      "label_reason": "assistant asks clarification question; route has no content page",
@@ -2951,14 +2951,14 @@
     {
      "turn_index": 5,
      "user_query": "Gigabits\nWhat plan am i on ??",
-     "expected_assistant": "To check your current internet plan, you need to use the My Verizon App. Select the link below to access it: My Verizon.",
+     "expected_assistant": "To check your current internet plan, you need to use the My Telco App. Select the link below to access it: My Telco.",
      "expected_route": "account_nav",
      "expected_content_page_id": null,
      "expected_page_section": null,
      "expected_link_id": null,
-     "expected_policy_link_id": "my-verizon-app",
+     "expected_policy_link_id": "my-telco-app",
      "must_include": [
-      "My Verizon"
+      "My Telco"
      ],
      "must_not_include": [],
      "label_confidence": "high",
@@ -3212,7 +3212,7 @@
     {
      "turn_index": 1,
      "user_query": "How much GHz do I have?",
-     "expected_assistant": "Your Verizon Home Internet setup includes multiple frequency bands: 2.4 GHz, 5 GHz, and 6 GHz. The 2.4 GHz band is typically used for IoT devices, while the 5 GHz and 6 GHz bands can offer faster connections for compatible devices.",
+     "expected_assistant": "Your Telco Home Internet setup includes multiple frequency bands: 2.4 GHz, 5 GHz, and 6 GHz. The 2.4 GHz band is typically used for IoT devices, while the 5 GHz and 6 GHz bands can offer faster connections for compatible devices.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": "04",
@@ -3277,7 +3277,7 @@
     {
      "turn_index": 1,
      "user_query": "Extender  is offline, how do I fix it?",
-     "expected_assistant": "To fix an offline extender, follow these steps: 1. Verify that the extender is plugged in and receiving power. 2. Power cycle the extender by unplugging it, waiting 30 seconds, then plugging it back in. 3. Ensure the extender is unobstructed and placed in an optimal location for signal coverage. If the issue persists, you can report it through the Help & feedback page in the Verizon Home App.",
+     "expected_assistant": "To fix an offline extender, follow these steps: 1. Verify that the extender is plugged in and receiving power. 2. Power cycle the extender by unplugging it, waiting 30 seconds, then plugging it back in. 3. Ensure the extender is unobstructed and placed in an optimal location for signal coverage. If the issue persists, you can report it through the Help & feedback page in the Telco Home App.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -3298,7 +3298,7 @@
     {
      "turn_index": 3,
      "user_query": "Its the white box ?",
-     "expected_assistant": "Yes, the extender is typically a white box. If you're referring to the Verizon Wi-Fi Extender, it should be a white device designed to enhance your Wi-Fi coverage. If you need further assistance with identifying or troubleshooting your extender, you can report the issue through the Help & feedback page in the Verizon Home App.",
+     "expected_assistant": "Yes, the extender is typically a white box. If you're referring to the Telco Wi-Fi Extender, it should be a white device designed to enhance your Wi-Fi coverage. If you need further assistance with identifying or troubleshooting your extender, you can report the issue through the Help & feedback page in the Telco Home App.",
      "expected_route": "rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -3318,7 +3318,7 @@
     {
      "turn_index": 5,
      "user_query": "Light is on and plugged in",
-     "expected_assistant": "If the extender's light is on and it's plugged in but still offline, try these steps: 1. Ensure the extender is properly connected to your network. Check if the extender is within range of your router. 2. Restart your router to refresh the network connection. Go to Restart Router > Select **Restart**. 3. Check for any firmware updates for the extender. You can do this through the Verizon Home App. 4. If the extender is still offline, consider resetting it to factory settings. This can often resolve connectivity issues. If the problem continues, you can report it through the Help & feedback page in the Verizon Home App.",
+     "expected_assistant": "If the extender's light is on and it's plugged in but still offline, try these steps: 1. Ensure the extender is properly connected to your network. Check if the extender is within range of your router. 2. Restart your router to refresh the network connection. Go to Restart Router > Select **Restart**. 3. Check for any firmware updates for the extender. You can do this through the Telco Home App. 4. If the extender is still offline, consider resetting it to factory settings. This can often resolve connectivity issues. If the problem continues, you can report it through the Help & feedback page in the Telco Home App.",
      "expected_route": "rag_answer",
      "expected_content_page_id": "02.07",
      "expected_page_section": "02",
@@ -3372,7 +3372,7 @@
     {
      "turn_index": 1,
      "user_query": "Bury the optic fiber line",
-     "expected_assistant": "It looks like I don't have specific information about burying optic fiber lines. For this question, I recommend checking our website Verizon Home Internet or contacting support directly.",
+     "expected_assistant": "It looks like I don't have specific information about burying optic fiber lines. For this question, I recommend checking our website Telco Home Internet or contacting support directly.",
      "expected_route": "no_rag_answer",
      "expected_content_page_id": null,
      "expected_page_section": null,
@@ -3380,7 +3380,7 @@
      "expected_policy_link_id": null,
      "must_include": [
       "specific information",
-      "Verizon Home Internet"
+      "Telco Home Internet"
      ],
      "must_not_include": [],
      "label_confidence": "high",

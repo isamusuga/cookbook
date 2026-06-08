@@ -37,7 +37,7 @@ final class TestChatHarness {
         profile: CustomerProfile = .demo,
         useSimulatorFastGroundedQA: Bool = false,
         conversationState: ConversationState? = nil,
-        verizonDispatcher: VerizonChatDispatcher? = nil,
+        telcoDispatcher: TelcoChatDispatcher? = nil,
         telcoUnderstandingClassifier: TelcoSharedUnderstandingClassifying? = nil,
         understandingClassifier: QueryUnderstandingClassifying? = nil,
         relationalStrategy: RelationalHeadsStrategy? = nil
@@ -89,7 +89,7 @@ final class TestChatHarness {
             nbaEngine: nba,
             toolSelector: tool,
             toolExecutor: executor,
-            verizonDispatcher: verizonDispatcher,
+            telcoDispatcher: telcoDispatcher,
             telcoUnderstandingClassifier: telcoUnderstandingClassifier,
             understandingClassifier: understandingClassifier,
             relationalStrategy: relationalStrategy,

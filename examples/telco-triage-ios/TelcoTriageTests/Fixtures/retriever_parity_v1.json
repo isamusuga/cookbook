@@ -674,7 +674,7 @@
         {
           "page_id": "10.00",
           "score": 11.3453,
-          "link_id": "my-verizon-app",
+          "link_id": "my-telco-app",
           "action_affordance": "navigate"
         },
         {
@@ -698,7 +698,7 @@
         {
           "page_id": "10.00",
           "score": 13.450153,
-          "link_id": "my-verizon-app",
+          "link_id": "my-telco-app",
           "action_affordance": "navigate"
         },
         {

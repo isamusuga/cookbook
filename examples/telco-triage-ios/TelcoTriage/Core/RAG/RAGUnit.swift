@@ -1,9 +1,9 @@
 import Foundation
 
 /// One canonical RAG unit, as produced by the Step 1–4a Python
-/// canonicalisation pipeline (`scripts/vz/canonicalize.py`).
+/// canonicalisation pipeline (`scripts/telco/canonicalize.py`).
 ///
-/// **Source of truth**: `data/finetune/vz-home-internet/rag_units.json`.
+/// **Source of truth**: `data/finetune/telco-home-internet/rag_units.json`.
 /// Bundled in the iOS app as `Resources/rag-units-v1.json`. The Swift
 /// struct mirrors the JSON shape exactly so we can `JSONDecoder` it
 /// without a transform layer.
@@ -11,14 +11,14 @@ import Foundation
 /// The composer (Step 5) treats every field except `body` as part of
 /// the response contract:
 ///
-/// * `canonicalURL` — the only `vzhome://` URL the composer is allowed
+/// * `canonicalURL` — the only `telcohome://` URL the composer is allowed
 ///   to render for this unit.
 /// * `citationLabel` — visible link label in the rendered text and the
 ///   citation chip.
 /// * `steps` — exact step chain, joined by `" > "`. Body content is
 ///   never opened to mine new steps.
 /// * `actionAffordance` — drives the route-classification side; see
-///   `VerizonChatDispatcher.deriveRoute`. The `ToolRegistry` gate is
+///   `TelcoChatDispatcher.deriveRoute`. The `ToolRegistry` gate is
 ///   the FINAL arbiter for whether confirmation is shown (guardrail
 ///   #3 in the Step 6 plan).
 public struct RAGUnit: Codable, Sendable, Equatable {
@@ -54,7 +54,7 @@ public struct RAGUnit: Codable, Sendable, Equatable {
         case actionAffordance = "action_affordance"
     }
 
-    /// The `vzhome://...` URL with the optional `?launchPoint=…` query
+    /// The `telcohome://...` URL with the optional `?launchPoint=…` query
     /// stripped. Used by alias / equivalence checks.
     public var canonicalURLBare: String {
         if let q = canonicalURL.firstIndex(of: "?") {

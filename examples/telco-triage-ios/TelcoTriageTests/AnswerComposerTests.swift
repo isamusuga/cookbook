@@ -1,7 +1,7 @@
 import XCTest
 @testable import TelcoTriage
 
-/// Mirrors `scripts/vz/tests/test_answer_composer.py` 1:1. Any
+/// Mirrors `scripts/telco/tests/test_answer_composer.py` 1:1. Any
 /// behaviour change in `AnswerComposer.swift` MUST be reflected in
 /// both the Python and Swift composers; this suite is the Swift side
 /// of that contract.
@@ -18,29 +18,29 @@ final class AnswerComposerTests: XCTestCase {
     // MARK: - Render helpers
 
     func test_renderLink_basic() {
-        XCTAssertEqual(renderLink(label: "Network", url: "vzhome://network"),
-                       "[Network](vzhome://network)")
+        XCTAssertEqual(renderLink(label: "Network", url: "telcohome://network"),
+                       "[Network](telcohome://network)")
     }
 
     func test_renderLink_escapes_brackets() {
-        XCTAssertEqual(renderLink(label: "Bad [Label]", url: "vzhome://x"),
-                       "[Bad (Label)](vzhome://x)")
+        XCTAssertEqual(renderLink(label: "Bad [Label]", url: "telcohome://x"),
+                       "[Bad (Label)](telcohome://x)")
     }
 
     func test_renderStepChain_basic() {
         let chain = renderStepChain(
             label: "Restart Router",
-            url: "vzhome://restart-router",
+            url: "telcohome://restart-router",
             steps: ["Tap Equipment.", "Select Restart router.", "Confirm."]
         )
         XCTAssertEqual(
             chain,
-            "[Restart Router](vzhome://restart-router) > Tap Equipment > Select Restart router > Confirm"
+            "[Restart Router](telcohome://restart-router) > Tap Equipment > Select Restart router > Confirm"
         )
     }
 
     func test_renderStepChain_strips_internal_arrows() {
-        let chain = renderStepChain(label: "X", url: "vzhome://x", steps: ["a > b"])
+        let chain = renderStepChain(label: "X", url: "telcohome://x", steps: ["a > b"])
         XCTAssertTrue(chain.contains(" > "), "outer arrow separator present")
         XCTAssertTrue(chain.contains("a - b") || chain.contains("a   b"),
                       "internal `>` defused")
@@ -48,9 +48,9 @@ final class AnswerComposerTests: XCTestCase {
 
     func test_extractRenderedLinks_pulls_urls_and_labels() {
         let (urls, labels) = extractRenderedLinks(
-            "Go to [Network](vzhome://network) and [Speed Test](vzhome://speed-test)."
+            "Go to [Network](telcohome://network) and [Speed Test](telcohome://speed-test)."
         )
-        XCTAssertEqual(urls, ["vzhome://network", "vzhome://speed-test"])
+        XCTAssertEqual(urls, ["telcohome://network", "telcohome://speed-test"])
         XCTAssertEqual(labels, ["Network", "Speed Test"])
     }
 
@@ -65,14 +65,14 @@ final class AnswerComposerTests: XCTestCase {
 
     func test_outOfScope_template() {
         let ans = composer.compose(query: "weather", route: .outOfScope, evidence: nil)
-        XCTAssertTrue(ans.text.contains("Verizon Home Internet"))
+        XCTAssertTrue(ans.text.contains("Telco Home Internet"))
         XCTAssertTrue(ans.renderedLinks.isEmpty)
     }
 
     func test_noRagAnswer_has_external_url() {
         let ans = composer.compose(query: "??", route: .noRagAnswer, evidence: nil)
-        XCTAssertEqual(ans.renderedLinks, [AnswerComposerConstants.verizonInternetURL])
-        XCTAssertFalse(ans.renderedLinks.contains { $0.hasPrefix("vzhome://") })
+        XCTAssertEqual(ans.renderedLinks, [AnswerComposerConstants.telcoInternetURL])
+        XCTAssertFalse(ans.renderedLinks.contains { $0.hasPrefix("telcohome://") })
     }
 
     func test_liveAgent_uses_phone() {
@@ -80,11 +80,11 @@ final class AnswerComposerTests: XCTestCase {
         XCTAssertEqual(ans.renderedLinks, [AnswerComposerConstants.liveAgentPhone])
     }
 
-    func test_accountNav_uses_my_verizon() {
+    func test_accountNav_uses_my_telco() {
         let unit = units["10.00"]!
         let ans = composer.compose(query: "my bill", route: .accountNav, evidence: unit)
-        XCTAssertEqual(ans.renderedLinks, [AnswerComposerConstants.myVerizonURL])
-        XCTAssertFalse(ans.renderedLinks.contains { $0.hasPrefix("vzhome://") })
+        XCTAssertEqual(ans.renderedLinks, [AnswerComposerConstants.myTelcoURL])
+        XCTAssertFalse(ans.renderedLinks.contains { $0.hasPrefix("telcohome://") })
     }
 
     func test_clarify_no_link() {
@@ -101,10 +101,10 @@ final class AnswerComposerTests: XCTestCase {
             evidence: unit,
             requiresConfirmation: false
         )
-        XCTAssertTrue(ans.text.contains("vzhome://restart-router"))
+        XCTAssertTrue(ans.text.contains("telcohome://restart-router"))
         XCTAssertTrue(ans.text.contains(" > Tap Equipment > "))
         XCTAssertTrue(ans.hasStepChain)
-        XCTAssertEqual(ans.renderedLinks.first, "vzhome://restart-router")
+        XCTAssertEqual(ans.renderedLinks.first, "telcohome://restart-router")
     }
 
     func test_ragAnswer_without_steps_renders_link_only() {
@@ -114,7 +114,7 @@ final class AnswerComposerTests: XCTestCase {
             route: .ragAnswer,
             evidence: unit
         )
-        XCTAssertTrue(ans.text.contains("vzhome://network"))
+        XCTAssertTrue(ans.text.contains("telcohome://network"))
         XCTAssertFalse(ans.hasStepChain)
     }
 
@@ -131,7 +131,7 @@ final class AnswerComposerTests: XCTestCase {
         XCTAssertTrue(ans.text.contains("group children's devices"))
         XCTAssertTrue(ans.text.contains("Name this profile"))
         XCTAssertTrue(ans.text.contains("Select a color"))
-        XCTAssertTrue(ans.text.contains("vzhome://home"))
+        XCTAssertTrue(ans.text.contains("telcohome://home"))
         XCTAssertFalse(ans.text.contains("Reply 'yes'"))
         XCTAssertFalse(ans.hasStepChain)
     }
@@ -173,62 +173,62 @@ final class AnswerComposerTests: XCTestCase {
             evidence: unit,
             requiresConfirmation: true
         )
-        XCTAssertTrue(ans.text.contains("vzhome://restart-router"))
+        XCTAssertTrue(ans.text.contains("telcohome://restart-router"))
         XCTAssertTrue(ans.text.lowercased().contains("confirm"))
     }
 
     func test_ragAnswer_without_evidence_uses_safe_fallback() {
         let ans = composer.compose(query: "x", route: .ragAnswer, evidence: nil)
         XCTAssertTrue(ans.usedFallback)
-        XCTAssertTrue(ans.text.contains(AnswerComposerConstants.verizonInternetURL))
-        XCTAssertFalse(ans.renderedLinks.contains { $0.hasPrefix("vzhome://") })
+        XCTAssertTrue(ans.text.contains(AnswerComposerConstants.telcoInternetURL))
+        XCTAssertFalse(ans.renderedLinks.contains { $0.hasPrefix("telcohome://") })
     }
 
     // MARK: - Grading helpers
 
-    func test_isLinkValid_accepts_known_vzhome() {
+    func test_isLinkValid_accepts_known_telcohome() {
         let ans = ComposedAnswer(
-            text: "[Network](vzhome://network)",
+            text: "[Network](telcohome://network)",
             route: .ragAnswer,
-            renderedLinks: ["vzhome://network"],
+            renderedLinks: ["telcohome://network"],
             renderedLinkLabels: ["Network"],
-            expectedLinkURL: "vzhome://network"
+            expectedLinkURL: "telcohome://network"
         )
-        XCTAssertTrue(ComposerGrading.isLinkValid(ans, knownVzhomeURLs: ["vzhome://network"]))
+        XCTAssertTrue(ComposerGrading.isLinkValid(ans, knownTelcoHomeURLs: ["telcohome://network"]))
     }
 
-    func test_isLinkValid_rejects_unknown_vzhome() {
+    func test_isLinkValid_rejects_unknown_telcohome() {
         let ans = ComposedAnswer(
-            text: "[Bogus](vzhome://bogus)",
+            text: "[Bogus](telcohome://bogus)",
             route: .ragAnswer,
-            renderedLinks: ["vzhome://bogus"],
+            renderedLinks: ["telcohome://bogus"],
             renderedLinkLabels: ["Bogus"]
         )
-        XCTAssertFalse(ComposerGrading.isLinkValid(ans, knownVzhomeURLs: ["vzhome://network"]))
+        XCTAssertFalse(ComposerGrading.isLinkValid(ans, knownTelcoHomeURLs: ["telcohome://network"]))
     }
 
     func test_isLinkValid_allows_external_fallback() {
         let ans = ComposedAnswer(
-            text: "[Verizon Home Internet](\(AnswerComposerConstants.verizonInternetURL))",
+            text: "[Telco Home Internet](\(AnswerComposerConstants.telcoInternetURL))",
             route: .noRagAnswer,
-            renderedLinks: [AnswerComposerConstants.verizonInternetURL],
-            renderedLinkLabels: ["Verizon Home Internet"]
+            renderedLinks: [AnswerComposerConstants.telcoInternetURL],
+            renderedLinkLabels: ["Telco Home Internet"]
         )
-        XCTAssertTrue(ComposerGrading.isLinkValid(ans, knownVzhomeURLs: []))
+        XCTAssertTrue(ComposerGrading.isLinkValid(ans, knownTelcoHomeURLs: []))
     }
 
     func test_isCitationCorrect_for_query_suffix_equivalence() {
         let ans = ComposedAnswer(
-            text: "[Network](vzhome://network?launchPoint=verizonAssistant)",
+            text: "[Network](telcohome://network?launchPoint=telcoAssistant)",
             route: .ragAnswer,
-            renderedLinks: ["vzhome://network?launchPoint=verizonAssistant"],
+            renderedLinks: ["telcohome://network?launchPoint=telcoAssistant"],
             renderedLinkLabels: ["Network"],
-            expectedLinkURL: "vzhome://network"
+            expectedLinkURL: "telcohome://network"
         )
         XCTAssertTrue(ComposerGrading.isCitationCorrect(ans))
     }
 
-    func test_isGrounded_rejects_extra_vzhome_link() {
+    func test_isGrounded_rejects_extra_telcohome_link() {
         let unit = units["02.07"]!
         let base = composer.compose(
             query: "restart my router",
@@ -236,10 +236,10 @@ final class AnswerComposerTests: XCTestCase {
             evidence: unit
         )
         let polluted = ComposedAnswer(
-            text: base.text + "\n\nAlso try [Network](vzhome://network).",
+            text: base.text + "\n\nAlso try [Network](telcohome://network).",
             route: base.route,
             citedPageID: base.citedPageID,
-            renderedLinks: base.renderedLinks + ["vzhome://network"],
+            renderedLinks: base.renderedLinks + ["telcohome://network"],
             renderedLinkLabels: base.renderedLinkLabels + ["Network"],
             expectedLinkURL: base.expectedLinkURL,
             requiresConfirmation: base.requiresConfirmation,
@@ -298,7 +298,7 @@ enum TestUnitFixture {
                 page: "01.02",
                 title: "Router speed test page",
                 link: "speed-test",
-                url: "vzhome://speed-test?launchPoint=verizonAssistant",
+                url: "telcohome://speed-test?launchPoint=telcoAssistant",
                 citation: "Speed Test",
                 task: "run-speed-test",
                 steps: [
@@ -321,16 +321,16 @@ enum TestUnitFixture {
                 page: "03.00",
                 title: "Network page",
                 link: "network",
-                url: "vzhome://network?launchPoint=verizonAssistant",
+                url: "telcohome://network?launchPoint=telcoAssistant",
                 citation: "Network",
                 aliases: ["wifi", "wifi password", "change wifi password"],
                 affordance: "view"
             ),
             "10.00": _u(
                 page: "10.00",
-                title: "My Verizon App",
-                link: "my-verizon-app",
-                citation: "My Verizon App",
+                title: "My Telco App",
+                link: "my-telco-app",
+                citation: "My Telco App",
                 aliases: ["my bill", "my account"],
                 affordance: "navigate"
             ),
@@ -338,7 +338,7 @@ enum TestUnitFixture {
                 page: "13.00",
                 title: "Parental Controls profiles page",
                 link: "home",
-                url: "vzhome://home?launchPoint=verizonAssistant",
+                url: "telcohome://home?launchPoint=telcoAssistant",
                 citation: "Parental Controls",
                 aliases: ["parental controls", "kid mode"],
                 steps: ["Tap Devices.", "Pick a profile.", "Adjust restrictions."],
@@ -348,7 +348,7 @@ enum TestUnitFixture {
                 page: "13.02",
                 title: "Create profile page",
                 link: "home",
-                url: "vzhome://home?launchPoint=verizonAssistant",
+                url: "telcohome://home?launchPoint=telcoAssistant",
                 citation: "Create profile",
                 aliases: ["add profile", "create profile", "profile for son"],
                 body: """
@@ -383,7 +383,7 @@ enum TestUnitFixture {
             level: 1,
             parentPageID: nil,
             linkID: link,
-            canonicalURL: url ?? "vzhome://\(link)",
+            canonicalURL: url ?? "telcohome://\(link)",
             aliases: aliases,
             steps: steps,
             body: body,

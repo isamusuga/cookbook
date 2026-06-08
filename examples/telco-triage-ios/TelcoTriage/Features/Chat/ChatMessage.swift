@@ -153,8 +153,8 @@ public struct CallTrace: Equatable {
     // -- Step 6.6 composer telemetry --
     //
     // Surgical four-field set per the Step 6 plan §5. Populated by
-    // `ChatViewModel.runVerizonDispatch` from the dispatcher's
-    // `VerizonDispatchResult`. Nil for non-Verizon paths (banking
+    // `ChatViewModel.runTelcoDispatch` from the dispatcher's
+    // `TelcoDispatchResult`. Nil for non-Telco paths (banking
     // POC pipeline, vision, voice) and for legacy Stage B turns.
     public let routePolicyMS: Int?
     public let composerMS: Int?

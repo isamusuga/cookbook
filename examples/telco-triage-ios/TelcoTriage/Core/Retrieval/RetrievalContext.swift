@@ -33,14 +33,14 @@ public struct RetrievalContext: Sendable, Equatable {
     /// `page_id` of the RAG unit cited on the most recent assistant
     /// turn (e.g. `"03.00"`). When set, the dispatcher's short-followup
     /// override may force the new turn's evidence back to this page —
-    /// see `VerizonChatDispatcher.runComposerPipeline` and
+    /// see `TelcoChatDispatcher.runComposerPipeline` and
     /// `TelcoPolicyEngine` for the gating rule. Mirrors the Python harness's
     /// `ConversationState.prior_page_id` so the Step 5b acceptance gates
     /// hold byte-for-byte against the iOS dispatcher.
     ///
     /// Source: `ConversationState.priorPageID`, populated by
     /// `ChatViewModel.recordTurnSideEffects` from the prior turn's
-    /// `VerizonDispatchResult.citedRAGUnit?.pageID`.
+    /// `TelcoDispatchResult.citedRAGUnit?.pageID`.
     public let priorPageID: String?
 
     /// Companion to `priorPageID` — the `link_id` of the cited unit

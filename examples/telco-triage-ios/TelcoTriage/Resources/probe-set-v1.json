@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_note": "On-device probe set for VerizonChatDispatcher (ADR-021 §11.5 L3). Hand-picked queries covering every routable lane. Run from engineering mode (or unit tests) to score the live dispatcher against expected behaviour. Subset of the 89-query probe set from the H100 training pipeline — those probes need a live H100 to score Python-side; this set scores on-device end-to-end.",
+  "_note": "On-device probe set for TelcoChatDispatcher (ADR-021 §11.5 L3). Hand-picked queries covering every routable lane. Run from engineering mode (or unit tests) to score the live dispatcher against expected behaviour. Subset of the 89-query probe set from the H100 training pipeline — those probes need a live H100 to score Python-side; this set scores on-device end-to-end.",
   "probes": [
     {
       "query": "How do I change my Wi-Fi password?",

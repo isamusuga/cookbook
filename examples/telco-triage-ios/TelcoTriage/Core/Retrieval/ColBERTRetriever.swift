@@ -16,7 +16,7 @@ public struct ColBERTHit: Sendable, Equatable {
 /// Full retrieval result for one query.
 ///
 /// `hits` are sorted high → low by MaxSim score. `topConfidence` and
-/// `topGap` are the inputs `VerizonRagRouter.route(stageA:retrieval:)`
+/// `topGap` are the inputs `TelcoRagRouter.route(stageA:retrieval:)`
 /// reads to decide between `.ragStepByStep`, `.clarification`, and
 /// `.unknownFeature`. Per ADR §11.4.3, these replace the synthetic
 /// values that `untilRetrievalLandsSyntheticRetrieval` was returning.
@@ -41,7 +41,7 @@ public struct ColBERTRetrievalResult: Sendable, Equatable {
 
     /// Gap between top-1 and top-2 confidence. A small gap with high
     /// absolute scores indicates ambiguity — the router routes to
-    /// `.clarification` in that case (ADR §11.3 / VerizonRagRouter).
+    /// `.clarification` in that case (ADR §11.3 / TelcoRagRouter).
     public var topGap: Float {
         guard hits.count >= 2, queryTokens > 0 else { return 1.0 }
         return (hits[0].score - hits[1].score) / Float(queryTokens)
@@ -69,7 +69,7 @@ public enum ColBERTRetrievalError: Error, LocalizedError {
 /// Late-interaction (ColBERT MaxSim) retriever over the bundled
 /// `ColBERTIndex`. Doesn't own a backend — caller provides one already
 /// loaded with `lfm2-colbert-350m-Q4_K_M.gguf`. Per ADR §11.4.3
-/// (single-backend topology), the caller is `VerizonChatDispatcher`
+/// (single-backend topology), the caller is `TelcoChatDispatcher`
 /// which `backend.unload()` + `backend.loadModel(path: colbertPath)`
 /// before invoking `retrieve` and swaps back afterward.
 ///

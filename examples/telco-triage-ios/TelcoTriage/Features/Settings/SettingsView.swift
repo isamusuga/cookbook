@@ -99,16 +99,16 @@ struct SettingsView: View {
                     )
                 )
                 NavigationLink {
-                    VerizonRAGTestView()
+                    TelcoRAGTestView()
                 } label: {
                     LabeledContent(
                         "Stage B generator",
-                        value: TelcoModelBundle.verizonStageBGeneratorPath() == nil
+                        value: TelcoModelBundle.telcoStageBGeneratorPath() == nil
                             ? "not bundled"
-                            : TelcoModelBundle.verizonStageBGeneratorName
+                            : TelcoModelBundle.telcoStageBGeneratorName
                     )
                 }
-                .disabled(TelcoModelBundle.verizonStageBGeneratorPath() == nil)
+                .disabled(TelcoModelBundle.telcoStageBGeneratorPath() == nil)
                 Text("These artifacts are kept only for degraded-build compatibility or offline evaluation. They are not invoked by the normal Telco Triage customer/demo answer path.")
                     .font(.caption).foregroundStyle(brand.textSecondary)
             }

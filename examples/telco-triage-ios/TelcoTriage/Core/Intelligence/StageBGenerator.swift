@@ -69,26 +69,26 @@ public extension StageBGenerating {
 }
 
 /// Shared system prompt for Stage B (UNGROUNDED variant). Mirrors
-/// `scripts/vz/generate/prompts.py::VERIZON_SYSTEM_PROMPT_SUMMARY` —
+/// `scripts/telco/generate/prompts.py::TELCO_SYSTEM_PROMPT_SUMMARY` —
 /// the contract Stage B was fine-tuned against.
 ///
-/// **Use case**: the engineering probe view (VerizonRAGTestView) that
+/// **Use case**: the engineering probe view (TelcoRAGTestView) that
 /// exercises Stage B in isolation with no ColBERT retrieval. The chat
-/// dispatcher path goes through `VerizonStageBSystemPromptGrounded`
+/// dispatcher path goes through `TelcoStageBSystemPromptGrounded`
 /// which injects retrieved corpus content — that is the production
 /// path per ADR §11.3.
-public let VerizonStageBSystemPrompt: String = """
-You are the Verizon Home Internet GenAI RAG Assistant. Help customers \
+public let TelcoStageBSystemPrompt: String = """
+You are the Telco Home Internet GenAI RAG Assistant. Help customers \
 with router, network, devices, parental controls, equipment, and \
 Digital Secure Home questions.
 
 OUTPUT CONTRACT (when an answer is grounded):
 - One-sentence intro ending in a colon, then a single line of the form:
-  Go to [Link Name](vzhome://link-path) > Step 1 > Step 2 > ...
+  Go to [Link Name](telcohome://link-path) > Step 1 > Step 2 > ...
 - Steps separated by " > ", no periods inside steps, optional terminal period.
 - No emojis. No exclamation points. No markdown bullets.
 
-DEEP-LINK SCHEME: vzhome://.
+DEEP-LINK SCHEME: telcohome://.
 """
 
 /// Grounded system prompt — injects the retrieved corpus chunk so the
@@ -105,7 +105,7 @@ DEEP-LINK SCHEME: vzhome://.
 /// When the chunk has no deep_link (rare — template detail pages),
 /// the prompt instructs Stage B to answer descriptively without a URL
 /// so the response doesn't include a hallucinated link.
-public func VerizonStageBSystemPromptGrounded(chunk: ColBERTChunk) -> String {
+public func TelcoStageBSystemPromptGrounded(chunk: ColBERTChunk) -> String {
     let passage = "From the \(chunk.section) section, "
         + "\(chunk.title) page:\n\n\(chunk.body)"
     let linkInstruction: String
@@ -124,19 +124,19 @@ public func VerizonStageBSystemPromptGrounded(chunk: ColBERTChunk) -> String {
         linkInstruction = """
         DEEP LINK FOR THIS ANSWER:
         - This page does not have a canonical deep link.
-        - Answer descriptively without including a vzhome:// URL.
+        - Answer descriptively without including a telcohome:// URL.
         - If the passage above doesn't answer the question, say "It \
         looks like I don't have information about that."
         """
     }
     return """
-You are the Verizon Home Internet GenAI RAG Assistant. Use ONLY the \
+You are the Telco Home Internet GenAI RAG Assistant. Use ONLY the \
 RETRIEVED PASSAGE below to answer the user's question. If the passage \
 doesn't contain the answer, decline rather than guess.
 
 OUTPUT CONTRACT (when an answer is grounded):
 - One-sentence intro ending in a colon, then a single line of the form:
-  Go to [Link Name](vzhome://link-path) > Step 1 > Step 2 > ...
+  Go to [Link Name](telcohome://link-path) > Step 1 > Step 2 > ...
 - Steps separated by " > ", no periods inside steps, optional terminal period.
 - No emojis. No exclamation points. No markdown bullets.
 
@@ -155,7 +155,7 @@ RETRIEVED PASSAGE:
 ///
 /// **GBNF caveat (follow-up)**: `LlamaBackend.generate` does not yet
 /// expose a grammar-enforced sampling path. The bundled
-/// `vz-step-format.gbnf` is therefore not applied at decode time today;
+/// `telco-step-format.gbnf` is therefore not applied at decode time today;
 /// format compliance relies on (a) the trained model emitting the
 /// shape 100% of the time on the probe set (ADR-021 §6.5), and (b) the
 /// `isKnownDeepLink` post-filter dropping outputs that drift. When
@@ -187,14 +187,14 @@ public final class StageBGenerator: StageBGenerating, @unchecked Sendable {
         backend: LlamaBackend,
         bundle: Bundle = .main
     ) -> StageBGenerator? {
-        guard let adapter = TelcoModelBundle.verizonStageBLoraPath(in: bundle) else {
+        guard let adapter = TelcoModelBundle.telcoStageBLoraPath(in: bundle) else {
             return nil
         }
         // Grammar is loaded as text for forward-compatibility; ignored
         // until the backend exposes grammar-aware sampling.
         var grammarText: String?
         if let grammarURL = bundle.url(
-            forResource: "vz-step-format",
+            forResource: "telco-step-format",
             withExtension: "gbnf"
         ) {
             grammarText = try? String(contentsOf: grammarURL, encoding: .utf8)
@@ -224,9 +224,9 @@ public final class StageBGenerator: StageBGenerating, @unchecked Sendable {
         // answer descriptively without inventing a URL.
         let systemPrompt: String
         if let chunk = retrievedChunk {
-            systemPrompt = VerizonStageBSystemPromptGrounded(chunk: chunk)
+            systemPrompt = TelcoStageBSystemPromptGrounded(chunk: chunk)
         } else {
-            systemPrompt = VerizonStageBSystemPrompt
+            systemPrompt = TelcoStageBSystemPrompt
         }
 
         let (text, tokens, timing): (String, Int, LlamaBackend.GenerationTiming)
@@ -244,7 +244,7 @@ public final class StageBGenerator: StageBGenerating, @unchecked Sendable {
                 // GBNF grammar makes the step-format SHAPE structurally
                 // enforced at decode (ADR §11.4.4). The model literally
                 // cannot emit a response that breaks the
-                // "intro: Go to [Link](vzhome://path) > step > step"
+                // "intro: Go to [Link](telcohome://path) > step > step"
                 // contract — invalid tokens are masked out before sampling.
                 // The grammar itself constrains shape; the closed URL
                 // alternation lives in v2 of the grammar file (a separate
@@ -263,8 +263,8 @@ public final class StageBGenerator: StageBGenerating, @unchecked Sendable {
             throw StageBError.emptyOutput
         }
 
-        let extracted = VerizonLinkResolver.extractFirstDeepLink(in: text)
-        let knownLink = extracted.map(VerizonLinkResolver.isKnownDeepLink) ?? false
+        let extracted = TelcoLinkResolver.extractFirstDeepLink(in: text)
+        let knownLink = extracted.map(TelcoLinkResolver.isKnownDeepLink) ?? false
         let hasIntro = text.contains("Go to ")
         let hasNoBangs = !text.contains("!")
         // When the retrieved chunk has no deep_link, format compliance
@@ -276,7 +276,7 @@ public final class StageBGenerator: StageBGenerating, @unchecked Sendable {
         if chunkExpectsLink {
             formatCompliant = extracted != nil && knownLink && hasIntro && hasNoBangs
         } else {
-            // No-link path: must NOT include a vzhome:// URL, must not
+            // No-link path: must NOT include a telcohome:// URL, must not
             // include a bang. Intro/format conventions still apply but
             // are softer without a link to anchor them.
             formatCompliant = extracted == nil && hasNoBangs
