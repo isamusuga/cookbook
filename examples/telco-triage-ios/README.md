@@ -130,19 +130,7 @@ xcodegen generate
 xcodebuild test \
   -project TelcoTriage.xcodeproj \
   -scheme TelcoTriage \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-  -only-testing:TelcoTriageTests/AnswerComposerTests \
-  -only-testing:TelcoTriageTests/BM25HierarchyRetrieverSwiftParityTests \
-  -only-testing:TelcoTriageTests/ChatViewModelIntegrationTests \
-  -only-testing:TelcoTriageTests/ConversationRecoveryTests \
-  -only-testing:TelcoTriageTests/ConversationStateTests \
-  -only-testing:TelcoTriageTests/MultiTurnIntegrationTests \
-  -only-testing:TelcoTriageTests/MultiTurnRetrievalAugmentationTests \
-  -only-testing:TelcoTriageTests/TelcoDialogueBlackboardTests \
-  -only-testing:TelcoTriageTests/TelcoPolicyEngineTests \
-  -only-testing:TelcoTriageTests/TelcoStateOperationResolverTests \
-  -only-testing:TelcoTriageTests/ToolExecutorTests \
-  -only-testing:TelcoTriageTests/VerizonDispatcherComposerPathTests
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 The regression tests assert that the single-forward understanding layer is used,
