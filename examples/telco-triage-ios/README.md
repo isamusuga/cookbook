@@ -16,6 +16,8 @@ follow-up turns such as "I can't find it" or "that didn't work"; it verbalizes
 the already-selected state and never chooses tools, citations, routes, or
 handoff policy.
 
+- [Architecture walkthrough](ARCHITECTURE.md)
+
 - **Target**: `TelcoTriage`
 - **Bundle ID**: `ai.liquid.demos.telcotriage`
 - **Deployment target**: iOS 17 on device; simulator builds use the project
