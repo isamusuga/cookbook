@@ -17,6 +17,7 @@ the already-selected state and never chooses tools, citations, routes, or
 handoff policy.
 
 - [Architecture walkthrough](ARCHITECTURE.md)
+- [Integration guide](INTEGRATION_GUIDE.md)
 
 - **Target**: `TelcoTriage`
 - **Bundle ID**: `ai.liquid.demos.telcotriage`
