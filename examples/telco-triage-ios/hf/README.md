@@ -27,7 +27,8 @@ RAG units and always carry a source chip or a handoff/clarification route.
 
 ```text
 User turn
-  -> ChatViewModel keeps UI state and pending actions
+  -> TelcoSupportSession keeps dialogue state
+  -> host UI renders answers, citations, links, and confirmations
   -> relation classifier decides how this turn relates to prior context
   -> support classifiers identify intent, tool, cloud, and safety signals
   -> dialogue blackboard records active task, prior page, pending tool, and repairs

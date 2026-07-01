@@ -16,7 +16,8 @@ The key distinction:
 
 ```text
 User turn
-  -> ChatViewModel owns UI state and pending actions
+  -> TelcoSupportSession owns headless dialogue state
+  -> host UI renders answers, citations, links, and confirmations
   -> telco-turn-relation-v4 decides how this turn relates to prior context
   -> telco-shared-clf-v1 reads support intent/tool/cloud/safety signals
   -> TelcoDialogueBlackboard records active task, prior page, pending tool, repair count

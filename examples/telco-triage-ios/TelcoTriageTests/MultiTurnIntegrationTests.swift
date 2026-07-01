@@ -50,7 +50,7 @@ final class MultiTurnIntegrationTests: XCTestCase {
         corpus = try RAGUnitCorpus.loadFromBundle()
         retriever = BM25HierarchyRetriever(corpus: corpus)
         composer = DeterministicAnswerComposer()
-        toolRegistry = ToolRegistry.default(customerContext: CustomerContext())
+        toolRegistry = ToolRegistry.demoDefault(customerContext: CustomerContext())
         toolAliasMap = ToolAliasMap.default()
     }
 

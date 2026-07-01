@@ -116,6 +116,7 @@ targets:
       - TelcoTriageTests/TelcoDialogueBlackboardTests.swift
       - TelcoTriageTests/TelcoPolicyEngineTests.swift
       - TelcoTriageTests/TelcoStateOperationResolverTests.swift
+      - TelcoTriageTests/TelcoSupportSessionTests.swift
       - TelcoTriageTests/ToolExecutorTests.swift
       - TelcoTriageTests/TelcoDispatcherComposerPathTests.swift
       - TelcoTriageTests/Fixtures/ScriptedBackend.swift

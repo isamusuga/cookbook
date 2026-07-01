@@ -29,14 +29,14 @@ handoff policy.
 
 ```mermaid
 flowchart TD
-    A["User turn"] --> B["ChatViewModel<br/>UI state + pending actions"]
+    A["User turn"] --> B["TelcoSupportSession<br/>headless orchestration"]
     B --> C["Conversation relation classifier<br/>how does this relate to prior context?"]
     C --> D["Support understanding classifiers<br/>intent, tool, cloud, safety"]
     D --> E["Dialogue blackboard<br/>active task, prior page, pending tool, repair count"]
     E --> F["BM25 retrieval<br/>canonical support knowledge units"]
     F --> G["TelcoPolicyEngine<br/>choose exactly one route"]
     G --> H["DeterministicAnswerComposer<br/>render from selected evidence"]
-    H --> I["UI<br/>answer, citation, link, handoff, or confirmation"]
+    H --> I["Host UI<br/>answer, citation, link, handoff, or confirmation"]
     I --> E
 ```
 

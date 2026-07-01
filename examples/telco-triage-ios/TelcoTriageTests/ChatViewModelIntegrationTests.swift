@@ -277,7 +277,7 @@ final class ChatViewModelIntegrationTests: XCTestCase {
         let corpus = try RAGUnitCorpus.loadFromBundle()
         let retriever = BM25HierarchyRetriever(corpus: corpus)
         let composer = DeterministicAnswerComposer()
-        let routeRegistry = ToolRegistry.default(customerContext: CustomerContext())
+        let routeRegistry = ToolRegistry.demoDefault(customerContext: CustomerContext())
         return TelcoChatDispatcher(
             stageA: nil,
             stageB: nil,

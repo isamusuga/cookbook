@@ -40,14 +40,14 @@ the on-device architecture concrete.
 
 ```mermaid
 flowchart TD
-    A["User message"] --> B["ChatViewModel"]
+    A["User message"] --> B["TelcoSupportSession"]
     B --> C["Turn relation classifier"]
     C --> D["Shared support understanding"]
     D --> E["Dialogue blackboard"]
     E --> F["BM25 hierarchy retriever"]
     F --> G["TelcoPolicyEngine"]
     G --> H["Deterministic answer composer"]
-    H --> I["Chat UI: answer, citation, link, handoff, or confirmation"]
+    H --> I["Client UI: answer, citation, link, handoff, or confirmation"]
     I --> E
 ```
 
@@ -305,7 +305,8 @@ Relevant files:
 - `TelcoTriage/Core/Tools/ToolRegistry.swift`
 - `TelcoTriage/Core/Routing/ToolAliasMap.swift`
 - `TelcoTriage/Core/Routing/ToolExecutor.swift`
-- `TelcoTriage/Features/Chat/ChatViewModel.swift`
+- `TelcoTriage/Core/Orchestration/TelcoSupportSession.swift`
+- `TelcoTriage/Features/Chat/ChatViewModel.swift` (demo UI client)
 
 ## Deflection and Handoff
 
@@ -407,7 +408,8 @@ app dependency graph.
 ```mermaid
 sequenceDiagram
     participant User
-    participant UI as ChatViewModel
+    participant UI as Client UI
+    participant Session as TelcoSupportSession
     participant Relation as Relation classifier
     participant Heads as Shared understanding heads
     participant State as Dialogue blackboard
@@ -417,13 +419,15 @@ sequenceDiagram
     participant Tool as ToolExecutor
 
     User->>UI: send message
-    UI->>Relation: classify relation to prior turn
-    UI->>Heads: classify support signals
-    UI->>State: resolve state operation
-    UI->>RAG: retrieve candidate RAG units
-    UI->>Policy: decide route
-    Policy-->>UI: route and tool/citation decision
-    UI->>Composer: render response
+    UI->>Session: handle(user message)
+    Session->>Relation: classify relation to prior turn
+    Session->>Heads: classify support signals
+    Session->>State: resolve state operation
+    Session->>RAG: retrieve candidate RAG units
+    Session->>Policy: decide route
+    Policy-->>Session: route and tool/citation decision
+    Session->>Composer: render response
+    Session-->>UI: structured turn result
     alt tool confirmation accepted
         UI->>Tool: execute registered tool
         Tool-->>UI: result

@@ -52,7 +52,7 @@ public enum ToolIntent: String, Sendable, Equatable, Codable, CaseIterable {
     case rebootExtender
 
     /// Hyphenated identifier the model emits in its `tool_id` JSON field.
-    /// Matches the `id` on each concrete `Tool` in `ToolRegistry.default`.
+    /// Matches the `id` on each concrete `Tool` registered by the host app.
     public var toolID: String {
         switch self {
         case .restartRouter:            return "restart-router"

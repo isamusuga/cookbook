@@ -21,6 +21,7 @@ user message
   -> BM25 retrieval over rag-units-v1.json
   -> TelcoPolicyEngine
   -> DeterministicAnswerComposer
+  -> TelcoSupportSession result
   -> host app chat UI / source chip / confirmation UI
 ```
 
@@ -35,12 +36,13 @@ demo tabs, engineering panels, voice, vision, or sample household screens.
 | --- | --- |
 | `Packages/LFMEngine/Sources/LFMEngine` | Local llama.cpp-backed runtime, adapter loading, classifier heads. |
 | `TelcoTriage/Core/Model` | Adapter backend, model bundle names, model provider bridge. |
+| `TelcoTriage/Core/Orchestration` | Headless `TelcoSupportSession` API. This is the preferred integration boundary. |
 | `TelcoTriage/Core/Intelligence` | Dispatcher, shared understanding, policy, support lanes, heuristics. |
 | `TelcoTriage/Core/Intelligence/Understanding` | Turn relation, blackboard, state operation resolver, conversation state. |
 | `TelcoTriage/Core/RAG` | Structured RAG unit schema and corpus loader. |
 | `TelcoTriage/Core/Retrieval/BM25HierarchyRetriever.swift` | Local RAG ranker used by the composer path. |
 | `TelcoTriage/Core/Composer` | Deterministic answer rendering from policy + evidence. |
-| `TelcoTriage/Core/Tools` | Typed tools and registry. Keep only tools your app can execute. |
+| `TelcoTriage/Core/Tools` | Typed tool protocol and registry. Register host-owned tools here. |
 | `TelcoTriage/Core/Routing` | Tool intent, tool alias map, tool execution/result types. |
 | `TelcoTriage/Core/Privacy` | Optional deterministic PII masking/scanning helpers. |
 | `TelcoTriage/Core/Observability` | Lightweight app logging used by runtime code. |
@@ -56,6 +58,9 @@ integration:
 | Optional piece | Include only if |
 | --- | --- |
 | `TelcoTriage/Features/Chat` | You want to reuse the demo chat UI. Most apps should use their own UI. |
+| `TelcoTriage/Features/Branding` | You want the cookbook Liquid/Verizon demo styling. |
+| `TelcoTriage/Features/DemoCustomer` | You want the sample household/device state. Production apps should use their own customer state. |
+| `TelcoTriage/Features/DemoTools` | You want the sample tool implementations. Production apps should implement `Tool` against their own APIs. |
 | `TelcoTriage/Features/Plan`, `Packs`, `Starters` | You want the cookbook demo shell. |
 | `TelcoTriage/Core/Voice` | You want the audio/voice path. Requires LeapSDK. |
 | `TelcoTriage/Core/Vision` | You want vision-language experiments. Requires MLX packages. |
@@ -169,6 +174,7 @@ Port these source groups:
 
 ```text
 TelcoTriage/Core/Model
+TelcoTriage/Core/Orchestration
 TelcoTriage/Core/RAG
 TelcoTriage/Core/Retrieval/BM25HierarchyRetriever.swift
 TelcoTriage/Core/Retrieval/RetrievalContext.swift
@@ -182,8 +188,10 @@ TelcoTriage/Core/Observability
 ```
 
 If your host app already has its own tool abstractions, keep the Telco tool
-types initially, get parity working, then adapt `ToolRegistry` and
-`ToolExecutor` to your internal action system.
+protocol/registry and implement small adapters from your internal action
+system. You do not need the cookbook `Features/Chat`, `Features/Branding`,
+`Features/DemoCustomer`, or `Features/DemoTools` folders unless you want to
+reuse the sample UI and simulated tools.
 
 ### Step 4: Wire Startup
 
@@ -214,7 +222,10 @@ let adapterBackend = LlamaAdapterBackend(backend: backend)
 let corpus = try RAGUnitCorpus.loadFromBundle()
 let retriever = BM25HierarchyRetriever(corpus: corpus)
 let composer = DeterministicAnswerComposer()
-let toolRegistry = ToolRegistry.default(customerContext: customerContext)
+let toolRegistry = ToolRegistry(tools: [
+    YourRestartRouterTool(),
+    YourSpeedTestTool(),
+])
 let aliasMap = ToolAliasMap.default()
 
 let dispatcher = TelcoChatDispatcher(
@@ -232,21 +243,41 @@ let dispatcher = TelcoChatDispatcher(
 
 let sharedUnderstanding = try TelcoSharedUnderstandingClassifier.bundled(backend: backend)
 let turnRelation = try TelcoTurnRelationV4Strategy.bundled(backend: backend)
+
+let session = TelcoSupportSession(
+    dispatcher: dispatcher,
+    understandingClassifier: sharedUnderstanding,
+    relationalStrategy: turnRelation
+)
 ```
 
 ### Step 5: Wire One Chat Turn
 
-Your chat view model should own the conversation state and pending confirmation
-state. On each user message:
+Your UI should call the headless session and render the returned value. On each
+user message:
 
-1. Check whether the message confirms or cancels a pending tool.
-2. Classify turn relation if there is prior state.
-3. Run shared support understanding for non-control turns.
-4. Pass dialogue state and retrieval context to `TelcoChatDispatcher`.
-5. Render the resulting answer in your UI.
-6. Show source/deep-link chips when present.
-7. Show confirmation UI only when `executableToolIntent` is present.
-8. Execute confirmed tools through your app's action layer.
+```swift
+let turn = try await session.handle(userText)
+
+// Render these however your app wants:
+turn.text
+turn.citation
+turn.deepLink
+turn.requiresConfirmation
+turn.executableToolIntent
+turn.blackboard
+```
+
+`TelcoSupportSession` owns the dialogue blackboard and calls the same relation
+classifier, shared-understanding classifier, RAG retriever, policy engine, and
+composer path used by the sample app. Your UI owns presentation only:
+
+1. Render the resulting answer in your UI.
+2. Show source/deep-link chips when present.
+3. Show confirmation UI only when `executableToolIntent` is present.
+4. Execute confirmed tools through your app's action layer.
+5. Call `recordPendingToolExecuted()` or `recordPendingToolCancelled(...)` so
+   the session blackboard stays in sync.
 
 Do not let a generated answer execute an action. Only typed tool intent plus
 explicit user confirmation should execute a tool.
@@ -374,6 +405,7 @@ complexity into one debugging problem.
 | Question | Start here |
 | --- | --- |
 | How are dependencies built? | `TelcoTriage/App/TelcoTriageApp.swift` |
+| What should my app call per turn? | `TelcoTriage/Core/Orchestration/TelcoSupportSession.swift` |
 | How does a turn get dispatched? | `TelcoTriage/Core/Intelligence/TelcoChatDispatcher.swift` |
 | What decides answer/tool/deflection? | `TelcoTriage/Core/Intelligence/TelcoPolicyEngine.swift` |
 | What is the conversation memory? | `TelcoTriage/Core/Intelligence/Understanding/TelcoDialogueBlackboard.swift` |

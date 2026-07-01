@@ -156,7 +156,7 @@ final class AppState: ObservableObject {
         // Customer + tools
         let context = CustomerContext()
         self.customerContext = context
-        self.toolRegistry = ToolRegistry.default(customerContext: context)
+        self.toolRegistry = ToolRegistry.demoDefault(customerContext: context)
 
         // Specialist packs + capability coordinators
         let packs = SpecialistPackManager()
@@ -301,7 +301,7 @@ final class AppState: ObservableObject {
         // path through AppState.toolRegistry + ToolExecutor. So the
         // CustomerContext baked into this registry is irrelevant; a
         // fresh one is fine.
-        let composerToolRegistry = ToolRegistry.default(customerContext: CustomerContext())
+        let composerToolRegistry = ToolRegistry.demoDefault(customerContext: CustomerContext())
         // Step 5b Pre-flight Fix A: link_id → ToolIntent alias map.
         // Resolves the corpus/registry vocabulary gap (e.g.
         // link_id="speed-test" → tool "run-speed-test") AND the

@@ -50,7 +50,7 @@ final class TestChatHarness {
         let provider = LFMChatProvider(backend: backend)
         let context = CustomerContext(profile: profile)
         self.customerContext = context
-        let registry = ToolRegistry.default(customerContext: context)
+        let registry = ToolRegistry.demoDefault(customerContext: context)
         let ledger = TokenLedger()
         self.tokenLedger = ledger
         let stats = SessionStats()

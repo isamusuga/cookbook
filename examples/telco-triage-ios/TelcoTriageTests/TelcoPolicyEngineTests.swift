@@ -19,7 +19,7 @@ final class TelcoPolicyEngineTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         corpus = try RAGUnitCorpus.loadFromBundle()
-        toolRegistry = ToolRegistry.default(customerContext: CustomerContext())
+        toolRegistry = ToolRegistry.demoDefault(customerContext: CustomerContext())
         aliasMap = ToolAliasMap.default()
     }
 
@@ -412,7 +412,7 @@ final class TelcoPolicyEngineTests: XCTestCase {
     /// page strongly grounds the turn — the grounded answer wins (corroboration-gated).
     func test_topicScopeOutOfScope_stronglyGrounded_answersLocally() {
         let u = makeUnderstanding(topicScope: .outOfScope, topicScopeConfidence: 0.99)
-        let unit = corpus.unit(forPageID: "03.00")
+        let unit = corpus.unit(forPageID: "03.01")
         let decision = decide(query: "change my wifi password", understanding: u, unit: unit)
         XCTAssertEqual(decision.route, .ragAnswer)
         XCTAssertNotEqual(decision.reason, "topic_scope_off_domain")

@@ -419,7 +419,7 @@ final class PhoneFlowValidationTests: XCTestCase {
             composer: DeterministicAnswerComposer(),
             corpus: corpus,
             lexicalRetriever: BM25HierarchyRetriever(corpus: corpus),
-            toolRegistry: ToolRegistry.default(customerContext: CustomerContext()),
+            toolRegistry: ToolRegistry.demoDefault(customerContext: CustomerContext()),
             toolAliasMap: ToolAliasMap.default()
         )
         return TestChatHarness(

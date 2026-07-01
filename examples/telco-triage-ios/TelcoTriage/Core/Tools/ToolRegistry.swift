@@ -25,19 +25,4 @@ public final class ToolRegistry: Sendable {
     }
 
     public var all: [Tool] { tools }
-
-    /// The production registry — every tool this POC ships.
-    @MainActor
-    public static func `default`(customerContext: CustomerContext) -> ToolRegistry {
-        ToolRegistry(tools: [
-            RestartRouterTool(customerContext: customerContext),
-            RunSpeedTestTool(),
-            CheckConnectionTool(customerContext: customerContext),
-            EnableWPSTool(),
-            RunDiagnosticsTool(customerContext: customerContext),
-            ScheduleTechnicianTool(customerContext: customerContext),
-            ToggleParentalControlsTool(customerContext: customerContext),
-            RebootExtenderTool(customerContext: customerContext),
-        ])
-    }
 }
