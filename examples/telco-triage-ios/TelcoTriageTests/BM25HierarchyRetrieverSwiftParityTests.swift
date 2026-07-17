@@ -106,6 +106,12 @@ final class BM25HierarchyRetrieverSwiftParityTests: XCTestCase {
         XCTAssertEqual(corpus.count, 49)
     }
 
+    func test_wifiSpellingVariantsShareOneCanonicalToken() {
+        for variant in ["wifi", "Wi-Fi", "Wi‑Fi", "wi fi"] {
+            XCTAssertEqual(BM25Tokenizer.tokenize(variant), ["wifi"], variant)
+        }
+    }
+
     func test_link_index_covers_known_canonical_pages() {
         let idx = corpus.linkIndex
         XCTAssertNotNil(idx["restart-router"])

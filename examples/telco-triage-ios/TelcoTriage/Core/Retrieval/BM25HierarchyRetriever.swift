@@ -32,6 +32,10 @@ public enum BM25Tokenizer {
         "the", "this", "to", "what", "when", "where", "which", "will",
         "with", "you", "your", "u", "ur", "im", "ive", "id", "ill",
     ]
+    private static let wifiVariantRegex = try! NSRegularExpression(
+        pattern: #"\bwi[\W_]*fi\b"#,
+        options: [.caseInsensitive]
+    )
 
     /// Light plural / verb-tense normalisation. Matches Python `_stem`.
     static func stem(_ token: String) -> String {
@@ -52,7 +56,14 @@ public enum BM25Tokenizer {
     /// `tokenize()`.
     public static func tokenize(_ text: String) -> [String] {
         let lower = text.lowercased()
-        let split = splitDigitLetterBoundaries(lower)
+        let range = NSRange(lower.startIndex..<lower.endIndex, in: lower)
+        let normalized = wifiVariantRegex.stringByReplacingMatches(
+            in: lower,
+            options: [],
+            range: range,
+            withTemplate: "wifi"
+        )
+        let split = splitDigitLetterBoundaries(normalized)
         var out: [String] = []
         var current = ""
         for scalar in split.unicodeScalars {
@@ -533,7 +544,9 @@ public final class BM25HierarchyRetriever: Sendable {
         for hit in base + aliasOnly + historyOnly {
             guard let unit = units[hit.pageID] else { continue }
             var score = hit.score
-            if aliasConfirmed[hit.pageID] != nil { score += bonusAliasConfirmed }
+            if let aliasPrecision = aliasConfirmed[hit.pageID] {
+                score += bonusAliasConfirmed * aliasPrecision
+            }
             let secToks = sectionTokens[hit.pageID] ?? []
             if sectionHeads.contains(hit.pageID) && !qToks.intersection(secToks).isEmpty {
                 score += bonusSectionHeadName

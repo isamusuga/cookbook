@@ -285,6 +285,17 @@ final class TelcoDispatcherComposerPathTests: XCTestCase {
                        "non-executable support page must NOT show the yes-to-confirm clause")
     }
 
+    func test_reset_wifi_password_routes_to_edit_wifi_not_reset_wifi() async {
+        let result = await dispatch(query: "How to reset the Wi-Fi password")
+
+        XCTAssertEqual(result.composerRoute, .ragAnswer)
+        XCTAssertEqual(result.citedRAGUnit?.pageID, "03.01")
+        XCTAssertTrue(result.text.contains("Tap Edit Wi-Fi"))
+        XCTAssertTrue(result.text.contains("Update the Wi-Fi name, security mode, or password"))
+        XCTAssertFalse(result.text.contains("Reset now"))
+        XCTAssertFalse(result.text.contains("won't be affected"))
+    }
+
     func test_share_wifi_password_is_rag_answer_no_confirmation() async {
         // 03.02 Share Wi-Fi — no ToolIntent registered for `share-wifi`.
         let result = await dispatch(query: "share my wifi password")

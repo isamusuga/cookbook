@@ -8,10 +8,10 @@
     "with_canonical_url": 49,
     "with_task_id": 43,
     "with_parent": 34,
-    "with_aliases": 30,
+    "with_aliases": 31,
     "with_steps": 16,
-    "with_answer_summary": 2,
-    "with_answer_facts": 2
+    "with_answer_summary": 3,
+    "with_answer_facts": 3
   },
   "pages_without_link_id": [],
   "unresolved_link_ids": [],
@@ -20,12 +20,12 @@
     "link_id": 3,
     "task_id": 0,
     "parent_page_id": 0,
-    "aliases": 27,
+    "aliases": 28,
     "steps": 8,
     "citation_label": 0,
     "action_affordance": 1,
-    "answer_summary": 2,
-    "answer_facts": 2
+    "answer_summary": 3,
+    "answer_facts": 3
   },
   "alias_match_log": [
     {
@@ -729,6 +729,15 @@
       "link_id": "network",
       "canonical_url": "telcohome://network?launchPoint=telcoAssistant",
       "aliases": [
+        "change wifi password",
+        "change wi-fi password",
+        "reset wifi password",
+        "reset wi-fi password",
+        "update wifi password",
+        "update wi-fi password",
+        "update wireless password",
+        "edit wifi password",
+        "edit wi-fi password",
         "change wifi security",
         "edit wifi security",
         "wifi security",
@@ -1000,15 +1009,26 @@
       "parent_page_id": "03.10",
       "link_id": "network",
       "canonical_url": "telcohome://network?launchPoint=telcoAssistant",
-      "aliases": [],
+      "aliases": [
+        "reset wifi settings",
+        "reset wi-fi settings",
+        "restore wifi settings",
+        "restore wi-fi settings",
+        "restore wifi defaults",
+        "restore wi-fi defaults"
+      ],
       "steps": [],
       "body": "This feature returns changed Wi-Fi settings to their default. Your current Wi-Fi network name (SSID) and password won’t be affected. This may help the user to optimize device connections, by refreshing their connection to the Wi-Fi.\nDuring this process, your devices may be temporarily disconnected from Wi-Fi, but will reconnect once it completes.\nAt the bottom of the page, is the Reset now button, which will trigger this process. This will take under 1 minute.",
       "source_doc": "Network Management RAG.docx",
       "citation_label": "Reset Wi-Fi",
       "action_affordance": "tool_action",
       "availability": null,
-      "answer_summary": null,
-      "answer_facts": []
+      "answer_summary": "Reset Wi-Fi restores changed Wi-Fi settings to their defaults without changing the current network name or password.",
+      "answer_facts": [
+        "The reset refreshes device connections to Wi-Fi.",
+        "Devices may disconnect temporarily and reconnect when the reset completes.",
+        "Select Reset now at the bottom of the page to start the reset."
+      ]
     },
     "03.09": {
       "page_id": "03.09",
