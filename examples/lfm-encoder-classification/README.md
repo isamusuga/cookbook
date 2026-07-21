@@ -1,6 +1,6 @@
 # Fine-tune LFM2.5-Encoder for document classification
 
-[![Discord](https://img.shields.io/discord/1385439864920739850?color=7289da&label=Join%20Discord&logo=discord&logoColor=white)](https://discord.com/invite/liquid-ai)
+[![Discord](https://img.shields.io/discord/1385439864920739850?color=7289da&label=Join%20Discord&logo=discord&logoColor=white)](https://discord.gg/YrtBx8mmt)
 [![X](https://img.shields.io/badge/X-%40LiquidAI-000000?logo=x&logoColor=white)](https://x.com/liquidai)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Liquid%20AI-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/company/liquid-ai-inc/)
 
@@ -52,7 +52,8 @@ On the first run, Transformers downloads the model weights, tokenizer, configura
 model code from Hugging Face. Authentication is only needed when the model repository requires it:
 
 ```bash
-uv run hf auth login
+cp .env.example .env
+# Add your HF_TOKEN to .env if authentication is required.
 ```
 
 ## 1. Prepare your data
@@ -252,11 +253,10 @@ model:
 ## Development
 
 ```bash
-make test
 make lint
 make format
 ```
 
 ## Need help?
 
-Join the [Liquid AI Discord Community](https://discord.com/invite/liquid-ai) and ask.
+Join the [Liquid AI Discord Community](https://discord.gg/YrtBx8mmt) and ask.

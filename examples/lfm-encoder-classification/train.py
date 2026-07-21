@@ -109,13 +109,32 @@ def document_text(value: Any) -> str:
     raise ValueError("Each document must be a string or a list of paragraph strings.")
 
 
-def multi_hot(values: Any, labels: tuple[str, ...]) -> list[float]:
+def multi_hot(
+    values: Any,
+    labels: tuple[str, ...],
+    source_label_names: Sequence[str] | None = None,
+) -> list[float]:
     if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
-        raise ValueError("Each labels value must be a list of strings.")
-    unknown = sorted(set(values) - set(labels))
+        raise ValueError("Each labels value must be a list.")
+
+    normalized = []
+    for value in values:
+        if isinstance(value, str):
+            normalized.append(value)
+        elif isinstance(value, (int, np.integer)) and source_label_names is not None:
+            index = int(value)
+            if not 0 <= index < len(source_label_names):
+                raise ValueError(f"Label ID {index} is outside the dataset's ClassLabel range.")
+            normalized.append(source_label_names[index])
+        else:
+            raise ValueError(
+                "Labels must be strings, or integer IDs backed by Hugging Face ClassLabel metadata."
+            )
+
+    unknown = sorted(set(normalized) - set(labels))
     if unknown:
         raise ValueError(f"Unknown labels: {unknown}")
-    selected = set(values)
+    selected = set(normalized)
     return [float(label in selected) for label in labels]
 
 
@@ -359,7 +378,6 @@ class DocumentClassifier(PreTrainedModel):
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("config.yaml"))
-    parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument(
         "--evaluate-test",
         action="store_true",
@@ -381,13 +399,6 @@ def main() -> None:
     epochs = float(training.get("epochs", 3))
     accumulation = int(training.get("gradient_accumulation_steps", 8))
     output = project_path(training.get("output_dir", "local/classifier"))
-    if args.smoke_test:
-        dataset["train"] = dataset["train"].select(range(min(8, len(dataset["train"]))))
-        dataset["validation"] = dataset["validation"].select(
-            range(min(4, len(dataset["validation"])))
-        )
-        max_length, epochs, accumulation = min(max_length, 128), 1.0, 1
-        output = project_path("local/smoke-classifier")
 
     if not 32 <= max_length <= 8192:
         raise ValueError("training.max_length must be between 32 and 8192.")
@@ -402,6 +413,8 @@ def main() -> None:
     )
     text_column = config["dataset"].get("text_column", "text")
     labels_column = config["dataset"].get("labels_column", "labels")
+    label_feature = dataset["train"].features[labels_column]
+    source_label_names = getattr(getattr(label_feature, "feature", None), "names", None)
 
     def tokenize(split: Any) -> Any:
         def preprocess(batch: dict[str, list[Any]]) -> dict[str, Any]:
@@ -410,7 +423,9 @@ def main() -> None:
                 truncation=True,
                 max_length=max_length,
             )
-            encoded["labels"] = [multi_hot(values, labels) for values in batch[labels_column]]
+            encoded["labels"] = [
+                multi_hot(values, labels, source_label_names) for values in batch[labels_column]
+            ]
             return encoded
 
         return split.map(preprocess, batched=True, remove_columns=split.column_names)
