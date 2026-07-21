@@ -5,7 +5,8 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Liquid%20AI-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/company/liquid-ai-inc/)
 
 Fine-tune
-[`LiquidAI/LFM2.5-Encoder-350M`](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M)
+[`LiquidAI/LFM2.5-Encoder-230M`](https://huggingface.co/LiquidAI/LFM2.5-Encoder-230M)
+or [`LiquidAI/LFM2.5-Encoder-350M`](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M)
 to classify long documents into one or more categories.
 
 This example gives you a reusable pipeline for multi-label classification: point a YAML file at
@@ -96,6 +97,19 @@ training:
   learning_rate: 2.0e-5
   precision: fp32
 ```
+
+Choose the encoder size with `model.id`. The 230M model uses less memory and offers faster training
+and inference, while the 350M model provides more capacity. Both support an 8,192-token context and
+work with the same training code:
+
+```yaml
+# Lower memory and faster execution
+model:
+  id: LiquidAI/LFM2.5-Encoder-230M
+```
+
+The default configuration uses the 350M model. It is also the model used for the ECtHR results
+reported below.
 
 The default [`config.yaml`](./config.yaml) uses the included synthetic data. For a realistic
 long-document fine-tuning example, the included [`config.ecthr-a.yaml`](./config.ecthr-a.yaml) uses
@@ -211,12 +225,13 @@ The tutorial reports micro and macro precision, recall, F1, average precision, e
 hamming loss, and per-label metrics. Micro metrics summarize all decisions; macro and per-label
 metrics expose poor performance on rare categories.
 
-As a reference, the included ECtHR configuration reached **0.8060 validation micro-F1** after
-per-label threshold tuning. On the held-out test split it reached **0.7913 micro-F1**, **0.7062
-macro-F1**, and **0.8400 micro average precision**; test micro-F1 at the fixed `0.5` threshold was
-**0.7815**. The run used an 8,192-token context, a `3e-5` learning rate, three epochs, and seed 42.
-These results are from one seed. The example includes the reproducible configuration, while legal
-documents and trained checkpoints remain in their original sources or generated output directories.
+As a reference, the 350M model with the included ECtHR configuration reached **0.8060 validation
+micro-F1** after per-label threshold tuning. On the held-out test split it reached **0.7913
+micro-F1**, **0.7062 macro-F1**, and **0.8400 micro average precision**; test micro-F1 at the fixed
+`0.5` threshold was **0.7815**. The run used an 8,192-token context, a `3e-5` learning rate, three
+epochs, and seed 42. These results are from one seed. The example includes the reproducible
+configuration, while legal documents and trained checkpoints remain in their original sources or
+generated output directories.
 
 ## Optional: keep the model download local
 
@@ -225,6 +240,8 @@ For an offline training environment, download the base model once and point the 
 ```bash
 uv run hf download LiquidAI/LFM2.5-Encoder-350M --local-dir local/base-model
 ```
+
+Use `LiquidAI/LFM2.5-Encoder-230M` in the same command to download the smaller model instead.
 
 ```yaml
 model:
