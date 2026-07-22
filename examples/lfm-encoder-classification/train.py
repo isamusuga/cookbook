@@ -275,6 +275,7 @@ class DocumentClassifier(PreTrainedModel):
     config_class = PretrainedConfig
     base_model_prefix = "backbone"
     supports_gradient_checkpointing = True
+    accepts_loss_kwargs = False
 
     def __init__(self, config: PretrainedConfig, backbone: nn.Module | None = None) -> None:
         super().__init__(config)
@@ -477,6 +478,7 @@ def main() -> None:
             greater_is_better=True,
             bf16=precision == "bf16",
             fp16=precision == "fp16",
+            dataloader_pin_memory=torch.cuda.is_available(),
             seed=int(training.get("seed", 42)),
             report_to=[],
         ),
