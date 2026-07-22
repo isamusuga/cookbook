@@ -193,7 +193,7 @@ and writes `local/classifier/test_results.json`.
 ```bash
 uv run predict.py \
   --config config.yaml \
-  --text "My payment was accepted, but the order has not shipped."
+  --text "I was charged twice for express delivery, and my package has not shipped."
 ```
 
 You can also pass a text file:

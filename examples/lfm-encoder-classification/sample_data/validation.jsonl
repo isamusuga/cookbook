@@ -1,7 +1,64 @@
-{"text":"I forgot my password and no longer have access to my old phone number.","labels":["account"]}
-{"text":"The annual plan was charged at the wrong price.","labels":["billing"]}
-{"text":"Tracking has not updated since the parcel left the warehouse.","labels":["shipping"]}
-{"text":"The application freezes when I try to export a report.","labels":["technical"]}
-{"text":"A failed payment is still showing on my invoice.","labels":["billing","technical"]}
-{"text":"I need to change the delivery address saved in my profile.","labels":["account","shipping"]}
-
+{"text": "Please investigate this: The verification code stopped working after updating my phone number. I also need help because the invoice total does not match a cancelled subscription. Please check what happened.", "labels": ["account", "billing"]}
+{"text": "I am unable to resolve this myself: The payment for a cancelled subscription appears twice on my statement. Please check what happened.", "labels": ["billing"]}
+{"text": "I need help with the following issue: I cannot sign in after recovering my profile. I also need help because two business days have passed, but my replacement order is still at the warehouse. I have already tried the suggested troubleshooting steps.", "labels": ["account", "shipping"]}
+{"text": "Could you help me with this? The warehouse recorded a scan, but tracking has not changed. Can you help me resolve it?", "labels": ["shipping"]}
+{"text": "Please investigate this: The verification code stopped working after enabling two-factor authentication. I also need help because the page keeps reloading when I submit the checkout form. Can you help me resolve it?", "labels": ["account", "technical"]}
+{"text": "Please investigate this: The receipt is missing the payment for a cancelled subscription. Could someone review this today?", "labels": ["billing"]}
+{"text": "Please investigate this: The page freezes when I attempt to download an invoice. Could someone review this today?", "labels": ["technical"]}
+{"text": "Can someone look into this? My profile became locked while recovering my profile. I also need help because two business days have passed, but the courier has delayed delivery again. Please let me know what to do next.", "labels": ["account", "shipping"]}
+{"text": "I need help with the following issue: I cannot sign in after several unsuccessful login attempts. I have already tried the suggested troubleshooting steps.", "labels": ["account"]}
+{"text": "I am contacting support about this issue: The warehouse recorded a scan, but the parcel marked as delivered is not here. What information do you need from me?", "labels": ["shipping"]}
+{"text": "This has been happening since yesterday: The button does nothing when I try to download an invoice. I would appreciate an update.", "labels": ["technical"]}
+{"text": "This has been happening since yesterday: The profile page will not accept changes related to accepting a team invitation. I also need help because the payment for a cancelled subscription appears twice on my statement. I have already tried the suggested troubleshooting steps.", "labels": ["account", "billing"]}
+{"text": "Can someone look into this? The warehouse recorded a scan, but the shipment is going to the wrong address. Please let me know what to do next.", "labels": ["shipping"]}
+{"text": "This has been happening since yesterday: My card was charged even though I cancelled a cancelled subscription. I would appreciate an update.", "labels": ["billing"]}
+{"text": "I need help with the following issue: The application crashes whenever I try to download an invoice. I have already tried the suggested troubleshooting steps.", "labels": ["technical"]}
+{"text": "I noticed a problem this morning: The discount was not applied to a cancelled subscription. This is preventing me from completing my request.", "labels": ["billing"]}
+{"text": "I noticed a problem this morning: I was unexpectedly signed out while accepting a team invitation. I also need help because I do not recognize the charge for a cancelled subscription. This is preventing me from completing my request.", "labels": ["account", "billing"]}
+{"text": "I am contacting support about this issue: My card was charged even though I cancelled a cancelled subscription. I also need help because the courier accepted the parcel, but tracking has not changed. I have already tried the suggested troubleshooting steps.", "labels": ["billing", "shipping"]}
+{"text": "I need help with the following issue: The warehouse recorded a scan, but my order has not shipped. I have already tried the suggested troubleshooting steps.", "labels": ["shipping"]}
+{"text": "Please investigate this: The amount charged for a cancelled subscription is incorrect. I also need help because I received a dispatch confirmation, but the delivery estimate has disappeared. Could someone review this today?", "labels": ["billing", "shipping"]}
+{"text": "I am still waiting for a resolution: The promised delivery date has passed, but the courier returned my package. I also need help because the application crashes whenever I try to download an invoice. Please check what happened.", "labels": ["shipping", "technical"]}
+{"text": "I am contacting support about this issue: My profile became locked while several unsuccessful login attempts. What information do you need from me?", "labels": ["account"]}
+{"text": "Please help me sort this out: The warehouse recorded a scan, but the delivery estimate has disappeared. I have already tried the suggested troubleshooting steps.", "labels": ["shipping"]}
+{"text": "I am unable to resolve this myself: The login page rejects my credentials after several unsuccessful login attempts. Please check what happened.", "labels": ["account"]}
+{"text": "I am unable to resolve this myself: The promised delivery date has passed, but the package arrived damaged. I also need help because an unexpected error appears every time I download an invoice. Could someone review this today?", "labels": ["shipping", "technical"]}
+{"text": "Please help me sort this out: The profile page will not accept changes related to several unsuccessful login attempts. I have already tried the suggested troubleshooting steps.", "labels": ["account"]}
+{"text": "Can someone look into this? I do not recognize the charge for a cancelled subscription. Please let me know what to do next.", "labels": ["billing"]}
+{"text": "I am still waiting for a resolution: The payment for a cancelled subscription was declined but still appears as pending. Can you help me resolve it?", "labels": ["billing"]}
+{"text": "I am contacting support about this issue: I need a refund for a cancelled subscription. What information do you need from me?", "labels": ["billing"]}
+{"text": "Can someone look into this? I need a refund for my monthly subscription. I also need help because the application displays corrupted text when I open my order history. I would appreciate an update.", "labels": ["billing", "technical"]}
+{"text": "Please help me sort this out: The promised delivery date has passed, but the shipment is going to the wrong address. I also need help because the page freezes when I attempt to download an invoice. What information do you need from me?", "labels": ["shipping", "technical"]}
+{"text": "I am still waiting for a resolution: The receipt is missing the payment for a cancelled subscription. I also need help because the courier accepted the parcel, but my order has not shipped. Can you help me resolve it?", "labels": ["billing", "shipping"]}
+{"text": "I need help with the following issue: I was charged twice for a cancelled subscription. I have already tried the suggested troubleshooting steps.", "labels": ["billing"]}
+{"text": "I noticed a problem this morning: The latest update made it impossible to download an invoice. This is preventing me from completing my request.", "labels": ["technical"]}
+{"text": "I am unable to resolve this myself: The payment for my monthly subscription appears twice on my statement. I also need help because an unexpected error appears every time I export a report. Can you help me resolve it?", "labels": ["billing", "technical"]}
+{"text": "This has been happening since yesterday: The warehouse recorded a scan, but part of my order is missing. I would appreciate an update.", "labels": ["shipping"]}
+{"text": "I noticed a problem this morning: My account recovery request fails when several unsuccessful login attempts. This is preventing me from completing my request.", "labels": ["account"]}
+{"text": "Can someone look into this? I need a refund for a cancelled subscription. I also need help because I received a dispatch confirmation, but the courier has delayed delivery again. What information do you need from me?", "labels": ["billing", "shipping"]}
+{"text": "Please investigate this: I no longer have access to the account after several unsuccessful login attempts. Could someone review this today?", "labels": ["account"]}
+{"text": "Could you help me with this? The amount charged for a cancelled subscription is incorrect. Can you help me resolve it?", "labels": ["billing"]}
+{"text": "I am unable to resolve this myself: The warehouse recorded a scan, but the package arrived damaged. Please check what happened.", "labels": ["shipping"]}
+{"text": "Please investigate this: The verification code stopped working after recovering my profile. I also need help because two business days have passed, but the delivery estimate has disappeared. This is preventing me from completing my request.", "labels": ["account", "shipping"]}
+{"text": "I am unable to resolve this myself: The mobile app closes before I can download an invoice. Please check what happened.", "labels": ["technical"]}
+{"text": "I am still waiting for a resolution: The application displays corrupted text when I download an invoice. Can you help me resolve it?", "labels": ["technical"]}
+{"text": "I am still waiting for a resolution: The receipt is missing the payment for my monthly subscription. I also need help because the application crashes whenever I try to export a report. Could someone review this today?", "labels": ["billing", "technical"]}
+{"text": "Can someone look into this? The service times out whenever I download an invoice. Please let me know what to do next.", "labels": ["technical"]}
+{"text": "I noticed a problem this morning: The warehouse recorded a scan, but my replacement order is still at the warehouse. This is preventing me from completing my request.", "labels": ["shipping"]}
+{"text": "I am contacting support about this issue: An unexpected error appears every time I download an invoice. What information do you need from me?", "labels": ["technical"]}
+{"text": "Could you help me with this? The verification code stopped working after several unsuccessful login attempts. Can you help me resolve it?", "labels": ["account"]}
+{"text": "I am still waiting for a resolution: I no longer have access to the account after enabling two-factor authentication. I also need help because the application crashes whenever I try to save my settings. This is preventing me from completing my request.", "labels": ["account", "technical"]}
+{"text": "Could you help me with this? The website shows a blank page when I download an invoice. Can you help me resolve it?", "labels": ["technical"]}
+{"text": "Please help me sort this out: The page keeps reloading when I download an invoice. I have already tried the suggested troubleshooting steps.", "labels": ["technical"]}
+{"text": "I am contacting support about this issue: My card was charged even though I cancelled my monthly subscription. I also need help because the website shows a blank page when I export a report. What information do you need from me?", "labels": ["billing", "technical"]}
+{"text": "Can someone look into this? I cannot update my security settings after several unsuccessful login attempts. Please let me know what to do next.", "labels": ["account"]}
+{"text": "Can someone look into this? My profile became locked while enabling two-factor authentication. I also need help because the application displays corrupted text when I submit the checkout form. I have already tried the suggested troubleshooting steps.", "labels": ["account", "technical"]}
+{"text": "I am contacting support about this issue: The promised delivery date has passed, but part of my order is missing. I also need help because the website shows a blank page when I download an invoice. I would appreciate an update.", "labels": ["shipping", "technical"]}
+{"text": "I need help with the following issue: I cannot sign in after updating my phone number. I also need help because the discount was not applied to a cancelled subscription. Please let me know what to do next.", "labels": ["account", "billing"]}
+{"text": "Please investigate this: The warehouse recorded a scan, but the courier returned my package. Could someone review this today?", "labels": ["shipping"]}
+{"text": "I am still waiting for a resolution: The warehouse recorded a scan, but the courier has delayed delivery again. Can you help me resolve it?", "labels": ["shipping"]}
+{"text": "I am still waiting for a resolution: I was unexpectedly signed out while several unsuccessful login attempts. Can you help me resolve it?", "labels": ["account"]}
+{"text": "I need help with the following issue: I cannot sign in after enabling two-factor authentication. I also need help because the latest update made it impossible to submit the checkout form. What information do you need from me?", "labels": ["account", "technical"]}
+{"text": "I noticed a problem this morning: I was unexpectedly signed out while switching to a new device. I also need help because two business days have passed, but the shipment is going to the wrong address. Can you help me resolve it?", "labels": ["account", "shipping"]}
+{"text": "Please help me sort this out: The invoice total does not match a cancelled subscription. I have already tried the suggested troubleshooting steps.", "labels": ["billing"]}
+{"text": "This has been happening since yesterday: Someone changed my account details while I was several unsuccessful login attempts. I would appreciate an update.", "labels": ["account"]}

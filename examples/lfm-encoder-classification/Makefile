@@ -1,7 +1,7 @@
 .PHONY: train predict lint format
 
 CONFIG ?= config.yaml
-TEXT ?= My payment was accepted, but the order has not shipped.
+TEXT ?= I was charged twice for express delivery, and my package has not shipped.
 
 train:
 	uv run train.py --config $(CONFIG)
