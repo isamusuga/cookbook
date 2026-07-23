@@ -26,7 +26,7 @@
 - [Community Projects](#-community-projects)
 - [Technical Deep Dives](#-technical-deep-dives)
 - [Contributing](#contributing)
-- [Support](#support)
+- [サポート](#サポート)
 
 ## 🖥️ Desktop Apps
 
@@ -182,7 +182,7 @@ We welcome contributions! Open a PR with a link to your project GitHub repo in t
 
 [![Contributors](https://contrib.rocks/image?repo=Liquid4All/cookbook)](https://github.com/Liquid4All/cookbook/graphs/contributors)
 
-## Support
+## サポート
 
 - 📖 [Liquid AI Documentation](https://docs.liquid.ai/)
 - 💬 [Join our community on Discord](https://discord.com/invite/liquid-ai)
