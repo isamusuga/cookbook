@@ -25,7 +25,7 @@
 - [Third-Party Apps Powered by LFM](#third-party-apps-powered-by-lfm)
 - [Community Projects](#-community-projects)
 - [Technical Deep Dives](#-technical-deep-dives)
-- [Contributing](#contributing)
+- [寄稿について](#寄稿について)
 - [サポート](#サポート)
 
 ## 🖥️ Desktop Apps
@@ -176,9 +176,9 @@ Recorded sessions (~60 minutes) covering advanced topics and hands-on implementa
 
 Join the next session! Head to the `#live-events` channel on [Discord](https://discord.com/invite/liquid-ai).
 
-## Contributing
+## 寄稿について
 
-We welcome contributions! Open a PR with a link to your project GitHub repo in the Community Projects section.
+私達は寄稿を歓迎します! コミュニティ・プロジェクトのセクションであなたのプロジェクト用GitHubリポへのリンクを添えてプルリクを開いてね。
 
 [![Contributors](https://contrib.rocks/image?repo=Liquid4All/cookbook)](https://github.com/Liquid4All/cookbook/graphs/contributors)
 
