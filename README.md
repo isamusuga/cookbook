@@ -184,5 +184,5 @@ We welcome contributions! Open a PR with a link to your project GitHub repo in t
 
 ## サポート
 
-- 📖 [Liquid AI Documentation](https://docs.liquid.ai/)
-- 💬 [Join our community on Discord](https://discord.com/invite/liquid-ai)
+- 📖 [リキッドAIの文書](https://docs.liquid.ai/)
+- 💬 [Discord上の私達のコミュニティに参加しよう](https://discord.com/invite/liquid-ai)
