@@ -24,7 +24,7 @@
 - [Fine-Tuning Examples](#-fine-tuning-examples)
 - [Third-Party Apps Powered by LFM](#third-party-apps-powered-by-lfm)
 - [Community Projects](#-community-projects)
-- [Technical Deep Dives](#-technical-deep-dives)
+- [テクニカル・ディープ・ダイブ](#-テクニカル・ディープ・ダイブ)
 - [寄稿について](#寄稿について)
 - [サポート](#サポート)
 
@@ -160,21 +160,21 @@ Open-source projects built by the community showcasing LFMs with real use cases.
 | GalamseyWatch | Two-layer agentic Earth observation over Sentinel-2 imagery for illegal mining detection in Ghana, powered by LFM2.5-VL-450M and LFM2-2.6B | [Code](https://github.com/samadon1/GalamseyWatch) |
 | Liquid Lens | Detects water anomalies in orbit by combining fast spectral filtering with conditional LFM2.5-VL visual insights on the SimSat orbital simulator | [Code](https://github.com/LiquidLensSystems/water-vlm) |
 
-## 🕐 Technical Deep Dives
+## 🕐 テクニカル・ディープ・ダイブ
 
-Recorded sessions (~60 minutes) covering advanced topics and hands-on implementations.
+上級者向けの話題とハンズ-オン実装をカバーした録画済みセッション (~60 分) 。
 
-| Date | Topic | Link |
+| 日付 | 話題 | リンク |
 |------|-------|------|
-| 2025-11-06 | Fine-tuning LFM2-VL for image classification | [Video](https://www.youtube.com/watch?v=00IK9apncCg) |
-| 2025-11-27 | Building a 100% local Audio-to-Speech CLI with LFM2-Audio | [Video](https://www.youtube.com/watch?v=yeu077gPmCA) |
-| 2025-12-26 | Fine-tuning LFM2-350M for browser control with GRPO and OpenEnv | [Video](https://www.youtube.com/watch?v=gKQ08yee3Lw) |
-| 2026-01-22 | Local video-captioning with LFM2.5-VL-1.6B and WebGPU | [Video](https://www.youtube.com/watch?v=xsWARHFoA3E) |
-| 2026-03-05 | Build your own local AI coding assistant | [Video](https://www.youtube.com/watch?v=6JEm1IxcxEw) |
-| 2026-04-22 | Let's build a wildfire detection system with a Vision Language Model and satellite images | [Video](https://www.youtube.com/watch?v=LOIDYl5fdb8) |
-| 2026-06-12 | Building on-device voice agents | [Video](https://www.youtube.com/watch?v=0YQquPG-9R8) |
+| 2025年11月06日 | 画像分類に向けたLFM2-VLのファイン-チューニング | [動画](https://www.youtube.com/watch?v=00IK9apncCg) |
+| 2025年11月27日 | LFM2-Audioで100%ローカルAudio-to-Speech CLIを構築する | [動画](https://www.youtube.com/watch?v=yeu077gPmCA) |
+| 2025年12月26日 | GRPOとOpenEnvでブラウザ制御に向けたLFM2-350Mのファイン-チューニング | [動画](https://www.youtube.com/watch?v=gKQ08yee3Lw) |
+| 2026年01月22日 | LFM2.5-VL-1.6BとWebGPUでローカル動画-キャプション付け | [動画](https://www.youtube.com/watch?v=xsWARHFoA3E) |
+| 2026年03月05日 | あなた独自のローカルAIコーディング・アシスタントを構築する | [動画](https://www.youtube.com/watch?v=6JEm1IxcxEw) |
+| 2026年04月22日 | 視覚言語モデルと衛星画像で野火検出システムを構築してみよう | [動画](https://www.youtube.com/watch?v=LOIDYl5fdb8) |
+| 2026年06月12日 | オン-デバイス・音声エージェントの構築 | [動画](https://www.youtube.com/watch?v=0YQquPG-9R8) |
 
-Join the next session! Head to the `#live-events` channel on [Discord](https://discord.com/invite/liquid-ai).
+次のセッションに参加しよう! [Discord](https://discord.com/invite/liquid-ai)上の`#live-events`チャネルに顔を出してみてください。
 
 ## 寄稿について
 
