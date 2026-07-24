@@ -24,7 +24,7 @@
 - [Fine-Tuning Examples](#-fine-tuning-examples)
 - [Third-Party Apps Powered by LFM](#third-party-apps-powered-by-lfm)
 - [Community Projects](#-community-projects)
-- [テクニカル・ディープ・ダイブ](#-テクニカル・ディープ・ダイブ)
+- [テクニカル・ディープ・ダイブ](#-テクニカルディープダイブ)
 - [寄稿について](#寄稿について)
 - [サポート](#サポート)
 
